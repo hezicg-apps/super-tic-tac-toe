@@ -33,53 +33,79 @@
 
             const questions = {
                 u1: [
-                    { q: "___ a green apple on the desk.", options: ["There is", "There are"], correct: "There is" },
-                    { q: "The ___ (fox) are in the forest.", options: ["foxes", "foxs"], correct: "foxes" },
-                    { q: "___ many students in the library.", options: ["There is", "There are"], correct: "There are" }
+                    { q: "___ a green apple on the desk.", options: ["There is", "There are"], correct: "There is", hint: "מדובר בתפוח אחד (a green apple), לכן נשתמש ב-There is." },
+                    { q: "The ___ (fox) are in the forest.", options: ["foxes", "foxs"], correct: "foxes", hint: "מילים שמסתיימות ב-x מקבלות es ברבים." },
+                    { q: "___ many students in the library.", options: ["There is", "There are"], correct: "There are", hint: "מדובר בהרבה סטודנטים (many students), לכן נשתמש ב-There are." },
+                    { q: "___ an orange in the bag.", options: ["There is", "There are"], correct: "There is", hint: "תפוז אחד (an orange) דורש There is." },
+                    { q: "___ two bikes in the garden.", options: ["There is", "There are"], correct: "There are", hint: "שני זוגות אופניים הם רבים, לכן נשתמש ב-There are." }
                 ],
                 u2: [
-                    { q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has" },
-                    { q: "The students ___ new books.", options: ["have", "has"], correct: "have" },
-                    { q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has" }
+                    { q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has", hint: "דנה היא She, וגוף שלישי יחיד מקבל has." },
+                    { q: "The students ___ new books.", options: ["have", "has"], correct: "have", hint: "הסטודנטים הם They, לכן נשתמש ב-have." },
+                    { q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has", hint: "הכלב הוא It, לכן נשתמש ב-has." },
+                    { q: "I ___ a blue pen.", options: ["have", "has"], correct: "have", hint: "עם הגוף I תמיד נשתמש ב-have." },
+                    { q: "The children ___ many toys.", options: ["have", "has"], correct: "have", hint: "ילדים (children) הם רבים (They), לכן נשתמש ב-have." }
                 ]
             };
 
             const Quiz = ({ qList, title }) => {
                 const [idx, setIdx] = useState(0);
                 const [score, setScore] = useState(0);
+                const [feedback, setFeedback] = useState(null);
                 const [done, setDone] = useState(false);
 
                 const handleAns = (ans) => {
+                    if (feedback) return;
                     const isCorrect = ans === qList[idx].correct;
-                    if (isCorrect) setScore(score + Math.round(100/qList.length));
-                    
+                    setFeedback(isCorrect ? 'correct' : 'wrong');
+                    if (isCorrect) setScore(prev => prev + Math.round(100/qList.length));
+                };
+
+                const nextQuestion = () => {
+                    setFeedback(null);
                     if (idx < qList.length - 1) setIdx(idx + 1);
                     else {
                         setDone(true);
+                        const final = Math.min(score, 100);
                         if (title === "המבחן") {
-                            setFinalScore(score + (isCorrect ? Math.round(100/qList.length) : 0));
-                            if (score + (isCorrect ? Math.round(100/qList.length) : 0) >= 60) setUnlocked(true);
+                            setFinalScore(final);
+                            if (final >= 60) setUnlocked(true);
                         }
                     }
                 };
 
                 if (done) return (
                     <div className="text-center p-10 animate-pop">
-                        <h2 className="text-4xl font-black mb-6 text-slate-800">ציון: {score}</h2>
-                        <button onClick={() => setStep('menu')} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold">חזרה לתפריט</button>
+                        <h2 className="text-4xl font-black mb-6 text-slate-800">ציון סופי: {score}</h2>
+                        <button onClick={() => setStep('menu')} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold text-xl shadow-lg">חזרה לתפריט</button>
                     </div>
                 );
+
+                const currentQ = qList[idx];
 
                 return (
                     <div className="animate-pop p-4">
                         <div className="bg-white p-8 rounded-[40px] shadow-sm mb-6 text-center border-2 border-slate-50">
-                            <h3 dir="ltr" className="text-2xl font-bold">{qList[idx].q}</h3>
+                            <h3 dir="ltr" className="text-2xl font-bold">{currentQ.q}</h3>
                         </div>
-                        <div className="space-y-3">
-                            {qList[idx].options.map(o => (
-                                <button key={o} onClick={() => handleAns(o)} className="w-full p-5 bg-white border-2 border-slate-200 rounded-2xl font-bold text-xl text-indigo-900 active:bg-indigo-50 btn-active">{o}</button>
-                            ))}
-                        </div>
+
+                        {!feedback ? (
+                            <div className="space-y-3">
+                                {currentQ.options.map(o => (
+                                    <button key={o} onClick={() => handleAns(o)} className="w-full p-5 bg-white border-2 border-slate-200 rounded-2xl font-bold text-xl text-indigo-900 active:bg-indigo-50 btn-active">{o}</button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className={`p-6 rounded-[30px] border-4 animate-pop ${feedback === 'correct' ? 'bg-emerald-50 border-emerald-400 text-emerald-900' : 'bg-rose-50 border-rose-400 text-rose-900'}`}>
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className="text-2xl">{feedback === 'correct' ? '✅ מעולה!' : '❌ אופס...'}</span>
+                                </div>
+                                <p className="font-bold text-lg mb-4">{feedback === 'correct' ? 'תשובה נכונה!' : currentQ.hint}</p>
+                                <button onClick={nextQuestion} className={`w-full py-4 rounded-2xl font-black text-white shadow-md ${feedback === 'correct' ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+                                    {idx < qList.length - 1 ? 'לשאלה הבאה' : 'סיום התרגול'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 );
             };
@@ -87,27 +113,34 @@
             if (step === 'menu') return (
                 <div className="max-w-md mx-auto min-h-screen bg-slate-50">
                     <div className="gradient-bg p-12 text-white rounded-b-[60px] shadow-xl text-center mb-10">
-                        <h1 className="text-5xl font-black italic mb-2">English Mastery</h1>
-                        <p className="font-bold opacity-90">הדרך הקלה והמהנה לשלוט בדקדוק!</p>
+                        <h1 className="text-5xl font-black italic mb-2 tracking-tight">English Mastery</h1>
+                        <p className="font-bold opacity-90 text-sm">הדרך המהנה לשלוט בדקדוק!</p>
                     </div>
                     <div className="px-6 pb-10">
                         <h2 className="text-2xl font-black text-slate-800 mb-8 text-center">מה נלמד היום?</h2>
                         <div className="grid grid-cols-2 gap-6">
-                            <button onClick={() => setStep('u1_learn')} className="bg-gradient-to-br from-blue-500 to-blue-600 p-8 rounded-[40px] text-white shadow-lg btn-active">
-                                <div className="font-black text-xl mb-1">יחידה 1</div>
-                                <div className="text-sm font-bold opacity-90">There is/are</div>
+                            {/* יחידה 1 */}
+                            <button onClick={() => setStep('u1_learn')} className="bg-gradient-to-br from-blue-600 to-blue-800 p-8 rounded-[40px] text-white shadow-lg btn-active min-h-[180px] flex flex-col justify-center items-center">
+                                <div className="font-black text-lg mb-2 opacity-80 uppercase tracking-wide">יחידה 1</div>
+                                <div className="text-2xl font-extrabold leading-tight">There is</div>
+                                <div className="text-2xl font-extrabold leading-tight">There are</div>
                             </button>
-                            <button onClick={() => setStep('u2_learn')} className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-8 rounded-[40px] text-white shadow-lg btn-active">
-                                <div className="font-black text-xl mb-1">יחידה 2</div>
-                                <div className="text-sm font-bold opacity-90">Have / Has</div>
+                            
+                            {/* יחידה 2 - נוספה שורה ריקה לאיזון ויזואלי */}
+                            <button onClick={() => setStep('u2_learn')} className="bg-gradient-to-br from-emerald-600 to-emerald-800 p-8 rounded-[40px] text-white shadow-lg btn-active min-h-[180px] flex flex-col justify-center items-center">
+                                <div className="font-black text-lg mb-2 opacity-80 uppercase tracking-wide">יחידה 2</div>
+                                <div className="text-2xl font-extrabold leading-tight">Have</div>
+                                <div className="text-2xl font-extrabold leading-tight">Has</div>
+                                <div className="text-2xl font-extrabold leading-tight opacity-0 select-none">Empty</div>
                             </button>
-                            <button onClick={() => setStep('final')} className="bg-gradient-to-br from-amber-400 to-orange-500 p-8 rounded-[40px] text-white shadow-lg btn-active relative">
-                                <div className="font-black text-xl mb-1">המבחן</div>
-                                <div className="text-[10px] font-bold">ציון 60 לפתיחה</div>
-                                {finalScore !== null && <div className="absolute top-2 right-2 bg-white/20 px-2 py-0.5 rounded-full text-[10px]">{finalScore}%</div>}
+
+                            <button onClick={() => setStep('final')} className="bg-gradient-to-br from-orange-500 to-red-600 p-8 rounded-[40px] text-white shadow-lg btn-active relative min-h-[180px] flex flex-col justify-center items-center">
+                                <div className="font-black text-2xl text-center leading-none">אתגר<br/>מסכם</div>
+                                {finalScore !== null && <div className="absolute top-4 right-4 bg-white/20 px-3 py-1 rounded-full text-xs font-bold">{finalScore}%</div>}
                             </button>
-                            <button onClick={() => unlocked && setStep('game')} className={`p-8 rounded-[40px] shadow-lg flex flex-col items-center justify-center btn-active ${unlocked ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
-                                <span className="font-black text-xl mb-1">{unlocked ? 'משחק' : 'נעול'}</span>
+
+                            <button onClick={() => unlocked && setStep('game')} className={`p-8 rounded-[40px] shadow-lg flex flex-col items-center justify-center btn-active min-h-[180px] ${unlocked ? 'bg-gradient-to-br from-purple-600 to-indigo-900 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                                <span className="font-black text-2xl mb-1">{unlocked ? 'משחק' : 'נעול'}</span>
                                 {!unlocked && <LockIcon />}
                             </button>
                         </div>
@@ -116,52 +149,93 @@
             );
 
             return (
-                <div className="max-w-md mx-auto min-h-screen p-6">
+                <div className="max-w-md mx-auto min-h-screen p-6 bg-slate-50">
                     <button onClick={() => setStep('menu')} className="mb-6 font-black text-indigo-600 flex items-center gap-2">➜ חזרה</button>
                     
-                    {step === 'u1_learn' && (
-                        <div className="space-y-6 animate-pop text-center">
-                            <h2 className="text-4xl font-black text-blue-600">יחידה 1</h2>
-                            <div className="bg-blue-50 p-6 rounded-[30px] border-b-4 border-blue-400 flex flex-col items-center">
-                                <div className="bg-white px-4 py-2 rounded-xl mb-2 font-black text-blue-700">an</div>
-                                <div className="font-bold text-blue-900 text-lg">לפני אות ניקוד (Vowel)</div>
-                                <div className="text-rose-500 font-black tracking-widest mt-2 text-xl">a, e, i, o, u</div>
-                            </div>
-                            <div className="bg-white p-6 rounded-[30px] shadow-sm space-y-2" dir="ltr">
-                                <div className="p-3 bg-slate-50 rounded-xl font-bold">an <span className="underline">a</span>pple</div>
-                                <div className="p-3 bg-slate-50 rounded-xl font-bold">an <span className="underline">o</span>range</div>
-                            </div>
-                            <button onClick={() => setStep('u1_quiz')} className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black text-2xl shadow-xl">בואו נתרגל!</button>
-                        </div>
-                    )}
-
-                    {step === 'u2_learn' && (
-                        <div className="space-y-6 animate-pop text-center">
-                            <h2 className="text-4xl font-black text-emerald-600">יחידה 2</h2>
-                            <div className="bg-amber-50 p-8 rounded-[40px] border-2 border-dashed border-amber-300">
-                                <div className="flex items-center gap-3 mb-4 justify-center">
-                                    <span className="text-3xl">💡</span>
-                                    <h4 className="font-black text-amber-900 text-xl">שימו לב למלכודת!</h4>
+                    <div className="flex-1">
+                        {step === 'u1_learn' && (
+                            <div className="space-y-6 animate-pop">
+                                <h2 className="text-4xl font-black text-blue-700 text-center mb-2">There is / There are</h2>
+                                
+                                <div className="bg-white p-6 rounded-[30px] shadow-sm border-r-8 border-blue-600 text-lg">
+                                    <h4 className="font-black text-blue-900 text-xl mb-2 italic">קיום והימצאות</h4>
+                                    <p className="font-bold text-slate-700 leading-relaxed">
+                                        משתמשים כשרק רוצים לומר ששם עצם <b>נמצא</b> במקום מסוים. 
+                                        <br/>
+                                        <span className="text-blue-700 font-extrabold underline decoration-blue-200 decoration-4">זה לא אומר למי הוא שייך!</span>
+                                    </p>
                                 </div>
-                                <p className="font-bold text-amber-800 leading-relaxed">
-                                    גם אם מופיע שם מפורש כמו <span dir="ltr">The cat</span> או <span dir="ltr">Ron</span> במקום כינוי גוף - עדיין נשתמש ב-<b>Has</b>.
-                                </p>
-                            </div>
-                            <button onClick={() => setStep('u2_quiz')} className="w-full bg-emerald-600 text-white py-5 rounded-3xl font-black text-2xl shadow-xl">בואו נתרגל!</button>
-                        </div>
-                    )}
 
-                    {step === 'u1_quiz' && <Quiz qList={questions.u1} title="תרגול 1" />}
-                    {step === 'u2_quiz' && <Quiz qList={questions.u2} title="תרגול 2" />}
-                    {step === 'final' && <Quiz qList={[...questions.u1, ...questions.u2]} title="המבחן" />}
-                    
-                    {step === 'game' && (
-                        <div className="text-center py-20 animate-pop">
-                            <div className="mb-6 flex justify-center"><TrophyIcon /></div>
-                            <h2 className="text-4xl font-black mb-4">ניצחת!</h2>
-                            <p className="font-bold text-slate-500">פתחת את כל השלבים!</p>
-                        </div>
-                    )}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-blue-700 p-5 rounded-3xl text-center shadow-md">
+                                        <div className="text-white font-black text-2xl">There is</div>
+                                        <div className="text-blue-100 font-bold text-xs">ליחיד (1)</div>
+                                    </div>
+                                    <div className="bg-blue-700 p-5 rounded-3xl text-center shadow-md">
+                                        <div className="text-white font-black text-2xl">There are</div>
+                                        <div className="text-blue-100 font-bold text-xs">לרבים (2+)</div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-red-600 p-6 rounded-[35px] shadow-xl border-4 border-red-400">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="bg-white text-red-600 w-8 h-8 rounded-full flex items-center justify-center font-black shadow-sm">!</div>
+                                        <h4 className="font-black text-white text-xl">חוק ה-an</h4>
+                                    </div>
+                                    <p className="text-white font-bold text-sm mb-4 leading-snug">
+                                        משתמשים ב-<b>an</b> (במקום a) כאשר <b>שם העצם</b> מתחיל באחת מאותיות הניקוד:
+                                    </p>
+                                    <div className="flex justify-between px-2 mb-4">
+                                        {['a','e','i','o','u'].map(v => (
+                                            <span key={v} className="bg-white text-red-600 font-black w-10 h-10 flex items-center justify-center rounded-xl shadow-lg text-2xl">{v}</span>
+                                        ))}
+                                    </div>
+                                    <div className="bg-red-900/40 p-3 rounded-2xl text-white font-black text-center text-sm border border-red-400/30" dir="ltr">
+                                        an <span className="underline decoration-2">a</span>pple | an <span className="underline decoration-2">o</span>range
+                                    </div>
+                                </div>
+
+                                <button onClick={() => setStep('u1_quiz')} className="w-full bg-blue-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4 active:scale-95 transition-transform">בואו נתרגל!</button>
+                            </div>
+                        )}
+
+                        {step === 'u2_learn' && (
+                            <div className="space-y-4 animate-pop">
+                                <h2 className="text-4xl font-black text-emerald-700 text-center mb-6">Have / Has</h2>
+                                
+                                <div className="bg-white p-6 rounded-[30px] shadow-sm border-r-8 border-emerald-600">
+                                    <h4 className="font-black text-emerald-900 text-xl mb-2 italic">שייכות (בעלות)</h4>
+                                    <p className="font-bold text-slate-600 leading-relaxed text-lg">
+                                        משתמשים כשמתארים <b>למי שייך</b> החפץ (למי יש אותו).
+                                    </p>
+                                </div>
+
+                                <div className="bg-amber-100 p-8 rounded-[40px] border-4 border-amber-400 shadow-md">
+                                    <div className="flex items-center gap-3 mb-4 justify-center">
+                                        <span className="text-4xl">💡</span>
+                                        <h4 className="font-black text-amber-900 text-2xl">המלכודת!</h4>
+                                    </div>
+                                    <p className="font-bold text-amber-900 leading-relaxed text-center text-lg">
+                                        גם אם מופיע שם מפורש כמו <span dir="ltr" className="bg-white px-2 rounded-lg border border-amber-300">The cat</span> או <span dir="ltr" className="bg-white px-2 rounded-lg border border-amber-300">Ron</span> - עדיין נשתמש ב-<b>Has</b>.
+                                    </p>
+                                </div>
+
+                                <button onClick={() => setStep('u2_quiz')} className="w-full bg-emerald-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4 active:scale-95 transition-transform">בואו נתרגל!</button>
+                            </div>
+                        )}
+
+                        {step === 'u1_quiz' && <Quiz qList={questions.u1} title="תרגול 1" />}
+                        {step === 'u2_quiz' && <Quiz qList={questions.u2} title="תרגול 2" />}
+                        {step === 'final' && <Quiz qList={[...questions.u1, ...questions.u2]} title="המבחן" />}
+                        
+                        {step === 'game' && (
+                            <div className="text-center py-20 animate-pop">
+                                <div className="mb-6 flex justify-center"><TrophyIcon /></div>
+                                <h2 className="text-4xl font-black mb-4">ניצחת!</h2>
+                                <p className="font-bold text-slate-500">פתחת את כל השלבים!</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
         };
