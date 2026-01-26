@@ -21,9 +21,8 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState } = React;
 
-        // Icons components
         const LockIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>);
         const TrophyIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>);
 
@@ -34,18 +33,18 @@
 
             const questions = {
                 u1: [
-                    { q: "___ a green apple on the desk.", options: ["There is", "There are"], correct: "There is", hint: "מדובר בתפוח אחד (a green apple), לכן נשתמש ב-There is." },
-                    { q: "The ___ (fox) are in the forest.", options: ["foxes", "foxs"], correct: "foxes", hint: "מילים שמסתיימות ב-x מקבלות es ברבים." },
-                    { q: "___ many students in the library.", options: ["There is", "There are"], correct: "There are", hint: "מדובר בהרבה סטודנטים (many students), לכן נשתמש ב-There are." },
-                    { q: "___ an orange in the bag.", options: ["There is", "There are"], correct: "There is", hint: "תפוז אחד (an orange) דורש There is." },
-                    { q: "___ two bikes in the garden.", options: ["There is", "There are"], correct: "There are", hint: "שני זוגות אופניים הם רבים, לכן נשתמש ב-There are." }
+                    { q: "___ a green apple on the desk.", options: ["There is", "There are"], correct: "There is", hint: "מדובר בשם עצם ביחיד (apple), לכן נשתמש ב-There is." },
+                    { q: "The ___ (fox) are in the forest.", options: ["foxes", "foxs"], correct: "foxes", hint: "שם עצם שמסתיים ב-x מקבל es ברבים." },
+                    { q: "___ many students in the library.", options: ["There is", "There are"], correct: "There are", hint: "מדובר בשמות עצם ברבים (students), לכן נשתמש ב-There are." },
+                    { q: "___ an orange in the bag.", options: ["There is", "There are"], correct: "There is", hint: "שם עצם אחד (orange) דורש There is." },
+                    { q: "___ two bikes in the garden.", options: ["There is", "There are"], correct: "There are", hint: "אופניים ברבים הם שם עצם הדורש There are." }
                 ],
                 u2: [
-                    { q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has", hint: "דנה היא She (יחיד), לכן נשתמש ב-has." },
+                    { q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has", hint: "דנה היא She (גוף שלישי יחיד), לכן נשתמש ב-has." },
                     { q: "The students ___ new books.", options: ["have", "has"], correct: "have", hint: "הסטודנטים הם רבים (They), לכן נשתמש ב-have." },
-                    { q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has", hint: "כלב אחד (It) הוא יחיד, לכן נשתמש ב-has." },
+                    { q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has", hint: "כלב אחד (It) הוא גוף שלישי יחיד, לכן נשתמש ב-has." },
                     { q: "I ___ a blue pen.", options: ["have", "has"], correct: "have", hint: "עם הגוף I (אני) תמיד משתמשים ב-have." },
-                    { q: "The children ___ many toys.", options: ["have", "has"], correct: "have", hint: "ילדים (children) הם רבים, לכן נשתמש ב-have." }
+                    { q: "The children ___ many toys.", options: ["have", "has"], correct: "have", hint: "ילדים (children) הם שם עצם ברבים, לכן נשתמש ב-have." }
                 ]
             };
 
@@ -130,6 +129,7 @@
                                 <div className="font-black text-lg mb-2 opacity-80 uppercase tracking-wide">יחידה 2</div>
                                 <div className="text-2xl font-extrabold leading-tight">Have</div>
                                 <div className="text-2xl font-extrabold leading-tight">Has</div>
+                                <div className="text-2xl font-extrabold leading-tight opacity-0 select-none">Empty</div>
                             </button>
 
                             <button onClick={() => setStep('final')} className="bg-gradient-to-br from-orange-500 to-red-600 p-8 rounded-[40px] text-white shadow-lg btn-active relative min-h-[180px] flex flex-col justify-center items-center">
@@ -152,43 +152,86 @@
                     
                     <div className="flex-1">
                         {step === 'u1_learn' && (
-                            <div className="space-y-6 animate-pop">
+                            <div className="space-y-5 animate-pop pb-10">
                                 <h2 className="text-4xl font-black text-blue-700 text-center mb-2">There is / There are</h2>
-                                <div className="bg-white p-6 rounded-[30px] shadow-sm border-r-8 border-blue-600 text-center text-lg">
-                                    <h4 className="font-black text-blue-900 text-xl mb-2 italic">קיום והימצאות</h4>
-                                    <p className="font-bold text-slate-700">כשאומרים שמשהו <b>נמצא</b> במקום מסוים.</p>
+                                
+                                <div className="bg-white p-5 rounded-[30px] shadow-sm border-r-8 border-blue-600 text-center">
+                                    <h4 className="font-black text-blue-900 text-xl mb-1 italic">קיום והימצאות</h4>
+                                    <p className="font-bold text-slate-700 leading-relaxed">
+                                        משתמשים כשרק רוצים לומר שמישהו או משהו <b>נמצא</b> במקום מסוים.
+                                    </p>
                                 </div>
+
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-blue-700 p-5 rounded-3xl text-center text-white">
+                                    <div className="bg-blue-700 p-5 rounded-3xl text-center shadow-md text-white">
                                         <div className="font-black text-2xl">There is</div>
-                                        <div className="text-xs font-bold">ליחיד (1)</div>
+                                        <div className="opacity-80 text-xs font-bold mt-1">ליחיד (1)</div>
                                     </div>
-                                    <div className="bg-blue-700 p-5 rounded-3xl text-center text-white">
+                                    <div className="bg-blue-700 p-5 rounded-3xl text-center shadow-md text-white">
                                         <div className="font-black text-2xl">There are</div>
-                                        <div className="text-xs font-bold">לרבים (2+)</div>
+                                        <div className="opacity-80 text-xs font-bold mt-1">לרבים (2+)</div>
                                     </div>
                                 </div>
-                                <button onClick={() => setStep('u1_quiz')} className="w-full bg-blue-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4">בואו נתרגל!</button>
+
+                                <div className="bg-white p-6 rounded-[35px] shadow-sm border-4 border-blue-100">
+                                    <h4 className="font-black text-slate-800 mb-5 text-center text-xl">איך נשתמש ב-a ו-an?</h4>
+                                    
+                                    <div className="space-y-4">
+                                        <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="font-black text-blue-700 text-xl" dir="ltr">There is a...</span>
+                                                <span className="text-xs font-bold bg-white px-2 py-1 rounded-lg text-blue-800">אות רגילה</span>
+                                            </div>
+                                            <p className="text-left font-bold text-slate-600 italic" dir="ltr">There is <u>a</u> <b>b</b>ook on the table.</p>
+                                        </div>
+
+                                        <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="font-black text-indigo-700 text-xl" dir="ltr">There is an...</span>
+                                                <span className="text-xs font-bold bg-white px-2 py-1 rounded-lg text-indigo-800">אות ניקוד</span>
+                                            </div>
+                                            <p className="text-left font-bold text-slate-600 italic mb-2" dir="ltr">There is <u>an</u> <b>a</b>pple in the bag.</p>
+                                            <div className="flex justify-center gap-2 mt-2">
+                                                {['a','e','i','o','u'].map(v => (
+                                                    <span key={v} className="bg-white text-indigo-600 font-black w-8 h-8 flex items-center justify-center rounded-lg border border-indigo-200 text-sm shadow-sm">{v}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* שיפור נראות הערת הדיוק - צבע כהה יותר ורקע מבדל */}
+                                    <div className="bg-slate-100 py-2 px-4 rounded-xl mt-4">
+                                        <p className="text-center font-bold text-slate-700 text-sm italic underline decoration-blue-300 underline-offset-4">
+                                            שימו לב: הכלל חל על שמות עצם בלבד
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <button onClick={() => setStep('u1_quiz')} className="w-full bg-blue-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4 active:scale-95 transition-transform">בואו נתרגל!</button>
                             </div>
                         )}
 
                         {step === 'u2_learn' && (
                             <div className="space-y-6 animate-pop">
                                 <h2 className="text-4xl font-black text-emerald-700 text-center mb-6">Have / Has</h2>
+                                
                                 <div className="bg-white p-6 rounded-[30px] shadow-sm border-r-8 border-emerald-600 text-center">
                                     <h4 className="font-black text-emerald-900 text-xl mb-2 italic">שייכות (בעלות)</h4>
-                                    <p className="font-bold text-slate-600 text-lg">כאשר מתארים <b>למי יש</b> משהו.</p>
+                                    <p className="font-bold text-slate-600 leading-relaxed text-lg">
+                                        משתמשים כשמתארים <b>למי יש</b> משהו.
+                                    </p>
                                 </div>
+
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-emerald-700 p-5 rounded-3xl text-center text-white">
+                                    <div className="bg-emerald-700 p-5 rounded-3xl text-center shadow-md text-white">
                                         <div className="font-black text-2xl">Has</div>
-                                        <div className="text-xs font-bold leading-tight">He, She, It<br/>(יחיד)</div>
+                                        <div className="opacity-80 text-xs font-bold mt-1 leading-tight">He, She, It<br/>(יחיד)</div>
                                     </div>
-                                    <div className="bg-emerald-700 p-5 rounded-3xl text-center text-white">
+                                    <div className="bg-emerald-700 p-5 rounded-3xl text-center shadow-md text-white">
                                         <div className="font-black text-2xl">Have</div>
-                                        <div className="text-xs font-bold leading-tight">I, You, We, They<br/>(אני או רבים)</div>
+                                        <div className="opacity-80 text-xs font-bold mt-1 leading-tight">I, You, We, They<br/>(אני או רבים)</div>
                                     </div>
                                 </div>
+
                                 <div className="bg-amber-50 p-6 rounded-[40px] border-4 border-amber-300 shadow-sm">
                                     <h4 className="font-black text-amber-900 text-center mb-4 text-xl">דגשים חשובים:</h4>
                                     <div className="space-y-3">
@@ -206,7 +249,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={() => setStep('u2_quiz')} className="w-full bg-emerald-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4">בואו נתרגל!</button>
+
+                                <button onClick={() => setStep('u2_quiz')} className="w-full bg-emerald-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4 active:scale-95 transition-transform">בואו נתרגל!</button>
                             </div>
                         )}
 
