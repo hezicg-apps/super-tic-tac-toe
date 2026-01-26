@@ -40,11 +40,11 @@
                     { q: "___ two bikes in the garden.", options: ["There is", "There are"], correct: "There are", hint: "שני זוגות אופניים הם רבים, לכן נשתמש ב-There are." }
                 ],
                 u2: [
-                    { q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has", hint: "דנה היא She, וגוף שלישי יחיד מקבל has." },
-                    { q: "The students ___ new books.", options: ["have", "has"], correct: "have", hint: "הסטודנטים הם They, לכן נשתמש ב-have." },
-                    { q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has", hint: "הכלב הוא It, לכן נשתמש ב-has." },
-                    { q: "I ___ a blue pen.", options: ["have", "has"], correct: "have", hint: "עם הגוף I תמיד נשתמש ב-have." },
-                    { q: "The children ___ many toys.", options: ["have", "has"], correct: "have", hint: "ילדים (children) הם רבים (They), לכן נשתמש ב-have." }
+                    { q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has", hint: "דנה היא She (גוף שלישי יחיד), לכן נשתמש ב-has." },
+                    { q: "The students ___ new books.", options: ["have", "has"], correct: "have", hint: "הסטודנטים הם רבים (They), לכן נשתמש ב-have." },
+                    { q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has", hint: "כלב אחד (It) הוא גוף שלישי יחיד, לכן נשתמש ב-has." },
+                    { q: "I ___ a blue pen.", options: ["have", "has"], correct: "have", hint: "עם הגוף I (אני) תמיד משתמשים ב-have." },
+                    { q: "The children ___ many toys.", options: ["have", "has"], correct: "have", hint: "ילדים (children) הם רבים, לכן נשתמש ב-have." }
                 ]
             };
 
@@ -119,14 +119,12 @@
                     <div className="px-6 pb-10">
                         <h2 className="text-2xl font-black text-slate-800 mb-8 text-center">מה נלמד היום?</h2>
                         <div className="grid grid-cols-2 gap-6">
-                            {/* יחידה 1 */}
                             <button onClick={() => setStep('u1_learn')} className="bg-gradient-to-br from-blue-600 to-blue-800 p-8 rounded-[40px] text-white shadow-lg btn-active min-h-[180px] flex flex-col justify-center items-center">
                                 <div className="font-black text-lg mb-2 opacity-80 uppercase tracking-wide">יחידה 1</div>
                                 <div className="text-2xl font-extrabold leading-tight">There is</div>
                                 <div className="text-2xl font-extrabold leading-tight">There are</div>
                             </button>
                             
-                            {/* יחידה 2 - נוספה שורה ריקה לאיזון ויזואלי */}
                             <button onClick={() => setStep('u2_learn')} className="bg-gradient-to-br from-emerald-600 to-emerald-800 p-8 rounded-[40px] text-white shadow-lg btn-active min-h-[180px] flex flex-col justify-center items-center">
                                 <div className="font-black text-lg mb-2 opacity-80 uppercase tracking-wide">יחידה 2</div>
                                 <div className="text-2xl font-extrabold leading-tight">Have</div>
@@ -157,42 +155,32 @@
                             <div className="space-y-6 animate-pop">
                                 <h2 className="text-4xl font-black text-blue-700 text-center mb-2">There is / There are</h2>
                                 
-                                <div className="bg-white p-6 rounded-[30px] shadow-sm border-r-8 border-blue-600 text-lg">
+                                <div className="bg-white p-6 rounded-[30px] shadow-sm border-r-8 border-blue-600 text-lg text-center">
                                     <h4 className="font-black text-blue-900 text-xl mb-2 italic">קיום והימצאות</h4>
                                     <p className="font-bold text-slate-700 leading-relaxed">
-                                        משתמשים כשרק רוצים לומר ששם עצם <b>נמצא</b> במקום מסוים. 
-                                        <br/>
-                                        <span className="text-blue-700 font-extrabold underline decoration-blue-200 decoration-4">זה לא אומר למי הוא שייך!</span>
+                                        משתמשים כשרק רוצים לומר שמישהו או משהו <b>נמצא</b> במקום מסוים.
                                     </p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-blue-700 p-5 rounded-3xl text-center shadow-md">
-                                        <div className="text-white font-black text-2xl">There is</div>
-                                        <div className="text-blue-100 font-bold text-xs">ליחיד (1)</div>
+                                    <div className="bg-blue-700 p-5 rounded-3xl text-center shadow-md text-white">
+                                        <div className="font-black text-2xl">There is</div>
+                                        <div className="opacity-80 text-xs font-bold mt-1">ליחיד (1)</div>
                                     </div>
-                                    <div className="bg-blue-700 p-5 rounded-3xl text-center shadow-md">
-                                        <div className="text-white font-black text-2xl">There are</div>
-                                        <div className="text-blue-100 font-bold text-xs">לרבים (2+)</div>
+                                    <div className="bg-blue-700 p-5 rounded-3xl text-center shadow-md text-white">
+                                        <div className="font-black text-2xl">There are</div>
+                                        <div className="opacity-80 text-xs font-bold mt-1">לרבים (2+)</div>
                                     </div>
                                 </div>
 
-                                <div className="bg-red-600 p-6 rounded-[35px] shadow-xl border-4 border-red-400">
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className="bg-white text-red-600 w-8 h-8 rounded-full flex items-center justify-center font-black shadow-sm">!</div>
-                                        <h4 className="font-black text-white text-xl">חוק ה-an</h4>
-                                    </div>
-                                    <p className="text-white font-bold text-sm mb-4 leading-snug">
-                                        משתמשים ב-<b>an</b> (במקום a) כאשר <b>שם העצם</b> מתחיל באחת מאותיות הניקוד:
-                                    </p>
-                                    <div className="flex justify-between px-2 mb-4">
+                                <div className="bg-white p-6 rounded-[35px] shadow-sm border-4 border-blue-100">
+                                    <h4 className="font-black text-slate-800 mb-4 text-center">מתי משתמשים ב-an?</h4>
+                                    <div className="flex justify-center gap-2 mb-4">
                                         {['a','e','i','o','u'].map(v => (
-                                            <span key={v} className="bg-white text-red-600 font-black w-10 h-10 flex items-center justify-center rounded-xl shadow-lg text-2xl">{v}</span>
+                                            <span key={v} className="bg-blue-50 text-blue-700 font-black w-10 h-10 flex items-center justify-center rounded-xl border border-blue-200">{v}</span>
                                         ))}
                                     </div>
-                                    <div className="bg-red-900/40 p-3 rounded-2xl text-white font-black text-center text-sm border border-red-400/30" dir="ltr">
-                                        an <span className="underline decoration-2">a</span>pple | an <span className="underline decoration-2">o</span>range
-                                    </div>
+                                    <p className="text-center font-bold text-slate-500 text-sm">לפני מילים שמתחילות באותיות ניקוד</p>
                                 </div>
 
                                 <button onClick={() => setStep('u1_quiz')} className="w-full bg-blue-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4 active:scale-95 transition-transform">בואו נתרגל!</button>
@@ -200,24 +188,46 @@
                         )}
 
                         {step === 'u2_learn' && (
-                            <div className="space-y-4 animate-pop">
+                            <div className="space-y-6 animate-pop">
                                 <h2 className="text-4xl font-black text-emerald-700 text-center mb-6">Have / Has</h2>
                                 
-                                <div className="bg-white p-6 rounded-[30px] shadow-sm border-r-8 border-emerald-600">
+                                <div className="bg-white p-6 rounded-[30px] shadow-sm border-r-8 border-emerald-600 text-center">
                                     <h4 className="font-black text-emerald-900 text-xl mb-2 italic">שייכות (בעלות)</h4>
                                     <p className="font-bold text-slate-600 leading-relaxed text-lg">
-                                        משתמשים כשמתארים <b>למי שייך</b> החפץ (למי יש אותו).
+                                        משתמשים כשמתארים <b>למי יש</b> משהו.
                                     </p>
                                 </div>
 
-                                <div className="bg-amber-100 p-8 rounded-[40px] border-4 border-amber-400 shadow-md">
-                                    <div className="flex items-center gap-3 mb-4 justify-center">
-                                        <span className="text-4xl">💡</span>
-                                        <h4 className="font-black text-amber-900 text-2xl">המלכודת!</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-emerald-700 p-5 rounded-3xl text-center shadow-md text-white">
+                                        <div className="font-black text-2xl">Has</div>
+                                        <div className="opacity-80 text-xs font-bold mt-1 leading-tight">He, She, It<br/>(יחיד)</div>
                                     </div>
-                                    <p className="font-bold text-amber-900 leading-relaxed text-center text-lg">
-                                        גם אם מופיע שם מפורש כמו <span dir="ltr" className="bg-white px-2 rounded-lg border border-amber-300">The cat</span> או <span dir="ltr" className="bg-white px-2 rounded-lg border border-amber-300">Ron</span> - עדיין נשתמש ב-<b>Has</b>.
-                                    </p>
+                                    <div className="bg-emerald-700 p-5 rounded-3xl text-center shadow-md text-white">
+                                        <div className="font-black text-2xl">Have</div>
+                                        <div className="opacity-80 text-xs font-bold mt-1 leading-tight">I, You, We, They<br/>(אני או רבים)</div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-amber-50 p-6 rounded-[40px] border-4 border-amber-300 shadow-sm">
+                                    <h4 className="font-black text-amber-900 text-center mb-4 text-xl">הכלל החשוב ביותר:</h4>
+                                    <div className="space-y-3">
+                                        <div className="bg-white p-3 rounded-2xl flex justify-between items-center border border-amber-200">
+                                            <span className="font-black text-emerald-700">Has</span>
+                                            <span className="font-bold text-slate-700" dir="ltr">Ron / The cat</span>
+                                            <span className="text-xs font-black bg-emerald-100 text-emerald-700 px-2 py-1 rounded">יחיד</span>
+                                        </div>
+                                        <div className="bg-white p-3 rounded-2xl flex justify-between items-center border border-amber-200">
+                                            <span className="font-black text-emerald-700">Have</span>
+                                            <span className="font-bold text-slate-700" dir="ltr">The cats / We</span>
+                                            <span className="text-xs font-black bg-blue-100 text-blue-700 px-2 py-1 rounded">רבים</span>
+                                        </div>
+                                        <div className="bg-white p-3 rounded-2xl flex justify-between items-center border border-amber-200">
+                                            <span className="font-black text-emerald-700">Have</span>
+                                            <span className="font-bold text-slate-700" dir="ltr">I / You</span>
+                                            <span className="text-xs font-black bg-purple-100 text-purple-700 px-2 py-1 rounded">אני / אתה</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <button onClick={() => setStep('u2_quiz')} className="w-full bg-emerald-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4 active:scale-95 transition-transform">בואו נתרגל!</button>
