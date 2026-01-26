@@ -3,226 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>English Mastery - Grammar Fun</title>
+    <title>English Mastery</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
         .animate-pop { animation: pop 0.3s ease-out; }
         @keyframes pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .card-shadow { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
         .btn-active:active { transform: scale(0.95); }
+        .gradient-bg { background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState } = React;
 
-        // Icons
-        const LockIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>);
-        const GameIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/><rect width="20" height="12" x="2" y="6" rx="2"/></svg>);
+        const LockIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>);
+        const TrophyIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>);
 
         const App = () => {
-            const [currentStep, setCurrentStep] = useState('menu');
+            const [step, setStep] = useState('menu');
             const [finalScore, setFinalScore] = useState(null);
-            const [isGameUnlocked, setIsGameUnlocked] = useState(false);
+            const [unlocked, setUnlocked] = useState(false);
 
-            const unit1Questions = [
-                { q: "___ a green apple on the desk.", options: ["There is", "There are"], correct: "There is" },
-                { q: "The ___ (fox) are in the forest.", options: ["foxes", "foxs", "foxies"], correct: "foxes" },
-                { q: "___ many students in the library.", options: ["There is", "There are"], correct: "There are" },
-                { q: "Three ___ (lady) are waiting for the bus.", options: ["ladies", "ladys", "ladyes"], correct: "ladies" },
-                { q: "___ a big dog in the garden.", options: ["There is", "There are"], correct: "There is" }
-            ];
+            const questions = {
+                u1: [
+                    { q: "___ a green apple on the desk.", options: ["There is", "There are"], correct: "There is" },
+                    { q: "The ___ (fox) are in the forest.", options: ["foxes", "foxs"], correct: "foxes" },
+                    { q: "___ many students in the library.", options: ["There is", "There are"], correct: "There are" }
+                ],
+                u2: [
+                    { q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has" },
+                    { q: "The students ___ new books.", options: ["have", "has"], correct: "have" },
+                    { q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has" }
+                ]
+            };
 
-            const unit2Questions = [
-                { q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has" },
-                { q: "The students ___ new English books.", options: ["have", "has"], correct: "have" },
-                { q: "My father ___ a red car.", options: ["have", "has"], correct: "has" },
-                { q: "I ___ a blue pen in my hand.", options: ["have", "has"], correct: "have" },
-                { q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has" }
-            ];
-
-            const finalQuestions = [
-                { q: "___ a beautiful picture on the wall.", options: ["There is", "There are", "Have", "Has"], correct: "There is" },
-                { q: "Mr. Cohen ___ two children.", options: ["there is", "there are", "have", "has"], correct: "has" },
-                { q: "___ five keys on the table.", options: ["There is", "There are", "Have", "Has"], correct: "There are" },
-                { q: "The boys ___ a football.", options: ["there is", "there are", "have", "has"], correct: "have" },
-                { q: "___ many flies in the kitchen.", options: ["There is", "There are", "Have", "Has"], correct: "There are" }
-            ];
-
-            const Quiz = ({ questions, title, onComplete, isFinal }) => {
+            const Quiz = ({ qList, title }) => {
                 const [idx, setIdx] = useState(0);
                 const [score, setScore] = useState(0);
-                const [finished, setFinished] = useState(false);
+                const [done, setDone] = useState(false);
 
-                const handleAns = (opt) => {
-                    let newScore = score;
-                    if (opt === questions[idx].correct) newScore += Math.round(100 / questions.length);
+                const handleAns = (ans) => {
+                    const isCorrect = ans === qList[idx].correct;
+                    if (isCorrect) setScore(score + Math.round(100/qList.length));
                     
-                    if (idx < questions.length - 1) {
-                        setIdx(idx + 1);
-                        setScore(newScore);
-                    } else {
-                        setScore(newScore);
-                        setFinished(true);
-                        if (isFinal) {
-                            setFinalScore(newScore);
-                            if (newScore >= 60) setIsGameUnlocked(true);
+                    if (idx < qList.length - 1) setIdx(idx + 1);
+                    else {
+                        setDone(true);
+                        if (title === "המבחן") {
+                            setFinalScore(score + (isCorrect ? Math.round(100/qList.length) : 0));
+                            if (score + (isCorrect ? Math.round(100/qList.length) : 0) >= 60) setUnlocked(true);
                         }
                     }
                 };
 
-                if (finished) return (
-                    <div className="text-center p-8 animate-pop">
-                        <div className={`text-6xl mb-4`}>{score >= 60 ? '🏆' : '📚'}</div>
-                        <h2 className="text-4xl font-black mb-2 text-slate-800">הציון שלך: {score}</h2>
-                        <p className="text-slate-500 mb-8">{score >= 60 ? 'מעולה! עברת את המשימה' : 'לא נורא, כדאי לנסות שוב'}</p>
-                        <button onClick={() => setCurrentStep('menu')} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-xl shadow-lg btn-active">חזרה לתפריט</button>
+                if (done) return (
+                    <div className="text-center p-10 animate-pop">
+                        <h2 className="text-4xl font-black mb-6 text-slate-800">ציון: {score}</h2>
+                        <button onClick={() => setStep('menu')} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold">חזרה לתפריט</button>
                     </div>
                 );
 
                 return (
-                    <div className="animate-pop">
-                        <div className="flex justify-between items-center mb-6">
-                            <span className="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm">{title}</span>
-                            <span className="font-black text-slate-400">{idx + 1} / {questions.length}</span>
+                    <div className="animate-pop p-4">
+                        <div className="bg-white p-8 rounded-[40px] shadow-sm mb-6 text-center border-2 border-slate-50">
+                            <h3 dir="ltr" className="text-2xl font-bold">{qList[idx].q}</h3>
                         </div>
-                        <div className="bg-white p-10 rounded-[40px] mb-8 text-center border-2 border-slate-100 shadow-sm">
-                            <h3 dir="ltr" className="text-3xl font-bold text-slate-800 leading-relaxed">{questions[idx].q}</h3>
-                        </div>
-                        <div className="grid grid-cols-1 gap-4">
-                            {questions[idx].options.map(o => (
-                                <button key={o} onClick={() => handleAns(o)} className="p-6 bg-white border-2 border-slate-200 rounded-2xl font-black text-2xl text-indigo-900 hover:border-indigo-500 hover:bg-indigo-50 transition-all shadow-sm btn-active" dir="ltr">{o}</button>
+                        <div className="space-y-3">
+                            {qList[idx].options.map(o => (
+                                <button key={o} onClick={() => handleAns(o)} className="w-full p-5 bg-white border-2 border-slate-200 rounded-2xl font-bold text-xl text-indigo-900 active:bg-indigo-50 btn-active">{o}</button>
                             ))}
                         </div>
                     </div>
                 );
             };
 
-            return (
-                <div className="max-w-md mx-auto min-h-screen flex flex-col bg-slate-50">
-                    {currentStep === 'menu' ? (
-                        <div className="flex-1 pb-10">
-                            <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500 p-12 text-white rounded-b-[60px] shadow-xl text-center mb-8">
-                                <h1 className="text-5xl font-black italic mb-3 tracking-tighter">English Mastery</h1>
-                                <p className="font-bold text-lg opacity-90">הופכים דקדוק למשחק!</p>
-                            </div>
-                            
-                            <div className="px-6">
-                                <h2 className="text-2xl font-black text-slate-800 mb-6 mr-2">מה נלמד היום?</h2>
-                                <div className="grid grid-cols-2 gap-5">
-                                    {/* יחידה 1 - כחול עז */}
-                                    <button onClick={() => setCurrentStep('u1_learn')} className="bg-gradient-to-br from-blue-500 to-blue-700 p-6 rounded-[35px] text-white text-center shadow-lg transform transition-transform btn-active">
-                                        <div className="bg-blue-400/30 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 font-bold italic">1</div>
-                                        <div className="font-black text-xl mb-1">יחידה 1</div>
-                                        <div className="text-sm font-bold opacity-90 leading-tight">There is<br/>There are</div>
-                                    </button>
-
-                                    {/* יחידה 2 - ירוק חי */}
-                                    <button onClick={() => setCurrentStep('u2_learn')} className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[35px] text-white text-center shadow-lg transform transition-transform btn-active">
-                                        <div className="bg-emerald-400/30 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 font-bold italic">2</div>
-                                        <div className="font-black text-xl mb-1">יחידה 2</div>
-                                        <div className="text-sm font-bold opacity-90 leading-tight">have<br/>has</div>
-                                    </button>
-
-                                    {/* אתגר - כתום/צהוב */}
-                                    <button onClick={() => setCurrentStep('final')} className="bg-gradient-to-br from-orange-400 to-amber-600 p-6 rounded-[35px] text-white text-center shadow-lg transform transition-transform btn-active relative overflow-hidden">
-                                        <div className="bg-orange-300/30 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">🔥</div>
-                                        <div className="font-black text-xl mb-1">אתגר מסכם</div>
-                                        <div className="text-[10px] font-black uppercase tracking-wider opacity-80">60% לפתיחה</div>
-                                        {finalScore !== null && <div className="absolute top-3 right-3 bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-bold">{finalScore}%</div>}
-                                    </button>
-
-                                    {/* משחק - סגול */}
-                                    <button 
-                                        onClick={() => isGameUnlocked && setCurrentStep('game')}
-                                        className={`p-6 rounded-[35px] flex flex-col items-center justify-center shadow-lg transition-all btn-active ${isGameUnlocked ? 'bg-gradient-to-br from-purple-500 to-indigo-800 text-white' : 'bg-slate-200 text-slate-400 shadow-none'}`}>
-                                        <div className="mb-2">{isGameUnlocked ? <GameIcon /> : <LockIcon />}</div>
-                                        <span className="font-black text-xl">{isGameUnlocked ? 'משחק' : 'נעול'}</span>
-                                    </button>
-                                </div>
-                            </div>
+            if (step === 'menu') return (
+                <div className="max-w-md mx-auto min-h-screen bg-slate-50">
+                    <div className="gradient-bg p-12 text-white rounded-b-[60px] shadow-xl text-center mb-10">
+                        <h1 className="text-5xl font-black italic mb-2">English Mastery</h1>
+                        <p className="font-bold opacity-90">הדרך הקלה והמהנה לשלוט בדקדוק!</p>
+                    </div>
+                    <div className="px-6 pb-10">
+                        <h2 className="text-2xl font-black text-slate-800 mb-8 text-center">מה נלמד היום?</h2>
+                        <div className="grid grid-cols-2 gap-6">
+                            <button onClick={() => setStep('u1_learn')} className="bg-gradient-to-br from-blue-500 to-blue-600 p-8 rounded-[40px] text-white shadow-lg btn-active">
+                                <div className="font-black text-xl mb-1">יחידה 1</div>
+                                <div className="text-sm font-bold opacity-90">There is/are</div>
+                            </button>
+                            <button onClick={() => setStep('u2_learn')} className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-8 rounded-[40px] text-white shadow-lg btn-active">
+                                <div className="font-black text-xl mb-1">יחידה 2</div>
+                                <div className="text-sm font-bold opacity-90">Have / Has</div>
+                            </button>
+                            <button onClick={() => setStep('final')} className="bg-gradient-to-br from-amber-400 to-orange-500 p-8 rounded-[40px] text-white shadow-lg btn-active relative">
+                                <div className="font-black text-xl mb-1">המבחן</div>
+                                <div className="text-[10px] font-bold">ציון 60 לפתיחה</div>
+                                {finalScore !== null && <div className="absolute top-2 right-2 bg-white/20 px-2 py-0.5 rounded-full text-[10px]">{finalScore}%</div>}
+                            </button>
+                            <button onClick={() => unlocked && setStep('game')} className={`p-8 rounded-[40px] shadow-lg flex flex-col items-center justify-center btn-active ${unlocked ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                                <span className="font-black text-xl mb-1">{unlocked ? 'משחק' : 'נעול'}</span>
+                                {!unlocked && <LockIcon />}
+                            </button>
                         </div>
-                    ) : (
-                        <div className="p-6 flex-1 flex flex-col">
-                            <div className="flex items-center justify-between mb-8">
-                                <button onClick={() => setCurrentStep('menu')} className="bg-white p-3 rounded-2xl shadow-sm text-indigo-600 font-black flex items-center gap-2 hover:bg-slate-50 transition-colors btn-active">
-                                    <span className="text-xl">➜</span> חזרה
-                                </button>
-                                <div className="text-slate-400 font-bold text-xs uppercase tracking-widest">Grammar Master</div>
-                            </div>
-                            
-                            <div className="flex-1">
-                                {currentStep === 'u1_learn' && (
-                                    <div className="space-y-6 animate-pop">
-                                        <h2 className="text-4xl font-black text-blue-600 text-center">There is / Are</h2>
-                                        <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="bg-blue-50 p-6 rounded-3xl text-center border-b-4 border-blue-400">
-                                                    <div className="text-blue-700 font-black text-xl mb-1">There is</div>
-                                                    <div className="text-xs font-bold text-slate-500 italic">a / an / one</div>
-                                                </div>
-                                                <div className="bg-blue-50 p-6 rounded-3xl text-center border-b-4 border-blue-400">
-                                                    <div className="text-blue-700 font-black text-xl mb-1">There are</div>
-                                                    <div className="text-xs font-bold text-slate-500 italic">2+ / s-ending</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="bg-white border-2 border-rose-50 p-8 rounded-[40px] shadow-sm">
-                                            <h4 className="font-black text-center text-slate-700 mb-4">לפני אות ניקוד (Vowel):</h4>
-                                            <div className="flex justify-center gap-2 mb-6">
-                                                {['a','e','i','o','u'].map(v => <span key={v} className="bg-rose-100 text-rose-600 font-black w-10 h-10 flex items-center justify-center rounded-xl shadow-sm text-xl">{v}</span>)}
-                                            </div>
-                                            <div className="text-center font-bold text-slate-600 bg-slate-50 p-4 rounded-2xl" dir="ltr">an <span className="text-rose-600">a</span>pple | an <span className="text-rose-600">o</span>range</div>
-                                        </div>
-                                        <button onClick={() => setCurrentStep('u1_quiz')} className="w-full bg-blue-600 text-white py-6 rounded-3xl font-black text-2xl shadow-xl btn-active">בואו נתרגל!</button>
-                                    </div>
-                                )}
+                    </div>
+                </div>
+            );
 
-                                {currentStep === 'u2_learn' && (
-                                    <div className="space-y-6 animate-pop">
-                                        <h2 className="text-4xl font-black text-emerald-600 text-center">Have / Has</h2>
-                                        <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="bg-emerald-50 p-6 rounded-3xl text-center border-b-4 border-emerald-400">
-                                                    <div className="text-emerald-700 font-black text-2xl mb-1">HAVE</div>
-                                                    <div className="text-[10px] font-bold text-slate-500 leading-tight uppercase">I, You, We, They</div>
-                                                </div>
-                                                <div className="bg-emerald-50 p-6 rounded-3xl text-center border-b-4 border-emerald-400">
-                                                    <div className="text-emerald-700 font-black text-2xl mb-1">HAS</div>
-                                                    <div className="text-[10px] font-bold text-slate-500 leading-tight uppercase">He, She, It</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="bg-amber-50 p-6 rounded-3xl border-2 border-dashed border-amber-300 flex items-center gap-4">
-                                            <div className="text-3xl">💡</div>
-                                            <p className="font-bold text-amber-900 text-sm leading-relaxed">זכור: גם שם מפורש כמו <b>Ron</b> או <b>Dana</b> נחשב ליחיד ומקבל <b>Has</b>!</p>
-                                        </div>
-                                        <button onClick={() => setCurrentStep('u2_quiz')} className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-2xl shadow-xl btn-active">בואו נתרגל!</button>
-                                    </div>
-                                )}
-
-                                {currentStep === 'u1_quiz' && <Quiz questions={unit1Questions} title="תרגול יחידה 1" />}
-                                {currentStep === 'u2_quiz' && <Quiz questions={unit2Questions} title="תרגול יחידה 2" />}
-                                {currentStep === 'final' && <Quiz questions={finalQuestions} title="אתגר מסכם" isFinal={true} />}
-                                
-                                {currentStep === 'game' && (
-                                    <div className="text-center space-y-8 animate-pop py-10">
-                                        <div className="text-8xl mb-4">🥳</div>
-                                        <h2 className="text-4xl font-black text-slate-800">כל הכבוד!</h2>
-                                        <p className="font-bold text-slate-500 text-lg px-4">השלמת את כל המשימות בהצלחה ופתחת את עולם המשחקים.</p>
-                                        <div className="p-12 bg-indigo-600 rounded-[50px] inline-block shadow-2xl text-white">
-                                            <GameIcon />
-                                        </div>
-                                    </div>
-                                )}
+            return (
+                <div className="max-w-md mx-auto min-h-screen p-6">
+                    <button onClick={() => setStep('menu')} className="mb-6 font-black text-indigo-600 flex items-center gap-2">➜ חזרה</button>
+                    
+                    {step === 'u1_learn' && (
+                        <div className="space-y-6 animate-pop text-center">
+                            <h2 className="text-4xl font-black text-blue-600">יחידה 1</h2>
+                            <div className="bg-blue-50 p-6 rounded-[30px] border-b-4 border-blue-400 flex flex-col items-center">
+                                <div className="bg-white px-4 py-2 rounded-xl mb-2 font-black text-blue-700">an</div>
+                                <div className="font-bold text-blue-900 text-lg">לפני אות ניקוד (Vowel)</div>
+                                <div className="text-rose-500 font-black tracking-widest mt-2 text-xl">a, e, i, o, u</div>
                             </div>
+                            <div className="bg-white p-6 rounded-[30px] shadow-sm space-y-2" dir="ltr">
+                                <div className="p-3 bg-slate-50 rounded-xl font-bold">an <span className="underline">a</span>pple</div>
+                                <div className="p-3 bg-slate-50 rounded-xl font-bold">an <span className="underline">o</span>range</div>
+                            </div>
+                            <button onClick={() => setStep('u1_quiz')} className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black text-2xl shadow-xl">בואו נתרגל!</button>
+                        </div>
+                    )}
+
+                    {step === 'u2_learn' && (
+                        <div className="space-y-6 animate-pop text-center">
+                            <h2 className="text-4xl font-black text-emerald-600">יחידה 2</h2>
+                            <div className="bg-amber-50 p-8 rounded-[40px] border-2 border-dashed border-amber-300">
+                                <div className="flex items-center gap-3 mb-4 justify-center">
+                                    <span className="text-3xl">💡</span>
+                                    <h4 className="font-black text-amber-900 text-xl">שימו לב למלכודת!</h4>
+                                </div>
+                                <p className="font-bold text-amber-800 leading-relaxed">
+                                    גם אם מופיע שם מפורש כמו <span dir="ltr">The cat</span> או <span dir="ltr">Ron</span> במקום כינוי גוף - עדיין נשתמש ב-<b>Has</b>.
+                                </p>
+                            </div>
+                            <button onClick={() => setStep('u2_quiz')} className="w-full bg-emerald-600 text-white py-5 rounded-3xl font-black text-2xl shadow-xl">בואו נתרגל!</button>
+                        </div>
+                    )}
+
+                    {step === 'u1_quiz' && <Quiz qList={questions.u1} title="תרגול 1" />}
+                    {step === 'u2_quiz' && <Quiz qList={questions.u2} title="תרגול 2" />}
+                    {step === 'final' && <Quiz qList={[...questions.u1, ...questions.u2]} title="המבחן" />}
+                    
+                    {step === 'game' && (
+                        <div className="text-center py-20 animate-pop">
+                            <div className="mb-6 flex justify-center"><TrophyIcon /></div>
+                            <h2 className="text-4xl font-black mb-4">ניצחת!</h2>
+                            <p className="font-bold text-slate-500">פתחת את כל השלבים!</p>
                         </div>
                     )}
                 </div>
@@ -234,3 +171,4 @@
     </script>
 </body>
 </html>
+
