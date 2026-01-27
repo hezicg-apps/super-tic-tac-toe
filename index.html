@@ -295,4 +295,67 @@
                                             <p className="text-left font-bold text-slate-600 italic" dir="ltr">There is <u>an</u> <b>a</b>pple in the bag.</p>
                                             <div className="flex justify-center gap-2 mt-2">
                                                 {['a','e','i','o','u'].map(v => <span key={v} className="bg-white text-indigo-600 font-black w-7 h-7 flex items-center justify-center rounded-lg border border-indigo-200 text-xs">{v}</span>)}
-        
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-100 py-2 px-4 rounded-xl mt-4">
+                                        <p className="text-center font-bold text-slate-700 text-sm italic underline decoration-blue-300 underline-offset-4">שימו לב: הכלל חל על שמות עצם בלבד</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setStep('u1_quiz')} className="w-full bg-blue-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4 active:scale-95 transition-transform">בואו נתרגל!</button>
+                            </div>
+                        )}
+
+                        {step === 'u2_learn' && (
+                            <div className="space-y-6 animate-pop">
+                                <h2 className="text-4xl font-black text-emerald-700 text-center mb-6">Have / Has</h2>
+                                <div className="bg-white p-6 rounded-[30px] shadow-sm border-r-8 border-emerald-600 text-center">
+                                    <h4 className="font-black text-emerald-900 text-xl mb-2 italic">שייכות (בעלות)</h4>
+                                    <p className="font-bold text-slate-600 leading-relaxed text-lg">משתמשים כשמתארים למי יש משהו.</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-emerald-700 p-5 rounded-3xl text-center shadow-md text-white">
+                                        <div className="font-black text-2xl">Has</div>
+                                        <div className="opacity-80 text-xs font-bold mt-1 leading-tight">He, She, It<br/>(יחיד)</div>
+                                    </div>
+                                    <div className="bg-emerald-700 p-5 rounded-3xl text-center shadow-md text-white">
+                                        <div className="font-black text-2xl">Have</div>
+                                        <div className="opacity-80 text-xs font-bold mt-1 leading-tight">I, You, We, They<br/>(אני או רבים)</div>
+                                    </div>
+                                </div>
+                                <div className="bg-amber-50 p-6 rounded-[40px] border-4 border-amber-300 shadow-sm">
+                                    <h4 className="font-black text-amber-900 text-center mb-4 text-xl text-center">דגשים חשובים:</h4>
+                                    <div className="space-y-3">
+                                        <div className="bg-white p-3 rounded-2xl flex justify-between items-center border border-amber-200" dir="ltr">
+                                            <span className="font-black text-emerald-700">Has</span>
+                                            <span className="font-bold text-slate-700">Ron / The cat</span>
+                                        </div>
+                                        <div className="bg-white p-3 rounded-2xl flex justify-between items-center border border-amber-200" dir="ltr">
+                                            <span className="font-black text-emerald-700">Have</span>
+                                            <span className="font-bold text-slate-700">The cats / We</span>
+                                        </div>
+                                        <div className="bg-white p-3 rounded-2xl flex justify-between items-center border border-amber-200" dir="ltr">
+                                            <span className="font-black text-emerald-700">Have</span>
+                                            <span className="font-bold text-slate-700">I / You</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onClick={() => setStep('u2_quiz')} className="w-full bg-emerald-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4 active:scale-95 transition-transform">בואו נתרגל!</button>
+                            </div>
+                        )}
+
+                        {step === 'u1_quiz' && <Quiz qList={questions.u1} title="תרגול 1" />}
+                        {step === 'u2_quiz' && <Quiz qList={questions.u2} title="תרגול 2" />}
+                        {step === 'final' && <Quiz qList={[...questions.u1, ...questions.u2]} title="המבחן" />}
+                        {step === 'game' && <GrammarGame onBack={() => setStep('menu')} />}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
