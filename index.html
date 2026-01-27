@@ -1,351 +1,315 @@
-import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Lock, Star, Gamepad2, Info, Lightbulb, SpellCheck, Trophy, Heart, ArrowRight } from 'lucide-react';
-
-const App = () => {
-  const [currentStep, setCurrentStep] = useState('menu'); 
-  const [finalScore, setFinalScore] = useState(null);
-  const [isGameUnlocked, setIsGameUnlocked] = useState(false);
-
-  // פונקציית עזר לערבוב מערכים (Fisher-Yates)
-  const shuffleArray = (array) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };
-
-  const rawUnit1 = [
-    { q: "___ a green apple on the desk.", options: ["There is", "There are"], correct: "There is" },
-    { q: "The ___ (fox) are in the forest.", options: ["foxes", "foxs", "foxies"], correct: "foxes" },
-    { q: "___ many students in the library.", options: ["There is", "There are"], correct: "There are" },
-    { q: "Three ___ (lady) are waiting for the bus.", options: ["ladys", "ladies", "ladyes"], correct: "ladies" },
-    { q: "___ a big dog in the garden.", options: ["There is", "There are"], correct: "There is" }
-  ];
-
-  const rawUnit2 = [
-    { q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has" },
-    { q: "The students ___ new English books.", options: ["have", "has"], correct: "have" },
-    { q: "My father ___ a red car.", options: ["have", "has"], correct: "has" },
-    { q: "I ___ a blue pen in my hand.", options: ["have", "has"], correct: "have" },
-    { q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has" }
-  ];
-
-  const rawFinal = [
-    { q: "___ a beautiful picture on the wall.", options: ["There is", "There are", "Have", "Has"], correct: "There is" },
-    { q: "Mr. Cohen ___ two children.", options: ["there is", "there are", "have", "has"], correct: "has" },
-    { q: "___ five keys on the table.", options: ["There is", "There are", "Have", "Has"], correct: "There are" },
-    { q: "The boys ___ a football.", options: ["there is", "there are", "have", "has"], correct: "have" },
-    { q: "___ many flies in the kitchen.", options: ["There is", "There are", "Have", "Has"], correct: "There are" }
-  ];
-
-  const handleFinalSubmit = (score) => {
-    setFinalScore(score);
-    if (score >= 60) setIsGameUnlocked(true);
-  };
-
-  const ProgressBar = ({ current, total, color = "bg-indigo-500" }) => (
-    <div className="w-full bg-slate-100 h-3 rounded-full mb-6">
-      <div className={`${color} h-full rounded-full transition-all duration-500`} style={{ width: `${(current / total) * 100}%` }}></div>
-    </div>
-  );
-
-  const Quiz = ({ questions, onComplete, title, isFinal = false }) => {
-    // ערבוב השאלות בכל פעם שהקומפוננטה נטענת
-    const [shuffledQuestions] = useState(() => shuffleArray(questions));
-    const [idx, setIdx] = useState(0);
-    const [ans, setAns] = useState({});
-    const [finished, setFinished] = useState(false);
-    const [score, setScore] = useState(0);
-
-    const handleSelect = (option) => {
-      const newAns = { ...ans, [idx]: option };
-      setAns(newAns);
-      if (idx < shuffledQuestions.length - 1) setIdx(idx + 1);
-      else {
-        let correctCount = 0;
-        shuffledQuestions.forEach((q, i) => {
-          if ((i === idx ? option : newAns[i]) === q.correct) correctCount++;
-        });
-        const finalScoreValue = Math.round((correctCount / shuffledQuestions.length) * 100);
-        setScore(finalScoreValue);
-        setFinished(true);
-        if (onComplete) onComplete(finalScoreValue);
-      }
-    };
-
-    if (finished) return (
-      <div className="text-center p-8 animate-in zoom-in-95">
-        {score >= 60 ? <CheckCircle className="mx-auto text-green-500 mb-6" size={80} /> : <XCircle className="mx-auto text-red-500 mb-6" size={80} />}
-        <h3 className="text-4xl font-bold mb-3 text-slate-800">הציון שלך: {score}</h3>
-        <p className="text-xl text-slate-600 mb-8">
-          {score >= 60 
-            ? (isFinal ? "עבודה מצוינת! המשחק נפתח." : "כל הכבוד! עכשיו אפשר להמשיך ליחידה הבאה או לאתגר המסכם.") 
-            : "כדאי לעבור שוב על ההסברים ולנסות שוב."
-          }
-        </p>
-        <button onClick={() => setCurrentStep('menu')} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-bold text-xl hover:bg-indigo-700 transition-all shadow-lg">חזרה לתפריט</button>
-      </div>
-    );
-
-    return (
-      <div className="p-4 animate-in fade-in">
-        <div className="flex justify-between items-center mb-4">
-           <span className="text-lg font-black text-indigo-500 uppercase tracking-wide">{title}</span>
-           <span className="text-lg font-bold text-slate-400">{idx + 1} / {shuffledQuestions.length}</span>
-        </div>
-        <ProgressBar current={idx + 1} total={shuffledQuestions.length} />
-        <div className="bg-slate-50 p-10 rounded-3xl mb-8 min-h-[160px] flex items-center justify-center border border-slate-200 shadow-inner">
-            <h3 className="text-3xl font-bold text-center text-slate-800 leading-relaxed" dir="ltr">{shuffledQuestions[idx].q}</h3>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          {shuffleArray(shuffledQuestions[idx].options).map(opt => (
-            <button 
-              key={opt} 
-              onClick={() => handleSelect(opt)} 
-              className="p-6 bg-white border-2 border-slate-200 rounded-2xl hover:border-indigo-500 hover:bg-indigo-50 transition-all font-black text-2xl text-indigo-700 shadow-sm active:scale-95" 
-              dir="ltr"
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const SentenceBuilderGame = () => {
-    const [gameScore, setGameScore] = useState(0);
-    const [lives, setLives] = useState(3);
-    const [currentTask, setCurrentTask] = useState(null);
-    const [feedback, setFeedback] = useState(null);
-    const [gameState, setGameState] = useState('playing'); 
-
-    const winCondition = 100;
-
-    const taskPool = [
-      { text: "The teacher ___ a new pen.", ans: "has" },
-      { text: "___ a happy child in the park.", ans: "There is" },
-      { text: "My parents ___ a big garden.", ans: "have" },
-      { text: "___ many birds in the tree.", ans: "There are" },
-      { text: "The robot ___ silver arms.", ans: "has" },
-      { text: "___ a red ball on the chair.", ans: "There is" },
-      { text: "The chefs ___ white hats.", ans: "have" },
-      { text: "___ two bikes in the garage.", ans: "There are" },
-      { text: "My sister ___ many toys.", ans: "has" },
-      { text: "___ no water in the bottle.", ans: "There is" }
-    ];
-
-    const generateTask = () => {
-      // אם המשחק נגמר (ניצחון או הפסד), אל תייצר משימה חדשה
-      if (gameState !== 'playing') return;
-      
-      let newTask;
-      do { newTask = taskPool[Math.floor(Math.random() * taskPool.length)]; } while (currentTask && newTask.text === currentTask.text);
-      setCurrentTask(newTask);
-      setFeedback(null);
-    };
-
-    useEffect(() => { 
-        if (gameState === 'playing') generateTask(); 
-    }, [gameState]);
-
-    const check = (val) => {
-      if (feedback || gameState !== 'playing') return;
-
-      if (val === currentTask.ans) {
-        const newScore = gameScore + 20;
-        setGameScore(newScore);
-        setFeedback("correct");
-        
-        // בדיקת ניצחון מיידית
-        if (newScore >= winCondition) { 
-          setTimeout(() => setGameState('won'), 600); 
-          return; 
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Mastery</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; }
+        .animate-pop { animation: pop 0.3s ease-out; }
+        @keyframes pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .btn-active:active { transform: scale(0.95); }
+        .gradient-header { background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); }
+        .progress-bar { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .heart-beat { animation: heartbeat 1s infinite; }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
-      } else {
-        const newLives = lives - 1;
-        setLives(newLives);
-        setFeedback("wrong");
-        
-        // בדיקת הפסד מיידית
-        if (newLives <= 0) { 
-          setTimeout(() => setGameState('lost'), 600); 
-          return; 
-        }
-      }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-      // מעבר לשאלה הבאה רק אם המשחק עדיין פעיל
-      setTimeout(() => {
-        if (gameState === 'playing') generateTask();
-      }, 1000);
-    };
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
 
-    if (gameState === 'won') return (
-        <div className="text-center p-10 animate-in zoom-in-90 space-y-6">
-          <Trophy className="text-yellow-500 mx-auto" size={120} />
-          <h2 className="text-5xl font-black text-slate-800">ניצחת!</h2>
-          <p className="text-xl font-bold text-slate-600">הגעת ליעד של {winCondition} נקודות!</p>
-          <button onClick={() => setCurrentStep('menu')} className="bg-indigo-600 text-white py-4 px-8 rounded-2xl font-bold text-xl shadow-lg hover:bg-indigo-700">חזרה לתפריט</button>
-        </div>
-    );
+        const shuffleArray = (array) => {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        };
 
-    if (gameState === 'lost') return (
-        <div className="text-center p-10 animate-in zoom-in-90 space-y-6">
-          <XCircle className="text-red-500 mx-auto" size={100} />
-          <h2 className="text-4xl font-black text-slate-800">המשחק נגמר</h2>
-          <p className="text-xl font-bold text-slate-600">אולי בפעם הבאה...</p>
-          <button onClick={() => {setGameScore(0); setLives(3); setGameState('playing');}} className="bg-slate-800 text-white py-4 px-8 rounded-2xl font-bold text-xl shadow-lg">נסה שוב</button>
-        </div>
-    );
+        const App = () => {
+            const [step, setStep] = useState('menu');
+            const [unlocked, setUnlocked] = useState(false);
+            const [finalScore, setFinalScore] = useState(null);
 
-    if (!currentTask) return null;
+            const allQuestions = useMemo(() => [
+                { id: 1, q: "___ a green apple on the desk.", options: ["There is", "There are"], correct: "There is", hint: "Apple הוא שם עצם ביחיד, לכן נשתמש ב-There is." },
+                { id: 2, q: "The ___ (fox) are in the forest.", options: ["foxes", "foxs"], correct: "foxes", hint: "לשמות עצם שמסתיימים ב-x מוסיפים es ברבים." },
+                { id: 3, q: "___ many students in the library.", options: ["There is", "There are"], correct: "There are", hint: "Students הם שמות עצם ברבים, לכן נשתמש ב-There are." },
+                { id: 4, q: "___ an eraser in my pencil case.", options: ["There is", "There are"], correct: "There is", hint: "Eraser הוא שם עצם ביחיד." },
+                { id: 5, q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has", hint: "הגוף She (דנה) מקבל has." },
+                { id: 6, q: "The students ___ new books.", options: ["have", "has"], correct: "have", hint: "הגוף They (סטודנטים) מקבל have." },
+                { id: 7, q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has", hint: "הגוף It (כלב) מקבל has." },
+                { id: 8, q: "I ___ a blue pen.", options: ["have", "has"], correct: "have", hint: "הגוף I תמיד מקבל have." }
+            ], []);
 
-    return (
-      <div className="text-center space-y-6 animate-in fade-in">
-        <div className="flex justify-between items-center bg-indigo-50 p-4 rounded-2xl">
-            <div className="flex items-center gap-4">
-                <Star className="text-yellow-500 fill-yellow-500" size={24} />
-                <span className="text-2xl font-black text-indigo-700">{gameScore}</span>
-                <div className="flex gap-1">
-                  {[...Array(3)].map((_, i) => (
-                    <Heart key={i} size={24} className={i < lives ? "text-red-500 fill-red-500" : "text-slate-300"} />
-                  ))}
-                </div>
-            </div>
-            <div className="text-indigo-400 font-bold">יעד: {winCondition}</div>
-        </div>
-        <div className={`p-10 rounded-3xl border-4 transition-all min-h-[180px] flex items-center justify-center shadow-sm ${feedback === 'correct' ? 'bg-green-100 border-green-500' : feedback === 'wrong' ? 'bg-red-100 border-red-500' : 'bg-white border-slate-100'}`} dir="ltr">
-            <p className="text-3xl font-black text-slate-800">
-                {currentTask.text.split('___')[0]} 
-                <span className={`mx-2 underline ${feedback === 'correct' ? 'text-green-600' : feedback === 'wrong' ? 'text-red-600' : 'text-indigo-500'}`}>
-                  {feedback === 'correct' ? currentTask.ans : feedback === 'wrong' ? 'X' : '____'}
-                </span>
-                {currentTask.text.split('___')[1]}
-            </p>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          {["There is", "There are", "have", "has"].map((btn) => (
-            <button 
-                key={btn} 
-                onClick={() => check(btn)} 
-                disabled={feedback !== null}
-                className={`py-5 rounded-2xl font-black text-2xl transition-all shadow-sm active:scale-95 ${feedback !== null ? 'bg-slate-100 text-slate-400' : 'bg-white border-2 border-slate-200 text-slate-700 hover:bg-indigo-600 hover:text-white'}`}
-            >
-              {btn}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
+            const Quiz = ({ qList, title, isFinal = false }) => {
+                const shuffledList = useMemo(() => shuffleArray(qList), [qList]);
+                const [idx, setIdx] = useState(0);
+                const [points, setPoints] = useState(0);
+                const [feedback, setFeedback] = useState(null);
+                const [selectedAns, setSelectedAns] = useState(null);
+                const [done, setDone] = useState(false);
 
-  return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-8 text-slate-900" dir="rtl">
-      <div className="max-w-xl mx-auto bg-white rounded-[40px] shadow-2xl overflow-hidden border border-slate-200">
-        
-        {currentStep === 'menu' && (
-          <div className="bg-gradient-to-br from-indigo-700 to-blue-500 p-10 text-white text-center">
-            <h1 className="text-5xl font-black mb-2 italic tracking-tighter">English Mastery</h1>
-            <p className="text-xl opacity-90 font-bold">הדרך הקלה והמהנה לשלוט בדקדוק!</p>
-          </div>
-        )}
+                const currentOptions = useMemo(() => {
+                    if (!shuffledList[idx]) return [];
+                    return shuffleArray(shuffledList[idx].options);
+                }, [idx, shuffledList]);
 
-        {currentStep !== 'menu' && (
-          <div className="bg-slate-50 px-8 py-4 border-b border-slate-100 flex justify-between items-center">
-            <button onClick={() => setCurrentStep('menu')} className="text-indigo-600 font-bold flex items-center gap-1 hover:underline">
-              <ArrowRight size={18} /> חזרה
-            </button>
-            <span className="font-black text-slate-400 text-sm">English Mastery</span>
-          </div>
-        )}
+                const handleAns = (ans) => {
+                    if (feedback || done) return;
+                    setSelectedAns(ans);
+                    const isCorrect = ans === shuffledList[idx].correct;
+                    if (isCorrect) setPoints(p => p + 1);
+                    setFeedback(isCorrect ? 'correct' : 'wrong');
+                };
 
-        <div className="p-8">
-          {currentStep === 'menu' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-black text-slate-700 mb-6 text-center">מה נלמד היום?</h2>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => setCurrentStep('unit1_learn')} className="flex flex-col items-center justify-center p-6 bg-blue-50 rounded-[32px] border-2 border-transparent hover:border-blue-300 transition-all text-center min-h-[140px] shadow-sm">
-                    <div className="font-black text-blue-900 text-xl mb-1">יחידה 1</div>
-                    <div className="text-lg text-blue-700 font-bold">There is/are</div>
-                </button>
+                const next = () => {
+                    if (idx < shuffledList.length - 1) {
+                        setFeedback(null);
+                        setSelectedAns(null);
+                        setIdx(prev => prev + 1);
+                    } else {
+                        const score = Math.round((points / shuffledList.length) * 100);
+                        if (isFinal) {
+                            setFinalScore(score);
+                            if (score >= 60) setUnlocked(true);
+                        }
+                        setDone(true);
+                    }
+                };
 
-                <button onClick={() => setCurrentStep('unit2_learn')} className="flex flex-col items-center justify-center p-6 bg-emerald-50 rounded-[32px] border-2 border-transparent hover:border-emerald-300 transition-all text-center min-h-[140px] shadow-sm">
-                    <div className="font-black text-emerald-900 text-xl mb-1">יחידה 2</div>
-                    <div className="text-lg text-emerald-700 font-bold">have/has</div>
-                </button>
+                if (done) return (
+                    <div className="text-center p-8 animate-pop">
+                        <div className="text-7xl font-black mb-4 text-indigo-600 drop-shadow-md">{Math.round((points / shuffledList.length) * 100)}%</div>
+                        <h2 className="text-2xl font-bold mb-8 text-slate-700">סיימת את המשימה!</h2>
+                        <button onClick={() => setStep('menu')} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-[25px] font-black text-xl shadow-lg shadow-indigo-200 transition-all btn-active">חזרה לתפריט</button>
+                    </div>
+                );
 
-                <button onClick={() => setCurrentStep('final_prac')} className="flex flex-col items-center justify-center p-6 bg-amber-50 rounded-[32px] border-2 border-transparent hover:border-amber-300 transition-all text-center min-h-[140px] relative shadow-sm">
-                    <div className="font-black text-amber-900 text-xl mb-1">אתגר מסכם</div>
-                    <div className="text-sm text-amber-700 font-bold">ציון 60 לפתיחה</div>
-                    {finalScore !== null && (
-                        <div className={`absolute top-2 right-2 font-black text-xs px-2 py-1 rounded-full ${finalScore >= 60 ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>{finalScore}%</div>
+                const current = shuffledList[idx];
+                if (!current) return null;
+
+                const renderQuestion = () => {
+                    const text = current.q;
+                    const parts = text.split("___");
+                    return (
+                        <h3 className="text-3xl font-black text-slate-800 leading-relaxed" dir="ltr">
+                            {parts[0]}
+                            <span className={`mx-2 ${feedback ? 'underline decoration-4' : 'text-indigo-500 underline decoration-2'}`} 
+                                  style={{ color: feedback === 'correct' ? '#10b981' : feedback === 'wrong' ? '#f43f5e' : 'inherit' }}>
+                                {selectedAns || "____"}
+                            </span>
+                            {parts[1]}
+                        </h3>
+                    );
+                };
+
+                return (
+                    <div className="animate-pop">
+                        <div className="flex justify-between items-end mb-4 font-bold text-slate-400">
+                            <span className="text-indigo-500 font-black tracking-tight">{title}</span>
+                            <span className="text-xs uppercase">שאלה {idx + 1} מתוך {shuffledList.length}</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-200 rounded-full mb-8 overflow-hidden">
+                            <div className="h-full bg-indigo-500 progress-bar" style={{ width: `${((idx + 1) / shuffledList.length) * 100}%` }}></div>
+                        </div>
+                        <div className="bg-white p-10 rounded-[40px] shadow-sm mb-8 border-2 border-slate-50 text-center flex items-center justify-center min-h-[160px]">
+                            {renderQuestion()}
+                        </div>
+                        {!feedback ? (
+                            <div className="grid grid-cols-1 gap-4">
+                                {currentOptions.map(o => (
+                                    <button key={o} onClick={() => handleAns(o)} className="p-6 bg-white border-2 border-slate-200 rounded-[25px] font-black text-2xl text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50 transition-all btn-active shadow-sm">{o}</button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className={`p-8 rounded-[35px] border-4 animate-pop shadow-xl ${feedback === 'correct' ? 'bg-emerald-50 border-emerald-400 text-emerald-900' : 'bg-rose-50 border-rose-400 text-rose-900'}`}>
+                                <h4 className="font-black text-2xl mb-2">{feedback === 'correct' ? 'מעולה!' : 'טיפ קטן'}</h4>
+                                <p className="font-bold text-lg mb-8 leading-relaxed">{feedback === 'correct' ? 'תשובה מדויקת. בוא נמשיך!' : current.hint}</p>
+                                <button onClick={next} className={`w-full py-5 rounded-[20px] font-black text-xl text-white shadow-lg btn-active ${feedback === 'correct' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'}`}>המשך</button>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            const SentenceGame = () => {
+                const [score, setScore] = useState(0);
+                const [lives, setLives] = useState(3);
+                const [gameState, setGameState] = useState('playing');
+                const [currentTask, setCurrentTask] = useState(null);
+                const [feedback, setFeedback] = useState(null);
+                const [selectedVal, setSelectedVal] = useState(null);
+
+                const tasks = [
+                    { t: "___ a cat.", a: "There is" },
+                    { t: "___ many dogs.", a: "There are" },
+                    { t: "She ___ a ball.", a: "has" },
+                    { t: "We ___ a car.", a: "have" },
+                    { t: "___ an apple.", a: "There is" },
+                    { t: "He ___ a book.", a: "has" },
+                    { t: "___ five pens.", a: "There are" }
+                ];
+
+                useEffect(() => {
+                    if (gameState === 'playing' && !feedback) {
+                        setCurrentTask(tasks[Math.floor(Math.random() * tasks.length)]);
+                        setSelectedVal(null);
+                    }
+                }, [score, gameState, feedback]);
+
+                const check = (val) => {
+                    if (feedback || gameState !== 'playing') return;
+                    setSelectedVal(val);
+                    if (val === currentTask.a) {
+                        const newScore = score + 20;
+                        setFeedback('correct');
+                        if (newScore >= 100) {
+                            setScore(100);
+                            setTimeout(() => setGameState('won'), 500);
+                        } else {
+                            setScore(newScore);
+                            setTimeout(() => setFeedback(null), 800);
+                        }
+                    } else {
+                        setFeedback('wrong');
+                        const newLives = lives - 1;
+                        setLives(newLives);
+                        if (newLives <= 0) {
+                            setTimeout(() => setGameState('lost'), 600);
+                        } else {
+                            setTimeout(() => setFeedback(null), 1000);
+                        }
+                    }
+                };
+
+                if (gameState === 'won') return (
+                    <div className="text-center p-10 animate-pop">
+                        <div className="text-8xl mb-6">🏆</div>
+                        <h2 className="text-4xl font-black mb-4 text-slate-800">ניצחת! 100%</h2>
+                        <button onClick={() => setStep('menu')} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-[25px] font-black text-xl shadow-lg btn-active">חזרה לתפריט</button>
+                    </div>
+                );
+
+                if (gameState === 'lost') return (
+                    <div className="text-center p-10 animate-pop">
+                        <div className="text-7xl mb-6">💔</div>
+                        <h2 className="text-3xl font-black mb-4 text-slate-800">נגמרו החיים... נסה שוב!</h2>
+                        <button onClick={() => setStep('menu')} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-[25px] font-black text-xl shadow-lg btn-active">חזרה</button>
+                    </div>
+                );
+
+                return (
+                    <div className="animate-pop">
+                        <div className="mb-6 flex justify-between items-center bg-indigo-50 p-5 rounded-[30px] border border-indigo-100">
+                            <span className="font-black text-indigo-700 text-2xl tracking-tighter">SCORE: {score}%</span>
+                            <div className="flex gap-1">
+                                {[...Array(3)].map((_, i) => (
+                                    <span key={i} className={`text-2xl ${i < lives ? 'text-rose-500 heart-beat' : 'text-slate-300 opacity-50'}`}>
+                                        {i < lives ? '❤️' : '🖤'}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                        <div className={`p-12 bg-white rounded-[45px] border-4 mb-8 flex items-center justify-center min-h-[220px] transition-all duration-300 ${feedback === 'correct' ? 'border-emerald-400 bg-emerald-50 scale-105 shadow-lg' : feedback === 'wrong' ? 'border-rose-400 bg-rose-50 animate-shake' : 'border-slate-50 shadow-sm'}`}>
+                            <p className="text-4xl font-black text-slate-800 text-center" dir="ltr">
+                                {currentTask?.t.split('___')[0]}
+                                <span className={`mx-2 underline decoration-4 ${feedback === 'correct' ? 'text-emerald-500' : feedback === 'wrong' ? 'text-rose-500' : 'text-indigo-500'}`}>
+                                    {selectedVal || "____"}
+                                </span>
+                                {currentTask?.t.split('___')[1]}
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            {["There is", "There are", "have", "has"].map(b => (
+                                <button key={b} onClick={() => check(b)} disabled={!!feedback} className="p-6 bg-white border-2 border-slate-200 rounded-[25px] font-black text-xl text-slate-700 hover:border-indigo-400 hover:text-indigo-600 transition-all btn-active shadow-sm disabled:opacity-50">{b}</button>
+                            ))}
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="max-w-md mx-auto min-h-screen flex flex-col p-6">
+                    {step === 'menu' ? (
+                        <div className="animate-pop">
+                            <div className="gradient-header p-12 rounded-[55px] text-white text-center shadow-2xl mb-10 relative overflow-hidden">
+                                <h1 className="text-5xl font-black italic mb-3 tracking-tighter drop-shadow-lg">English Mastery</h1>
+                                <p className="font-bold text-lg opacity-90 leading-tight">בואו נכבוש את השפה האנגלית!</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-5">
+                                <button onClick={() => setStep('u1_learn')} className="bg-blue-600 p-8 rounded-[40px] text-white btn-active flex flex-col items-center justify-center shadow-lg hover:bg-blue-700">
+                                    <span className="text-xl font-black">There is/are</span>
+                                </button>
+                                <button onClick={() => setStep('u2_learn')} className="bg-emerald-600 p-8 rounded-[40px] text-white btn-active flex flex-col items-center justify-center shadow-lg hover:bg-emerald-700">
+                                    <span className="text-xl font-black">Have/Has</span>
+                                </button>
+                                <button onClick={() => setStep('final')} className="bg-orange-500 p-8 rounded-[40px] text-white btn-active flex flex-col items-center justify-center shadow-lg hover:bg-orange-600 col-span-1">
+                                    <span className="text-xl font-black">אתגר 100%</span>
+                                    {finalScore !== null && <span className="text-xs font-black mt-1 bg-white/20 px-2 py-0.5 rounded-full">{finalScore}%</span>}
+                                </button>
+                                <button onClick={() => unlocked && setStep('game')} className={`p-8 rounded-[40px] btn-active flex flex-col items-center justify-center border-2 transition-all ${unlocked ? 'bg-indigo-600 text-white border-transparent shadow-indigo-200 shadow-xl' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                                    <span className="text-xl font-black">{unlocked ? 'משחק' : 'נעול'}</span>
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex-1">
+                            <button onClick={() => setStep('menu')} className="mb-8 text-indigo-600 font-black flex items-center gap-2 hover:bg-indigo-50 p-2 px-4 rounded-xl transition-colors w-fit">➜ חזרה לתפריט</button>
+                            {step === 'u1_learn' && (
+                                <div className="animate-pop space-y-8">
+                                    <h2 className="text-4xl font-black text-blue-700 text-center tracking-tight">There is / There are</h2>
+                                    <div className="bg-white p-8 rounded-[40px] shadow-sm border-2 border-slate-50">
+                                        <p className="text-xl font-bold mb-6 text-slate-700 text-center">מתי נשתמש ב-an לפני שם עצם?</p>
+                                        <div className="flex justify-center gap-3 mb-4">
+                                            {['a', 'e', 'i', 'o', 'u'].map(l => <span key={l} className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-full font-black text-blue-600 text-xl shadow-inner">{l}</span>)}
+                                        </div>
+                                        <p className="text-sm text-center font-bold text-slate-600 leading-relaxed italic">משתמשים ב-an לפני שם עצם שמתחיל באות ניקוד.</p>
+                                    </div>
+                                    <button onClick={() => setStep('u1_quiz')} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-[30px] font-black text-2xl shadow-xl transition-all btn-active">בואו נתרגל!</button>
+                                </div>
+                            )}
+                            {step === 'u2_learn' && (
+                                <div className="animate-pop space-y-8 text-center">
+                                    <h2 className="text-4xl font-black text-emerald-700 tracking-tight">Have / Has</h2>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-white p-8 rounded-[35px] shadow-sm border-2 border-slate-50">
+                                            <b className="text-emerald-600 text-3xl font-black italic">HAVE</b>
+                                            <div className="mt-4 font-black text-slate-700 text-lg">I, You, We, They</div>
+                                        </div>
+                                        <div className="bg-white p-8 rounded-[35px] shadow-sm border-2 border-slate-50">
+                                            <b className="text-emerald-600 text-3xl font-black italic">HAS</b>
+                                            <div className="mt-4 font-black text-slate-700 text-lg">He, She, It</div>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setStep('u2_quiz')} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-[30px] font-black text-2xl shadow-xl transition-all btn-active">בואו נתרגל!</button>
+                                </div>
+                            )}
+                            {step === 'u1_quiz' && <Quiz qList={allQuestions.slice(0, 4)} title="Lesson 1 Practice" />}
+                            {step === 'u2_quiz' && <Quiz qList={allQuestions.slice(4, 8)} title="Lesson 2 Practice" />}
+                            {step === 'final' && <Quiz qList={allQuestions} title="המבחן המסכם" isFinal={true} />}
+                            {step === 'game' && <SentenceGame />}
+                        </div>
                     )}
-                </button>
-
-                <button 
-                    onClick={() => isGameUnlocked && setCurrentStep('game')}
-                    className={`flex flex-col items-center justify-center p-6 rounded-[32px] border-2 transition-all text-center min-h-[140px] shadow-sm ${isGameUnlocked ? 'bg-indigo-600 text-white border-indigo-400 hover:bg-indigo-700' : 'bg-slate-50 border-slate-200 opacity-60'}`}>
-                    <div className="font-black text-xl mb-1">משחק</div>
-                    {isGameUnlocked ? <Gamepad2 size={28} /> : <Lock size={28} className="text-slate-400" />}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 'unit1_learn' && (
-            <div className="space-y-8 animate-in fade-in">
-              <h2 className="text-4xl font-black text-blue-600 border-b-4 border-blue-50 pb-3 text-center">There is / There are</h2>
-              <div className="bg-blue-50 p-8 rounded-[40px] border-b-8 border-blue-500">
-                <p className="text-2xl font-black text-center mb-6 text-blue-900">איך אומרים "יש"?</p>
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="bg-white p-5 rounded-[30px] shadow-sm">
-                    <span className="text-xl font-black text-blue-600">There is</span>
-                    <div className="mt-4 font-black text-2xl">יחיד</div>
-                  </div>
-                  <div className="bg-white p-5 rounded-[30px] shadow-sm">
-                    <span className="text-xl font-black text-blue-600">There are</span>
-                    <div className="mt-4 font-black text-2xl">רבים</div>
-                  </div>
                 </div>
-              </div>
-              <button onClick={() => setCurrentStep('unit1_prac')} className="w-full bg-indigo-600 text-white py-6 rounded-3xl font-black text-2xl shadow-lg">בואו נתרגל!</button>
-            </div>
-          )}
+            );
+        };
 
-          {currentStep === 'unit2_learn' && (
-            <div className="space-y-8 animate-in fade-in">
-              <h2 className="text-4xl font-black text-emerald-600 border-b-4 border-emerald-50 pb-4 text-center">Have / Has</h2>
-              <div className="bg-emerald-50 p-8 rounded-[40px] border-b-8 border-emerald-500">
-                <p className="text-2xl font-black text-center mb-6 text-emerald-900">מי הבעלים?</p>
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="bg-white p-5 rounded-[30px] shadow-sm">
-                    <span className="text-2xl font-black text-emerald-600">HAVE</span>
-                    <div className="mt-4 font-bold text-slate-800 leading-tight">I, You, We, They</div>
-                  </div>
-                  <div className="bg-white p-5 rounded-[30px] shadow-sm">
-                    <span className="text-2xl font-black text-emerald-600">HAS</span>
-                    <div className="mt-4 font-bold text-slate-800 leading-tight">He, She, It</div>
-                  </div>
-                </div>
-              </div>
-              <button onClick={() => setCurrentStep('unit2_prac')} className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-2xl shadow-lg">בואו נתרגל!</button>
-            </div>
-          )}
-
-          {currentStep === 'unit1_prac' && <Quiz questions={rawUnit1} title="תרגול: There is/are" />}
-          {currentStep === 'unit2_prac' && <Quiz questions={rawUnit2} title="תרגול: Have / Has" />}
-          {currentStep === 'final_prac' && <Quiz questions={rawFinal} title="אתגר מסכם" onComplete={handleFinalSubmit} isFinal={true} />}
-          {currentStep === 'game' && <SentenceBuilderGame />}
-
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default App;
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
 
