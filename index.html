@@ -1,361 +1,351 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>English Mastery - Game Edition</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; overflow-x: hidden; }
-        .animate-pop { animation: pop 0.3s ease-out; }
-        @keyframes pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .btn-active:active { transform: scale(0.95); }
-        .gradient-bg { background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); }
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, Lock, Star, Gamepad2, Info, Lightbulb, SpellCheck, Trophy, Heart, ArrowRight } from 'lucide-react';
+
+const App = () => {
+  const [currentStep, setCurrentStep] = useState('menu'); 
+  const [finalScore, setFinalScore] = useState(null);
+  const [isGameUnlocked, setIsGameUnlocked] = useState(false);
+
+  // פונקציית עזר לערבוב מערכים (Fisher-Yates)
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  const rawUnit1 = [
+    { q: "___ a green apple on the desk.", options: ["There is", "There are"], correct: "There is" },
+    { q: "The ___ (fox) are in the forest.", options: ["foxes", "foxs", "foxies"], correct: "foxes" },
+    { q: "___ many students in the library.", options: ["There is", "There are"], correct: "There are" },
+    { q: "Three ___ (lady) are waiting for the bus.", options: ["ladys", "ladies", "ladyes"], correct: "ladies" },
+    { q: "___ a big dog in the garden.", options: ["There is", "There are"], correct: "There is" }
+  ];
+
+  const rawUnit2 = [
+    { q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has" },
+    { q: "The students ___ new English books.", options: ["have", "has"], correct: "have" },
+    { q: "My father ___ a red car.", options: ["have", "has"], correct: "has" },
+    { q: "I ___ a blue pen in my hand.", options: ["have", "has"], correct: "have" },
+    { q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has" }
+  ];
+
+  const rawFinal = [
+    { q: "___ a beautiful picture on the wall.", options: ["There is", "There are", "Have", "Has"], correct: "There is" },
+    { q: "Mr. Cohen ___ two children.", options: ["there is", "there are", "have", "has"], correct: "has" },
+    { q: "___ five keys on the table.", options: ["There is", "There are", "Have", "Has"], correct: "There are" },
+    { q: "The boys ___ a football.", options: ["there is", "there are", "have", "has"], correct: "have" },
+    { q: "___ many flies in the kitchen.", options: ["There is", "There are", "Have", "Has"], correct: "There are" }
+  ];
+
+  const handleFinalSubmit = (score) => {
+    setFinalScore(score);
+    if (score >= 60) setIsGameUnlocked(true);
+  };
+
+  const ProgressBar = ({ current, total, color = "bg-indigo-500" }) => (
+    <div className="w-full bg-slate-100 h-3 rounded-full mb-6">
+      <div className={`${color} h-full rounded-full transition-all duration-500`} style={{ width: `${(current / total) * 100}%` }}></div>
+    </div>
+  );
+
+  const Quiz = ({ questions, onComplete, title, isFinal = false }) => {
+    // ערבוב השאלות בכל פעם שהקומפוננטה נטענת
+    const [shuffledQuestions] = useState(() => shuffleArray(questions));
+    const [idx, setIdx] = useState(0);
+    const [ans, setAns] = useState({});
+    const [finished, setFinished] = useState(false);
+    const [score, setScore] = useState(0);
+
+    const handleSelect = (option) => {
+      const newAns = { ...ans, [idx]: option };
+      setAns(newAns);
+      if (idx < shuffledQuestions.length - 1) setIdx(idx + 1);
+      else {
+        let correctCount = 0;
+        shuffledQuestions.forEach((q, i) => {
+          if ((i === idx ? option : newAns[i]) === q.correct) correctCount++;
+        });
+        const finalScoreValue = Math.round((correctCount / shuffledQuestions.length) * 100);
+        setScore(finalScoreValue);
+        setFinished(true);
+        if (onComplete) onComplete(finalScoreValue);
+      }
+    };
+
+    if (finished) return (
+      <div className="text-center p-8 animate-in zoom-in-95">
+        {score >= 60 ? <CheckCircle className="mx-auto text-green-500 mb-6" size={80} /> : <XCircle className="mx-auto text-red-500 mb-6" size={80} />}
+        <h3 className="text-4xl font-bold mb-3 text-slate-800">הציון שלך: {score}</h3>
+        <p className="text-xl text-slate-600 mb-8">
+          {score >= 60 
+            ? (isFinal ? "עבודה מצוינת! המשחק נפתח." : "כל הכבוד! עכשיו אפשר להמשיך ליחידה הבאה או לאתגר המסכם.") 
+            : "כדאי לעבור שוב על ההסברים ולנסות שוב."
+          }
+        </p>
+        <button onClick={() => setCurrentStep('menu')} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-bold text-xl hover:bg-indigo-700 transition-all shadow-lg">חזרה לתפריט</button>
+      </div>
+    );
+
+    return (
+      <div className="p-4 animate-in fade-in">
+        <div className="flex justify-between items-center mb-4">
+           <span className="text-lg font-black text-indigo-500 uppercase tracking-wide">{title}</span>
+           <span className="text-lg font-bold text-slate-400">{idx + 1} / {shuffledQuestions.length}</span>
+        </div>
+        <ProgressBar current={idx + 1} total={shuffledQuestions.length} />
+        <div className="bg-slate-50 p-10 rounded-3xl mb-8 min-h-[160px] flex items-center justify-center border border-slate-200 shadow-inner">
+            <h3 className="text-3xl font-bold text-center text-slate-800 leading-relaxed" dir="ltr">{shuffledQuestions[idx].q}</h3>
+        </div>
         
-        /* Game Styles */
-        .game-container { position: relative; height: 400px; width: 100%; background: #0f172a; border-radius: 24px; overflow: hidden; touch-action: none; }
-        .falling-word { position: absolute; transform: translateX(-50%); cursor: pointer; transition: top 0.1s linear; }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
+        <div className="grid grid-cols-2 gap-4">
+          {shuffleArray(shuffledQuestions[idx].options).map(opt => (
+            <button 
+              key={opt} 
+              onClick={() => handleSelect(opt)} 
+              className="p-6 bg-white border-2 border-slate-200 rounded-2xl hover:border-indigo-500 hover:bg-indigo-50 transition-all font-black text-2xl text-indigo-700 shadow-sm active:scale-95" 
+              dir="ltr"
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+  const SentenceBuilderGame = () => {
+    const [gameScore, setGameScore] = useState(0);
+    const [lives, setLives] = useState(3);
+    const [currentTask, setCurrentTask] = useState(null);
+    const [feedback, setFeedback] = useState(null);
+    const [gameState, setGameState] = useState('playing'); 
 
-        const LockIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>);
-        const TrophyIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>);
+    const winCondition = 100;
 
-        // Game Component
-        const GrammarGame = ({ onBack }) => {
-            const [score, setScore] = useState(0);
-            const [gameState, setGameState] = useState('start'); // start, playing, end
-            const [currentQ, setCurrentQ] = useState(null);
-            const [fallingWords, setFallingWords] = useState([]);
-            const gameRef = useRef(null);
-            const timerRef = useRef(null);
+    const taskPool = [
+      { text: "The teacher ___ a new pen.", ans: "has" },
+      { text: "___ a happy child in the park.", ans: "There is" },
+      { text: "My parents ___ a big garden.", ans: "have" },
+      { text: "___ many birds in the tree.", ans: "There are" },
+      { text: "The robot ___ silver arms.", ans: "has" },
+      { text: "___ a red ball on the chair.", ans: "There is" },
+      { text: "The chefs ___ white hats.", ans: "have" },
+      { text: "___ two bikes in the garage.", ans: "There are" },
+      { text: "My sister ___ many toys.", ans: "has" },
+      { text: "___ no water in the bottle.", ans: "There is" }
+    ];
 
-            const pool = [
-                { q: "A cat", options: ["There is", "There are"], correct: "There is" },
-                { q: "Apples", options: ["There is", "There are"], correct: "There are" },
-                { q: "She", options: ["Has", "Have"], correct: "Has" },
-                { q: "I", options: ["Has", "Have"], correct: "Have" },
-                { q: "Dogs", options: ["Has", "Have"], correct: "Have" },
-                { q: "He", options: ["Has", "Have"], correct: "Has" },
-                { q: "An orange", options: ["There is", "There are"], correct: "There is" }
-            ];
+    const generateTask = () => {
+      // אם המשחק נגמר (ניצחון או הפסד), אל תייצר משימה חדשה
+      if (gameState !== 'playing') return;
+      
+      let newTask;
+      do { newTask = taskPool[Math.floor(Math.random() * taskPool.length)]; } while (currentTask && newTask.text === currentTask.text);
+      setCurrentTask(newTask);
+      setFeedback(null);
+    };
 
-            const startGame = () => {
-                setScore(0);
-                setGameState('playing');
-                spawnQuestion();
-            };
+    useEffect(() => { 
+        if (gameState === 'playing') generateTask(); 
+    }, [gameState]);
 
-            const spawnQuestion = () => {
-                const q = pool[Math.floor(Math.random() * pool.length)];
-                setCurrentQ(q);
-                const words = q.options.map((opt, i) => ({
-                    id: Math.random(),
-                    text: opt,
-                    x: 25 + (i * 50), // 25% or 75% width
-                    top: -50,
-                    speed: 2 + Math.random() * 2
-                }));
-                setFallingWords(words);
-            };
+    const check = (val) => {
+      if (feedback || gameState !== 'playing') return;
 
-            useEffect(() => {
-                if (gameState !== 'playing') return;
+      if (val === currentTask.ans) {
+        const newScore = gameScore + 20;
+        setGameScore(newScore);
+        setFeedback("correct");
+        
+        // בדיקת ניצחון מיידית
+        if (newScore >= winCondition) { 
+          setTimeout(() => setGameState('won'), 600); 
+          return; 
+        }
+      } else {
+        const newLives = lives - 1;
+        setLives(newLives);
+        setFeedback("wrong");
+        
+        // בדיקת הפסד מיידית
+        if (newLives <= 0) { 
+          setTimeout(() => setGameState('lost'), 600); 
+          return; 
+        }
+      }
 
-                const interval = setInterval(() => {
-                    setFallingWords(prev => {
-                        const next = prev.map(w => ({ ...w, top: w.top + w.speed }));
-                        // If any word hits the bottom
-                        if (next.some(w => w.top > 380)) {
-                            clearInterval(interval);
-                            setGameState('end');
-                            return [];
-                        }
-                        return next;
-                    });
-                }, 30);
+      // מעבר לשאלה הבאה רק אם המשחק עדיין פעיל
+      setTimeout(() => {
+        if (gameState === 'playing') generateTask();
+      }, 1000);
+    };
 
-                return () => clearInterval(interval);
-            }, [gameState]);
+    if (gameState === 'won') return (
+        <div className="text-center p-10 animate-in zoom-in-90 space-y-6">
+          <Trophy className="text-yellow-500 mx-auto" size={120} />
+          <h2 className="text-5xl font-black text-slate-800">ניצחת!</h2>
+          <p className="text-xl font-bold text-slate-600">הגעת ליעד של {winCondition} נקודות!</p>
+          <button onClick={() => setCurrentStep('menu')} className="bg-indigo-600 text-white py-4 px-8 rounded-2xl font-bold text-xl shadow-lg hover:bg-indigo-700">חזרה לתפריט</button>
+        </div>
+    );
 
-            const handleWordClick = (word) => {
-                if (word.text === currentQ.correct) {
-                    setScore(s => s + 10);
-                    spawnQuestion();
-                } else {
-                    setGameState('end');
-                }
-            };
+    if (gameState === 'lost') return (
+        <div className="text-center p-10 animate-in zoom-in-90 space-y-6">
+          <XCircle className="text-red-500 mx-auto" size={100} />
+          <h2 className="text-4xl font-black text-slate-800">המשחק נגמר</h2>
+          <p className="text-xl font-bold text-slate-600">אולי בפעם הבאה...</p>
+          <button onClick={() => {setGameScore(0); setLives(3); setGameState('playing');}} className="bg-slate-800 text-white py-4 px-8 rounded-2xl font-bold text-xl shadow-lg">נסה שוב</button>
+        </div>
+    );
 
-            return (
-                <div className="animate-pop text-center">
-                    <h3 className="text-2xl font-black text-purple-700 mb-4">Grammar Catch!</h3>
-                    <div className="game-container shadow-2xl border-4 border-indigo-200">
-                        {gameState === 'start' && (
-                            <div className="flex flex-col items-center justify-center h-full text-white p-6">
-                                <p className="mb-4 font-bold text-lg">לחץ על התשובה הנכונה לפני שהיא נוגעת ברצפה!</p>
-                                <button onClick={startGame} className="bg-purple-500 px-8 py-3 rounded-full font-black text-xl">התחל משחק</button>
-                            </div>
-                        )}
-                        {gameState === 'playing' && (
-                            <>
-                                <div className="absolute top-4 left-4 text-white font-black text-xl">Score: {score}</div>
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/20 text-4xl font-black pointer-events-none uppercase" dir="ltr">
-                                    {currentQ?.q}
-                                </div>
-                                {fallingWords.map(w => (
-                                    <div 
-                                        key={w.id}
-                                        onClick={() => handleWordClick(w)}
-                                        className="falling-word bg-white text-indigo-900 font-black py-2 px-6 rounded-full shadow-lg border-2 border-indigo-400 active:scale-90"
-                                        style={{ top: w.top, left: `${w.x}%` }}
-                                    >
-                                        {w.text}
-                                    </div>
-                                ))}
-                            </>
-                        )}
-                        {gameState === 'end' && (
-                            <div className="flex flex-col items-center justify-center h-full text-white p-6 bg-red-900/80">
-                                <h4 className="text-3xl font-black mb-2">Game Over!</h4>
-                                <p className="text-xl mb-6 font-bold">צברת {score} נקודות</p>
-                                <button onClick={startGame} className="bg-white text-red-900 px-8 py-3 rounded-full font-black text-xl mb-3">נסה שוב</button>
-                                <button onClick={onBack} className="text-white underline font-bold">חזרה לתפריט</button>
-                            </div>
-                        )}
-                    </div>
+    if (!currentTask) return null;
+
+    return (
+      <div className="text-center space-y-6 animate-in fade-in">
+        <div className="flex justify-between items-center bg-indigo-50 p-4 rounded-2xl">
+            <div className="flex items-center gap-4">
+                <Star className="text-yellow-500 fill-yellow-500" size={24} />
+                <span className="text-2xl font-black text-indigo-700">{gameScore}</span>
+                <div className="flex gap-1">
+                  {[...Array(3)].map((_, i) => (
+                    <Heart key={i} size={24} className={i < lives ? "text-red-500 fill-red-500" : "text-slate-300"} />
+                  ))}
                 </div>
-            );
-        };
+            </div>
+            <div className="text-indigo-400 font-bold">יעד: {winCondition}</div>
+        </div>
+        <div className={`p-10 rounded-3xl border-4 transition-all min-h-[180px] flex items-center justify-center shadow-sm ${feedback === 'correct' ? 'bg-green-100 border-green-500' : feedback === 'wrong' ? 'bg-red-100 border-red-500' : 'bg-white border-slate-100'}`} dir="ltr">
+            <p className="text-3xl font-black text-slate-800">
+                {currentTask.text.split('___')[0]} 
+                <span className={`mx-2 underline ${feedback === 'correct' ? 'text-green-600' : feedback === 'wrong' ? 'text-red-600' : 'text-indigo-500'}`}>
+                  {feedback === 'correct' ? currentTask.ans : feedback === 'wrong' ? 'X' : '____'}
+                </span>
+                {currentTask.text.split('___')[1]}
+            </p>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {["There is", "There are", "have", "has"].map((btn) => (
+            <button 
+                key={btn} 
+                onClick={() => check(btn)} 
+                disabled={feedback !== null}
+                className={`py-5 rounded-2xl font-black text-2xl transition-all shadow-sm active:scale-95 ${feedback !== null ? 'bg-slate-100 text-slate-400' : 'bg-white border-2 border-slate-200 text-slate-700 hover:bg-indigo-600 hover:text-white'}`}
+            >
+              {btn}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
-        const App = () => {
-            const [step, setStep] = useState('menu');
-            const [finalScore, setFinalScore] = useState(null);
-            const [unlocked, setUnlocked] = useState(false);
+  return (
+    <div className="min-h-screen bg-slate-100 p-4 md:p-8 text-slate-900" dir="rtl">
+      <div className="max-w-xl mx-auto bg-white rounded-[40px] shadow-2xl overflow-hidden border border-slate-200">
+        
+        {currentStep === 'menu' && (
+          <div className="bg-gradient-to-br from-indigo-700 to-blue-500 p-10 text-white text-center">
+            <h1 className="text-5xl font-black mb-2 italic tracking-tighter">English Mastery</h1>
+            <p className="text-xl opacity-90 font-bold">הדרך הקלה והמהנה לשלוט בדקדוק!</p>
+          </div>
+        )}
 
-            const questions = {
-                u1: [
-                    { q: "___ a green apple on the desk.", options: ["There is", "There are"], correct: "There is", hint: "מדובר בשם עצם ביחיד (apple), לכן נשתמש ב-There is." },
-                    { q: "The ___ (fox) are in the forest.", options: ["foxes", "foxs"], correct: "foxes", hint: "שם עצם שמסתיים ב-x מקבל es ברבים." },
-                    { q: "___ many students in the library.", options: ["There is", "There are"], correct: "There are", hint: "מדובר בשמות עצם ברבים (students), לכן נשתמש ב-There are." },
-                    { q: "___ an orange in the bag.", options: ["There is", "There are"], correct: "There is", hint: "שם עצם אחד (orange) דורש There is." },
-                    { q: "___ two bikes in the garden.", options: ["There is", "There are"], correct: "There are", hint: "אופניים ברבים הם שם עצם הדורש There are." }
-                ],
-                u2: [
-                    { q: "Dana ___ a very cute cat.", options: ["have", "has"], correct: "has", hint: "דנה היא She (גוף שלישי יחיד), לכן נשתמש ב-has." },
-                    { q: "The students ___ new books.", options: ["have", "has"], correct: "have", hint: "הסטודנטים הם רבים (They), לכן נשתמש ב-have." },
-                    { q: "The dog ___ a long tail.", options: ["have", "has"], correct: "has", hint: "כלב אחד (It) הוא גוף שלישי יחיד, לכן נשתמש ב-has." },
-                    { q: "I ___ a blue pen.", options: ["have", "has"], correct: "have", hint: "עם הגוף I (אני) תמיד משתמשים ב-have." },
-                    { q: "The children ___ many toys.", options: ["have", "has"], correct: "have", hint: "ילדים (children) הם שם עצם ברבים, לכן נשתמש ב-have." }
-                ]
-            };
+        {currentStep !== 'menu' && (
+          <div className="bg-slate-50 px-8 py-4 border-b border-slate-100 flex justify-between items-center">
+            <button onClick={() => setCurrentStep('menu')} className="text-indigo-600 font-bold flex items-center gap-1 hover:underline">
+              <ArrowRight size={18} /> חזרה
+            </button>
+            <span className="font-black text-slate-400 text-sm">English Mastery</span>
+          </div>
+        )}
 
-            const Quiz = ({ qList, title }) => {
-                const [idx, setIdx] = useState(0);
-                const [score, setScore] = useState(0);
-                const [feedback, setFeedback] = useState(null);
-                const [done, setDone] = useState(false);
+        <div className="p-8">
+          {currentStep === 'menu' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-slate-700 mb-6 text-center">מה נלמד היום?</h2>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <button onClick={() => setCurrentStep('unit1_learn')} className="flex flex-col items-center justify-center p-6 bg-blue-50 rounded-[32px] border-2 border-transparent hover:border-blue-300 transition-all text-center min-h-[140px] shadow-sm">
+                    <div className="font-black text-blue-900 text-xl mb-1">יחידה 1</div>
+                    <div className="text-lg text-blue-700 font-bold">There is/are</div>
+                </button>
 
-                const handleAns = (ans) => {
-                    if (feedback) return;
-                    const isCorrect = ans === qList[idx].correct;
-                    setFeedback(isCorrect ? 'correct' : 'wrong');
-                    if (isCorrect) setScore(prev => prev + Math.round(100/qList.length));
-                };
+                <button onClick={() => setCurrentStep('unit2_learn')} className="flex flex-col items-center justify-center p-6 bg-emerald-50 rounded-[32px] border-2 border-transparent hover:border-emerald-300 transition-all text-center min-h-[140px] shadow-sm">
+                    <div className="font-black text-emerald-900 text-xl mb-1">יחידה 2</div>
+                    <div className="text-lg text-emerald-700 font-bold">have/has</div>
+                </button>
 
-                const nextQuestion = () => {
-                    setFeedback(null);
-                    if (idx < qList.length - 1) setIdx(idx + 1);
-                    else {
-                        setDone(true);
-                        const final = Math.min(score, 100);
-                        if (title === "המבחן") {
-                            setFinalScore(final);
-                            if (final >= 60) setUnlocked(true);
-                        }
-                    }
-                };
+                <button onClick={() => setCurrentStep('final_prac')} className="flex flex-col items-center justify-center p-6 bg-amber-50 rounded-[32px] border-2 border-transparent hover:border-amber-300 transition-all text-center min-h-[140px] relative shadow-sm">
+                    <div className="font-black text-amber-900 text-xl mb-1">אתגר מסכם</div>
+                    <div className="text-sm text-amber-700 font-bold">ציון 60 לפתיחה</div>
+                    {finalScore !== null && (
+                        <div className={`absolute top-2 right-2 font-black text-xs px-2 py-1 rounded-full ${finalScore >= 60 ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>{finalScore}%</div>
+                    )}
+                </button>
 
-                if (done) return (
-                    <div className="text-center p-10 animate-pop">
-                        <h2 className="text-4xl font-black mb-6 text-slate-800">ציון סופי: {score}</h2>
-                        <button onClick={() => setStep('menu')} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold text-xl shadow-lg">חזרה לתפריט</button>
-                    </div>
-                );
+                <button 
+                    onClick={() => isGameUnlocked && setCurrentStep('game')}
+                    className={`flex flex-col items-center justify-center p-6 rounded-[32px] border-2 transition-all text-center min-h-[140px] shadow-sm ${isGameUnlocked ? 'bg-indigo-600 text-white border-indigo-400 hover:bg-indigo-700' : 'bg-slate-50 border-slate-200 opacity-60'}`}>
+                    <div className="font-black text-xl mb-1">משחק</div>
+                    {isGameUnlocked ? <Gamepad2 size={28} /> : <Lock size={28} className="text-slate-400" />}
+                </button>
+              </div>
+            </div>
+          )}
 
-                const currentQ = qList[idx];
-
-                return (
-                    <div className="animate-pop p-4 max-w-md mx-auto">
-                        <div className="bg-white p-8 rounded-[40px] shadow-sm mb-6 text-center border-2 border-slate-50">
-                            <h3 dir="ltr" className="text-2xl font-bold">{currentQ.q}</h3>
-                        </div>
-
-                        {!feedback ? (
-                            <div className="space-y-3">
-                                {currentQ.options.map(o => (
-                                    <button key={o} onClick={() => handleAns(o)} className="w-full p-5 bg-white border-2 border-slate-200 rounded-2xl font-bold text-xl text-indigo-900 active:bg-indigo-50 btn-active">{o}</button>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className={`p-6 rounded-[30px] border-4 animate-pop ${feedback === 'correct' ? 'bg-emerald-50 border-emerald-400 text-emerald-900' : 'bg-rose-50 border-rose-400 text-rose-900'}`}>
-                                <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-2xl">{feedback === 'correct' ? '✅ מעולה!' : '❌ אופס...'}</span>
-                                </div>
-                                <p className="font-bold text-lg mb-4">{feedback === 'correct' ? 'תשובה נכונה!' : currentQ.hint}</p>
-                                <button onClick={nextQuestion} className={`w-full py-4 rounded-2xl font-black text-white shadow-md ${feedback === 'correct' ? 'bg-emerald-500' : 'bg-rose-500'}`}>
-                                    {idx < qList.length - 1 ? 'לשאלה הבאה' : 'סיום התרגול'}
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                );
-            };
-
-            if (step === 'menu') return (
-                <div className="max-w-md mx-auto min-h-screen bg-slate-50">
-                    <div className="gradient-bg p-12 text-white rounded-b-[60px] shadow-xl text-center mb-10">
-                        <h1 className="text-5xl font-black italic mb-2 tracking-tight">English Mastery</h1>
-                        <p className="font-bold opacity-90 text-sm text-center">הדרך המהנה לשלוט בדקדוק!</p>
-                    </div>
-                    <div className="px-6 pb-10">
-                        <h2 className="text-2xl font-black text-slate-800 mb-8 text-center">מה נלמד היום?</h2>
-                        <div className="grid grid-cols-2 gap-6">
-                            <button onClick={() => setStep('u1_learn')} className="bg-gradient-to-br from-blue-600 to-blue-800 p-8 rounded-[40px] text-white shadow-lg btn-active min-h-[180px] flex flex-col justify-center items-center">
-                                <div className="font-black text-sm mb-2 opacity-80 uppercase tracking-wide">יחידה 1</div>
-                                <div className="text-xl font-extrabold leading-tight">There is / are</div>
-                            </button>
-                            
-                            <button onClick={() => setStep('u2_learn')} className="bg-gradient-to-br from-emerald-600 to-emerald-800 p-8 rounded-[40px] text-white shadow-lg btn-active min-h-[180px] flex flex-col justify-center items-center text-center">
-                                <div className="font-black text-sm mb-2 opacity-80 uppercase tracking-wide">יחידה 2</div>
-                                <div className="text-xl font-extrabold leading-tight">Have / Has</div>
-                            </button>
-
-                            <button onClick={() => setStep('final')} className="bg-gradient-to-br from-orange-500 to-red-600 p-8 rounded-[40px] text-white shadow-lg btn-active relative min-h-[180px] flex flex-col justify-center items-center">
-                                <div className="font-black text-2xl text-center leading-none">אתגר<br/>מסכם</div>
-                                {finalScore !== null && <div className="absolute top-4 right-4 bg-white/20 px-3 py-1 rounded-full text-xs font-bold">{finalScore}%</div>}
-                            </button>
-
-                            <button onClick={() => unlocked && setStep('game')} className={`p-8 rounded-[40px] shadow-lg flex flex-col items-center justify-center btn-active min-h-[180px] ${unlocked ? 'bg-gradient-to-br from-purple-600 to-indigo-900 text-white' : 'bg-slate-200 text-slate-400'}`}>
-                                <span className="font-black text-2xl mb-1">{unlocked ? 'משחק' : 'נעול'}</span>
-                                {!unlocked && <LockIcon />}
-                                {unlocked && <p className="text-[10px] font-bold opacity-70">Catch the Word!</p>}
-                            </button>
-                        </div>
-                    </div>
+          {currentStep === 'unit1_learn' && (
+            <div className="space-y-8 animate-in fade-in">
+              <h2 className="text-4xl font-black text-blue-600 border-b-4 border-blue-50 pb-3 text-center">There is / There are</h2>
+              <div className="bg-blue-50 p-8 rounded-[40px] border-b-8 border-blue-500">
+                <p className="text-2xl font-black text-center mb-6 text-blue-900">איך אומרים "יש"?</p>
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="bg-white p-5 rounded-[30px] shadow-sm">
+                    <span className="text-xl font-black text-blue-600">There is</span>
+                    <div className="mt-4 font-black text-2xl">יחיד</div>
+                  </div>
+                  <div className="bg-white p-5 rounded-[30px] shadow-sm">
+                    <span className="text-xl font-black text-blue-600">There are</span>
+                    <div className="mt-4 font-black text-2xl">רבים</div>
+                  </div>
                 </div>
-            );
+              </div>
+              <button onClick={() => setCurrentStep('unit1_prac')} className="w-full bg-indigo-600 text-white py-6 rounded-3xl font-black text-2xl shadow-lg">בואו נתרגל!</button>
+            </div>
+          )}
 
-            return (
-                <div className="max-w-md mx-auto min-h-screen p-6 bg-slate-50">
-                    <button onClick={() => setStep('menu')} className="mb-6 font-black text-indigo-600 flex items-center gap-2">➜ חזרה לתפריט</button>
-                    
-                    <div className="flex-1">
-                        {step === 'u1_learn' && (
-                            <div className="space-y-5 animate-pop pb-10">
-                                <h2 className="text-4xl font-black text-blue-700 text-center mb-2">There is / There are</h2>
-                                <div className="bg-white p-5 rounded-[30px] shadow-sm border-r-8 border-blue-600 text-center">
-                                    <h4 className="font-black text-blue-900 text-xl mb-1 italic">קיום והימצאות</h4>
-                                    <p className="font-bold text-slate-700">משתמשים כשרק רוצים לומר שמישהו או משהו נמצא במקום מסוים.</p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-blue-700 p-5 rounded-3xl text-center text-white shadow-md">
-                                        <div className="font-black text-2xl">There is</div>
-                                        <div className="opacity-80 text-xs font-bold mt-1">ליחיד (1)</div>
-                                    </div>
-                                    <div className="bg-blue-700 p-5 rounded-3xl text-center text-white shadow-md">
-                                        <div className="font-black text-2xl">There are</div>
-                                        <div className="opacity-80 text-xs font-bold mt-1">לרבים (2+)</div>
-                                    </div>
-                                </div>
-                                <div className="bg-white p-6 rounded-[35px] shadow-sm border-4 border-blue-100">
-                                    <h4 className="font-black text-slate-800 mb-5 text-center text-xl">איך נשתמש ב-a ו-an?</h4>
-                                    <div className="space-y-4">
-                                        <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                                            <div className="flex justify-between items-center mb-2" dir="ltr">
-                                                <span className="font-black text-blue-700 text-xl">There is a...</span>
-                                                <span className="text-xs font-bold bg-white px-2 py-1 rounded-lg text-blue-800">Normal</span>
-                                            </div>
-                                            <p className="text-left font-bold text-slate-600 italic" dir="ltr">There is <u>a</u> <b>b</b>ook on the table.</p>
-                                        </div>
-                                        <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
-                                            <div className="flex justify-between items-center mb-2" dir="ltr">
-                                                <span className="font-black text-indigo-700 text-xl">There is an...</span>
-                                                <span className="text-xs font-bold bg-white px-2 py-1 rounded-lg text-indigo-800">Vowel</span>
-                                            </div>
-                                            <p className="text-left font-bold text-slate-600 italic" dir="ltr">There is <u>an</u> <b>a</b>pple in the bag.</p>
-                                            <div className="flex justify-center gap-2 mt-2">
-                                                {['a','e','i','o','u'].map(v => <span key={v} className="bg-white text-indigo-600 font-black w-7 h-7 flex items-center justify-center rounded-lg border border-indigo-200 text-xs">{v}</span>)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="bg-slate-100 py-2 px-4 rounded-xl mt-4">
-                                        <p className="text-center font-bold text-slate-700 text-sm italic underline decoration-blue-300 underline-offset-4">שימו לב: הכלל חל על שמות עצם בלבד</p>
-                                    </div>
-                                </div>
-                                <button onClick={() => setStep('u1_quiz')} className="w-full bg-blue-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4 active:scale-95 transition-transform">בואו נתרגל!</button>
-                            </div>
-                        )}
-
-                        {step === 'u2_learn' && (
-                            <div className="space-y-6 animate-pop">
-                                <h2 className="text-4xl font-black text-emerald-700 text-center mb-6">Have / Has</h2>
-                                <div className="bg-white p-6 rounded-[30px] shadow-sm border-r-8 border-emerald-600 text-center">
-                                    <h4 className="font-black text-emerald-900 text-xl mb-2 italic">שייכות (בעלות)</h4>
-                                    <p className="font-bold text-slate-600 leading-relaxed text-lg">משתמשים כשמתארים למי יש משהו.</p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-emerald-700 p-5 rounded-3xl text-center shadow-md text-white">
-                                        <div className="font-black text-2xl">Has</div>
-                                        <div className="opacity-80 text-xs font-bold mt-1 leading-tight">He, She, It<br/>(יחיד)</div>
-                                    </div>
-                                    <div className="bg-emerald-700 p-5 rounded-3xl text-center shadow-md text-white">
-                                        <div className="font-black text-2xl">Have</div>
-                                        <div className="opacity-80 text-xs font-bold mt-1 leading-tight">I, You, We, They<br/>(אני או רבים)</div>
-                                    </div>
-                                </div>
-                                <div className="bg-amber-50 p-6 rounded-[40px] border-4 border-amber-300 shadow-sm">
-                                    <h4 className="font-black text-amber-900 text-center mb-4 text-xl text-center">דגשים חשובים:</h4>
-                                    <div className="space-y-3">
-                                        <div className="bg-white p-3 rounded-2xl flex justify-between items-center border border-amber-200" dir="ltr">
-                                            <span className="font-black text-emerald-700">Has</span>
-                                            <span className="font-bold text-slate-700">Ron / The cat</span>
-                                        </div>
-                                        <div className="bg-white p-3 rounded-2xl flex justify-between items-center border border-amber-200" dir="ltr">
-                                            <span className="font-black text-emerald-700">Have</span>
-                                            <span className="font-bold text-slate-700">The cats / We</span>
-                                        </div>
-                                        <div className="bg-white p-3 rounded-2xl flex justify-between items-center border border-amber-200" dir="ltr">
-                                            <span className="font-black text-emerald-700">Have</span>
-                                            <span className="font-bold text-slate-700">I / You</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onClick={() => setStep('u2_quiz')} className="w-full bg-emerald-700 text-white py-6 rounded-3xl font-black text-2xl shadow-xl mt-4 active:scale-95 transition-transform">בואו נתרגל!</button>
-                            </div>
-                        )}
-
-                        {step === 'u1_quiz' && <Quiz qList={questions.u1} title="תרגול 1" />}
-                        {step === 'u2_quiz' && <Quiz qList={questions.u2} title="תרגול 2" />}
-                        {step === 'final' && <Quiz qList={[...questions.u1, ...questions.u2]} title="המבחן" />}
-                        {step === 'game' && <GrammarGame onBack={() => setStep('menu')} />}
-                    </div>
+          {currentStep === 'unit2_learn' && (
+            <div className="space-y-8 animate-in fade-in">
+              <h2 className="text-4xl font-black text-emerald-600 border-b-4 border-emerald-50 pb-4 text-center">Have / Has</h2>
+              <div className="bg-emerald-50 p-8 rounded-[40px] border-b-8 border-emerald-500">
+                <p className="text-2xl font-black text-center mb-6 text-emerald-900">מי הבעלים?</p>
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="bg-white p-5 rounded-[30px] shadow-sm">
+                    <span className="text-2xl font-black text-emerald-600">HAVE</span>
+                    <div className="mt-4 font-bold text-slate-800 leading-tight">I, You, We, They</div>
+                  </div>
+                  <div className="bg-white p-5 rounded-[30px] shadow-sm">
+                    <span className="text-2xl font-black text-emerald-600">HAS</span>
+                    <div className="mt-4 font-bold text-slate-800 leading-tight">He, She, It</div>
+                  </div>
                 </div>
-            );
-        };
+              </div>
+              <button onClick={() => setCurrentStep('unit2_prac')} className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-2xl shadow-lg">בואו נתרגל!</button>
+            </div>
+          )}
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+          {currentStep === 'unit1_prac' && <Quiz questions={rawUnit1} title="תרגול: There is/are" />}
+          {currentStep === 'unit2_prac' && <Quiz questions={rawUnit2} title="תרגול: Have / Has" />}
+          {currentStep === 'final_prac' && <Quiz questions={rawFinal} title="אתגר מסכם" onComplete={handleFinalSubmit} isFinal={true} />}
+          {currentStep === 'game' && <SentenceBuilderGame />}
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
 
