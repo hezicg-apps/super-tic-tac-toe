@@ -140,7 +140,7 @@
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
             osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueToTime(100, audioCtx.currentTime + 0.1);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
             gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
             osc.connect(gainNode); gainNode.connect(audioCtx.destination);
@@ -259,13 +259,12 @@
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         .btn-option { background: #111; border: 2px solid #333; padding: 18px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
         
-        /* עיצוב כותרת טקסט חלופית */
-        .game-title { font-size: 2.2rem; font-weight: 900; line-height: 1.1; font-style: italic; }
-        .title-top { color: #00f2ff; text-shadow: 0 0 10px #00f2ff; }
-        .title-bottom { color: #bc13fe; text-shadow: 0 0 10px #bc13fe; }
+        /* כותרת בעיצוב ניאון לבן עם זוהר צבעוני */
+        .game-title { font-size: 2.2rem; font-weight: 900; line-height: 1.1; font-style: italic; color: #fff; }
+        .title-top { text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
+        .title-bottom { text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
 
-        /* כפתורים בגובה אחיד */
-        .btn-game { height: 60px; display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 1rem; font-weight: bold; text-transform: uppercase; }
+        .btn-game { height: 60px; display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 1rem; font-weight: bold; text-transform: uppercase; transition: all 0.2s; }
         .btn-outline-yellow { background: transparent; border: 2px solid #facc15; color: #facc15; }
         .btn-yellow-solid { background: #facc15; color: #000; }
         .btn-blue-solid { background: #2563eb; color: #fff; }
@@ -300,25 +299,23 @@
         
         <div id="lobbyInputs" class="w-full max-w-xs space-y-4 pointer-events-none" style="opacity:0.5;">
             <button onclick="openVocabEditor()" class="btn-game btn-outline-yellow text-lg italic">לחצו להוספת מילים למשחק</button>
-            
-            <button onclick="startLocalGame('ai')" class="btn-game btn-yellow-solid text-xl">שחק נגד ה-AI</button>
-            
-            <button onclick="startLocalGame('friend')" class="btn-game bg-zinc-800 text-white border border-zinc-700">נגד חבר (באותו מכשיר)</button>
+            <button onclick="startLocalGame('ai')" class="btn-game btn-yellow-solid text-xl">משחק נגד AI</button>
+            <button onclick="startLocalGame('friend')" class="btn-game bg-zinc-800 text-white border border-zinc-700">משחק 1:1</button>
             
             <div class="pt-2">
                 <p class="text-yellow-400 text-[10px] uppercase tracking-widest font-bold mb-2">Multiplayer Mode</p>
                 <div class="space-y-4">
-                    <button onclick="createOnline()" class="btn-game btn-blue-solid">צור משחק אונליין</button>
-                    <input type="text" id="gameIdInput" placeholder="קיבלתם קוד? פה מדביקים" class="h-[60px] bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center w-full text-white font-bold">
+                    <button onclick="createOnline()" class="btn-game btn-blue-solid">משחק אונליין</button>
+                    <input type="text" id="gameIdInput" placeholder="קיבלתם קוד? פה מדביקים" class="h-[60px] bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center w-full text-white font-bold outline-none">
                     <button onclick="joinOnline()" class="btn-game bg-zinc-900 text-zinc-400 border border-zinc-800">הצטרף לחבר</button>
                 </div>
             </div>
         </div>
 
-        <div id="codeDisplayArea" style="display:none" class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-3xl mt-4 w-full max-w-xs">
-            <p class="text-gray-500 text-xs">קוד הכיתה שלך:</p>
+        <div id="codeDisplayArea" style="display:none" class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-3xl mt-4 w-full max-w-xs text-center">
+            <p class="text-gray-500 text-xs uppercase tracking-widest">קוד המשחק שלך:</p>
             <div id="displayCode" class="text-6xl font-mono font-bold my-4 text-white"></div>
-            <a id="waLink" href="#" target="_blank" class="bg-green-600 text-white h-[60px] flex items-center justify-center rounded-xl font-bold">שלח הזמנה</a>
+            <a id="waLink" href="#" target="_blank" class="btn-game bg-green-600 text-white shadow-lg">שלח הזמנה ב-WhatsApp</a>
         </div>
     </div>
 
@@ -331,11 +328,11 @@
                 <div class="rule-item">הסימן הרביעי ימחק את הסימן הכי ישן שלכם.</div>
                 <div class="rule-item" style="border-color: #bc13fe;">סימן שעומד להיעלם יהיה חצי שקוף.</div>
             </div>
-            <button onclick="closeModal('rulesModal')" class="bg-white text-black w-full h-[60px] rounded-xl mt-8 font-black uppercase">הבנתי!</button>
+            <button onclick="closeModal('rulesModal')" class="btn-game bg-white text-black mt-8">הבנתי!</button>
         </div>
     </div>
     <div id="quizModal" class="modal"><h2 id="questionText" class="text-6xl font-black mb-12"></h2><div id="optionsContainer" class="w-full max-w-xs"></div></div>
-    <div id="resultModal" class="modal"><h2 id="resultTitle" class="text-7xl font-black mb-12 italic"></h2><button onclick="playAgain()" class="bg-white text-black px-16 h-[60px] rounded-2xl font-black text-xl">שחק שוב</button></div>
+    <div id="resultModal" class="modal"><h2 id="resultTitle" class="text-7xl font-black mb-12 italic"></h2><button onclick="playAgain()" class="btn-game bg-white text-black px-16 text-xl">שחק שוב</button></div>
     <div id="vocabModal" class="modal">
         <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 p-8">
             <h2 class="text-white text-xl font-bold mb-2 uppercase">עריכת אוצר מילים</h2>
