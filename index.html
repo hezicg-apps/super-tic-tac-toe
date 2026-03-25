@@ -132,7 +132,13 @@
             document.querySelectorAll('.cell').forEach((cell, i) => {
                 const val = data.board[i];
                 cell.textContent = val === "X" ? "✕" : (val === "O" ? "◯" : "");
-                cell.className = `cell ${val === "X" ? 'x-neon' : (val === "O" ? 'o-neon' : '')} ${val === "" && isMyTurn && data.status === 'ready_to_move' ? 'highlight' : ''}`;
+                
+                // בדיקה אם זה הסימן שעומד להיעלם (הראשון בהיסטוריה)
+                const isExpiringX = data.history.X.length === 3 && data.history.X[0] === i;
+                const isExpiringO = data.history.O.length === 3 && data.history.O[0] === i;
+                const expiringClass = (isExpiringX || isExpiringO) ? 'opacity-30' : 'opacity-100';
+
+                cell.className = `cell ${val === "X" ? 'x-neon' : (val === "O" ? 'o-neon' : '')} ${expiringClass} ${val === "" && isMyTurn && data.status === 'ready_to_move' ? 'highlight' : ''}`;
             });
 
             if (data.status === "playing" && isMyTurn) showQuiz(data.currentPlayer);
@@ -206,11 +212,26 @@
                 const b = document.createElement('button');
                 b.className = `btn-option w-full text-white`; b.style.borderColor = color; b.textContent = o;
                 b.onclick = async () => {
-                    const isCorrect = o === item.he;
-                    const updates = isCorrect ? { status: 'ready_to_move' } : { currentPlayer: myRole === "X" ? "O" : "X" };
-                    if (gameMode === "online") await updateDoc(doc(db, 'games', gameId), updates);
-                    else { Object.assign(localState, updates); renderGame(localState); }
-                    document.getElementById('quizModal').classList.remove('active');
+                    if (o === item.he) {
+                        const updates = { status: 'ready_to_move' };
+                        if (gameMode === "online") await updateDoc(doc(db, 'games', gameId), updates);
+                        else { Object.assign(localState, updates); renderGame(localState); }
+                        document.getElementById('quizModal').classList.remove('active');
+                    } else {
+                        // אפקט רעידה בטעות
+                        const modalContent = document.getElementById('quizModal');
+                        modalContent.classList.add('shake');
+                        setTimeout(() => modalContent.classList.remove('shake'), 400);
+                        
+                        // העברת תור
+                        setTimeout(async () => {
+                            const nextPlayer = data.currentPlayer === "X" ? "O" : "X";
+                            const updates = { currentPlayer: nextPlayer };
+                            if (gameMode === "online") await updateDoc(doc(db, 'games', gameId), updates);
+                            else { Object.assign(localState, updates); renderGame(localState); }
+                            document.getElementById('quizModal').classList.remove('active');
+                        }, 500);
+                    }
                 };
                 container.appendChild(b);
             });
@@ -261,7 +282,6 @@
         .turn-o { color: #bc13fe; text-shadow: 0 0 15px #bc13fe; }
         .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 90vw; max-width: 360px; margin: 20px auto; gap: 8px; }
         .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 5rem; font-weight: bold; cursor: pointer; background: #080808; border-radius: 12px; border: 1px solid #1a1a1a; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .cell:active { transform: scale(0.9); }
         .cell.highlight { border-color: #555; background: rgba(255, 255, 255, 0.05); animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; border-color: #555; } 50% { opacity: 0.5; border-color: #222; } }
         .x-neon { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff, 0 0 40px #00f2ff; animation: spawn 0.4s ease-out; }
@@ -269,9 +289,10 @@
         @keyframes spawn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.96); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; text-align: center; }
         .modal.active { display: flex; }
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         .btn-option { background: #111; border: 2px solid #333; padding: 18px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; transition: transform 0.1s; }
-        .btn-option:active { transform: scale(0.95); }
-        .wa-btn { background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 16px; border-radius: 20px; font-weight: bold; text-decoration: none; display: block; margin-top: 20px; box-shadow: 0 10px 20px rgba(37, 211, 102, 0.2); }
+        .wa-btn { background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 16px; border-radius: 20px; font-weight: bold; text-decoration: none; display: block; margin-top: 20px; }
         .btn-primary { background: linear-gradient(135deg, #fff, #ccc); color: #000; }
         textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 12px; font-family: monospace; }
     </style>
@@ -299,14 +320,14 @@
             <hr class="border-zinc-900 my-6">
             <button onclick="createOnline()" class="bg-blue-600 w-full py-4 rounded-xl font-bold text-white shadow-lg shadow-blue-900/20">צור משחק אונליין</button>
             <div class="relative">
-                <input type="text" id="gameIdInput" placeholder="קוד מהמורה" class="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center w-full focus:outline-none focus:border-blue-500 transition-colors">
+                <input type="text" id="gameIdInput" placeholder="קיבלת קוד? פה מדביקים" class="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center w-full focus:outline-none focus:border-blue-500 transition-colors text-white placeholder:text-zinc-600">
             </div>
             <button onclick="joinOnline()" class="bg-zinc-800 w-full py-4 rounded-xl font-bold text-zinc-300">הצטרף למשחק</button>
         </div>
         <div id="codeDisplayArea" style="display:none" class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-3xl mt-4 w-full max-w-xs">
             <p class="text-gray-500 text-xs uppercase">קוד הכיתה שלך:</p>
             <div id="displayCode" class="text-6xl font-mono font-bold my-4 text-white tracking-widest"></div>
-            <a id="waLink" href="#" target="_blank" class="wa-btn text-sm">שלח הזמנה לתלמידים 📱</a>
+            <a id="waLink" href="#" target="_blank" class="wa-btn text-sm text-center">שלח הזמנה לתלמידים 📱</a>
         </div>
     </div>
     <div id="quizModal" class="modal"><p id="quizPlayerLabel" class="text-xs mb-2 font-bold uppercase tracking-widest"></p><h2 id="questionText" class="text-6xl font-black mb-12"></h2><div id="optionsContainer" class="w-full max-w-xs"></div></div>
@@ -314,7 +335,6 @@
     <div id="vocabModal" class="modal">
         <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 p-8 rounded-3xl">
             <h2 class="text-white text-xl font-bold mb-2">עריכת אוצר מילים</h2>
-            <p class="text-zinc-500 text-[10px] mb-4 uppercase">English - Hebrew (מילה בכל שורה)</p>
             <textarea id="vocabInput" placeholder="Apple - תפוח"></textarea>
             <button onclick="saveVocab()" class="bg-white text-black w-full py-4 rounded-xl mt-6 font-black uppercase">שמור רשימה</button>
             <button onclick="closeModal('vocabModal')" class="text-zinc-600 mt-4 text-xs uppercase font-bold tracking-widest">סגור</button>
