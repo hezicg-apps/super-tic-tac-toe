@@ -15,21 +15,44 @@
         let firebaseReady = false;
         
         // Safe Firebase Initialization
-        try {
-            const configRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-            if (configRaw) {
-                const firebaseConfig = JSON.parse(configRaw);
-                // Only initialize if we have a valid-looking config
-                if (firebaseConfig && firebaseConfig.apiKey) {
-                    const app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-                    appId = typeof __app_id !== 'undefined' ? __app_id : 'super-ttt-default';
-                    firebaseReady = true;
+        async function setupFirebase() {
+            try {
+                const configRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+                if (configRaw) {
+                    const firebaseConfig = JSON.parse(configRaw);
+                    if (firebaseConfig && firebaseConfig.apiKey) {
+                        const app = initializeApp(firebaseConfig);
+                        auth = getAuth(app);
+                        db = getFirestore(app);
+                        appId = typeof __app_id !== 'undefined' ? __app_id : 'super-ttt-default';
+                        
+                        // Auth Logic
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                        
+                        firebaseReady = true;
+                        document.getElementById('gameStatus').innerHTML = "מחובר לשרת ✅";
+                        enableLobby();
+                    } else {
+                        throw new Error("Missing API Key");
+                    }
+                } else {
+                    throw new Error("No config available");
                 }
+            } catch (e) {
+                console.error("Firebase Setup Error:", e);
+                document.getElementById('gameStatus').innerHTML = `<span class="text-amber-500">מצב מקומי בלבד (אופליין)</span>`;
+                enableLobby();
             }
-        } catch (e) {
-            console.error("Firebase Setup Error:", e);
+        }
+
+        function enableLobby() {
+            const lobby = document.getElementById('lobbyInputs');
+            lobby.style.opacity = "1";
+            lobby.classList.remove('pointer-events-none');
         }
 
         let vocabulary = [
@@ -52,43 +75,8 @@
             status: "playing"
         };
 
-        async function initAuth() {
-            if (!firebaseReady) {
-                document.getElementById('gameStatus').innerHTML = `<span class="text-amber-500">מצב מקומי בלבד (אופליין)</span>`;
-                enableLobby();
-                return;
-            }
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (e) { 
-                console.error("Auth Error:", e);
-                document.getElementById('gameStatus').innerHTML = `<span class="text-red-500">שגיאת חיבור לשרת</span>`;
-                enableLobby();
-            }
-        }
-
-        function enableLobby() {
-            const lobby = document.getElementById('lobbyInputs');
-            lobby.style.opacity = "1";
-            lobby.classList.remove('pointer-events-none');
-            if (firebaseReady) {
-                document.getElementById('gameStatus').textContent = "מחובר לשרת ✅";
-            }
-        }
-
-        if (firebaseReady) {
-            onAuthStateChanged(auth, (u) => {
-                user = u;
-                if (user) enableLobby();
-            });
-        }
-
         window.addEventListener('load', () => {
-            initAuth();
+            setupFirebase();
             document.getElementById('lobbyModal').classList.add('active');
         });
 
@@ -160,7 +148,7 @@
         };
 
         window.createOnline = async () => {
-            if (!firebaseReady || !user) {
+            if (!firebaseReady) {
                 alert("המשחק המקוון אינו זמין כרגע. נסה שחקן יחיד.");
                 return;
             }
@@ -174,7 +162,7 @@
                     currentPlayer: "X", 
                     playerTurns: { X: 0, O: 0 }, 
                     status: "waiting", 
-                    players: { X: user.uid, O: null } 
+                    players: { X: auth.currentUser.uid, O: null } 
                 });
                 startListening();
                 showLobbyInfo();
@@ -185,7 +173,10 @@
         };
 
         window.joinOnline = async () => {
-            if (!firebaseReady || !user) return;
+            if (!firebaseReady) {
+                alert("התחברות לשרת נכשלה. נסה שוב מאוחר יותר.");
+                return;
+            }
             const inputId = document.getElementById('gameIdInput').value.toUpperCase();
             if (!inputId) return;
             gameMode = "online";
@@ -195,7 +186,7 @@
             try {
                 const snap = await getDoc(gameRef);
                 if (snap.exists()) {
-                    await updateDoc(gameRef, { "players.O": user.uid, status: "playing" });
+                    await updateDoc(gameRef, { "players.O": auth.currentUser.uid, status: "playing" });
                     startListening();
                     closeModal('lobbyModal');
                 } else alert("משחק לא נמצא");
@@ -210,7 +201,7 @@
             const gameRef = doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId);
             unsubscribe = onSnapshot(gameRef, (snap) => {
                 if (snap.exists()) renderGame(snap.data());
-            });
+            }, (err) => console.error("Snapshot error:", err));
         }
 
         function renderGame(data) {
@@ -235,11 +226,12 @@
                 setTimeout(() => {
                     const move = (function() {
                         let bestScore = -Infinity; let m = -1;
+                        let tempBoard = [...localState.board];
                         for (let i=0; i<9; i++) {
-                            if (localState.board[i] === "") {
-                                localState.board[i] = "O";
-                                let score = minimax(localState.board, 0, false);
-                                localState.board[i] = "";
+                            if (tempBoard[i] === "") {
+                                tempBoard[i] = "O";
+                                let score = minimax(tempBoard, 0, false);
+                                tempBoard[i] = "";
                                 if (score > bestScore) { bestScore = score; m = i; }
                             }
                         }
@@ -265,7 +257,8 @@
             let currentData;
             if (gameMode === "online") {
                 const gameRef = doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId);
-                currentData = (await getDoc(gameRef)).data();
+                const snap = await getDoc(gameRef);
+                currentData = snap.data();
             } else {
                 currentData = localState;
             }
