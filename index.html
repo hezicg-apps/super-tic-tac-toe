@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Tic Tac Toe - Synced Vocab</title>
+    <title>Super Tic Tac Toe - Clean Mode</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
@@ -77,14 +77,13 @@
             gameMode = "online";
             gameId = Math.random().toString(36).substring(2, 7).toUpperCase();
             myRole = "X";
-            // כאן אנחנו מוסיפים את ה-vocabulary למסמך של המשחק ב-Firebase
             await setDoc(doc(db, 'games', gameId), { 
                 board: Array(9).fill(""), 
                 currentPlayer: "X", 
                 history: { X: [], O: [] }, 
                 status: "waiting", 
                 players: { X: auth.currentUser.uid, O: null },
-                vocabulary: vocabulary // סנכרון המילים
+                vocabulary: vocabulary
             });
             startListening();
             showLobbyInfo();
@@ -97,7 +96,7 @@
             const snap = await getDoc(doc(db, 'games', gameId));
             if (snap.exists()) {
                 const data = snap.data();
-                if (data.vocabulary) vocabulary = data.vocabulary; // טעינת המילים מהשרת
+                if (data.vocabulary) vocabulary = data.vocabulary;
                 await updateDoc(doc(db, 'games', gameId), { "players.O": auth.currentUser.uid, status: "playing" });
                 startListening();
                 document.getElementById('lobbyModal').classList.remove('active');
@@ -109,7 +108,7 @@
             unsubscribe = onSnapshot(doc(db, 'games', gameId), (snap) => { 
                 if (snap.exists()) {
                     const data = snap.data();
-                    if (data.vocabulary) vocabulary = data.vocabulary; // עדכון מילים בזמן אמת
+                    if (data.vocabulary) vocabulary = data.vocabulary;
                     renderGame(data);
                 }
             });
@@ -128,8 +127,6 @@
                 const val = data.board[i];
                 cell.textContent = val === "X" ? "✕" : (val === "O" ? "◯" : "");
                 cell.className = `cell ${val === "X" ? 'x-neon' : (val === "O" ? 'o-neon' : '')} ${val === "" && isMyTurn && data.status === 'ready_to_move' ? 'highlight' : ''}`;
-                if (data.history[data.currentPlayer]?.length === 3 && data.history[data.currentPlayer][0] === i) cell.classList.add('fading-soon');
-                else cell.classList.remove('fading-soon');
             });
 
             if (data.status === "playing" && isMyTurn) showQuiz(data.currentPlayer);
@@ -139,13 +136,18 @@
             if (gameMode === "ai" && data.currentPlayer === "O" && data.status === "playing") setTimeout(() => aiMove(data), 800);
         }
 
+        async function aiMove(data) {
+            const emptyCells = data.board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            if (emptyCells.length > 0) executeMove("O", emptyCells[Math.floor(Math.random() * emptyCells.length)]);
+        }
+
         async function executeMove(role, idx) {
             let currentData = gameMode === "online" ? (await getDoc(doc(db, 'games', gameId))).data() : localState;
             if (currentData.board[idx] !== "") return;
             let newBoard = [...currentData.board], newHistory = { ...currentData.history };
             if (!newHistory[role]) newHistory[role] = [];
             newHistory[role].push(idx); newBoard[idx] = role;
-            if (newHistory[role].length > 3) { newBoard[newHistory[role].shift()] = ""; showFlashMsg(); }
+            if (newHistory[role].length > 3) { newBoard[newHistory[role].shift()] = ""; }
             const win = checkWinner(newBoard);
             const updates = { board: newBoard, history: newHistory, status: win ? "finished" : "playing", winner: win || null, currentPlayer: role === "X" ? "O" : "X" };
             if (gameMode === "online") await updateDoc(doc(db, 'games', gameId), updates);
@@ -204,7 +206,6 @@
             document.getElementById('resultModal').classList.add('active');
         }
 
-        function showFlashMsg() { const m = document.getElementById('removalMsg'); m.classList.add('visible'); setTimeout(() => m.classList.remove('visible'), 2000); }
         function speak(t) { const u = new SpeechSynthesisUtterance(t); u.lang = 'en-US'; window.speechSynthesis.speak(u); }
 
         window.openVocabEditor = () => {
@@ -232,18 +233,14 @@
         .turn-x { color: #00f2ff; text-shadow: 0 0 5px #00f2ff; }
         .turn-o { color: #bc13fe; text-shadow: 0 0 5px #bc13fe; }
         .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 90vw; max-width: 360px; margin: 20px auto; gap: 0; }
-        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 5.5rem; font-weight: bold; cursor: pointer; border: 2px solid #222; line-height: 1; }
+        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 5.5rem; font-weight: bold; cursor: pointer; border: 2px solid #222; line-height: 1; transition: all 0.2s ease-in-out; }
         .cell.highlight { background: rgba(255, 255, 255, 0.1); animation: pulse 1.5s infinite; }
-        .fading-soon { opacity: 0.3; animation: blink 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.1; } }
         .x-neon { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .o-neon { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; text-align: center; }
         .modal.active { display: flex; }
         .btn-option { background: #111; border: 2px solid #333; padding: 20px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
-        .removal-alert { color: #ff4444; font-weight: bold; opacity: 0; transition: 0.3s; height: 20px; font-size: 0.9rem; }
-        .removal-alert.visible { opacity: 1; }
         .wa-btn { background: #25D366; color: white; padding: 16px; border-radius: 16px; font-weight: bold; text-decoration: none; display: block; margin-top: 20px; }
         textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 12px; font-family: monospace; }
         @media (max-height: 600px) { .cell { font-size: 4rem; } .board { margin: 10px auto; } }
@@ -253,7 +250,6 @@
     <div id="turnBar" class="turn-bar turn-x"><span id="turnIcon" class="ml-3">✕</span><span class="text-sm opacity-50 font-normal">תור השחקן</span></div>
     <div class="text-center mt-4">
         <div class="flex justify-center items-baseline gap-1"><span id="playerTurnCounter" class="text-2xl font-light">0</span><span class="text-gray-600 text-sm">/ 3</span></div>
-        <div id="removalMsg" class="removal-alert">סימן ישן הוסר!</div>
         <p id="gameStatus" class="text-[10px] text-gray-600 mt-1">טוען...</p>
     </div>
     <div class="board">
