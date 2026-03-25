@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Tic Tac Toe</title>
+    <title>Super Tic Tac Toe - English Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
@@ -21,7 +21,7 @@
             measurementId: "G-0476T9DDNG"
         };
 
-        let db, auth, appId = "super-ttt-v1";
+        let db, auth;
         let firebaseReady = false;
         
         async function setupFirebase() {
@@ -35,7 +35,7 @@
                 enableLobby();
             } catch (e) {
                 console.error(e);
-                document.getElementById('gameStatus').innerHTML = `<span class="text-amber-500">אופליין</span>`;
+                document.getElementById('gameStatus').innerHTML = `<span class="text-amber-500">מצב אופליין</span>`;
                 enableLobby();
             }
         }
@@ -65,25 +65,6 @@
             document.getElementById('lobbyModal').classList.add('active');
         });
 
-        window.openVocabEditor = () => {
-            document.getElementById('vocabInput').value = vocabulary.map(item => `${item.en}:${item.he}`).join('\n');
-            document.getElementById('vocabModal').classList.add('active');
-        };
-
-        window.saveVocab = () => {
-            const lines = document.getElementById('vocabInput').value.split('\n');
-            const newVocab = lines.map(line => {
-                const parts = line.split(':');
-                if (parts.length === 2) return { en: parts[0].trim(), he: parts[1].trim() };
-                return null;
-            }).filter(i => i !== null);
-            if (newVocab.length >= 3) vocabulary = newVocab;
-            closeModal('vocabModal');
-        };
-
-        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
-        window.openTutorial = () => document.getElementById('tutorialModal').classList.add('active');
-
         function checkWinner(board) {
             const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
             for (let p of wins) {
@@ -95,7 +76,7 @@
         window.startAI = () => {
             gameMode = "ai";
             localState = { board: Array(9).fill(""), currentPlayer: "X", playerTurns: { X: 0, O: 0 }, status: "playing" };
-            closeModal('lobbyModal');
+            document.getElementById('lobbyModal').classList.remove('active');
             renderGame(localState);
         };
 
@@ -127,7 +108,7 @@
             if (snap.exists()) {
                 await updateDoc(gameRef, { "players.O": auth.currentUser.uid, status: "playing" });
                 startListening();
-                closeModal('lobbyModal');
+                document.getElementById('lobbyModal').classList.remove('active');
             } else alert("משחק לא נמצא");
         };
 
@@ -139,13 +120,14 @@
         }
 
         function renderGame(data) {
-            // אם המשחק התחיל (יש שחקן O), נסגור את המודאל של הלובי סופית
+            // סגירת הלובי אם המשחק התחיל
             if (data.status !== 'waiting' && document.getElementById('lobbyModal').classList.contains('active')) {
-                closeModal('lobbyModal');
+                document.getElementById('lobbyModal').classList.remove('active');
             }
 
             const isMyTurn = data.currentPlayer === myRole;
-            document.getElementById('turnBar').className = `turn-bar turn-${data.currentPlayer.toLowerCase()}`;
+            const turnBar = document.getElementById('turnBar');
+            turnBar.className = `turn-bar turn-${data.currentPlayer.toLowerCase()}`;
             document.getElementById('turnIcon').textContent = data.currentPlayer === "X" ? "✕" : "◯";
             document.getElementById('playerTurnCounter').textContent = data.playerTurns[data.currentPlayer];
 
@@ -157,7 +139,7 @@
 
             if (data.status === "playing" && isMyTurn) showQuiz();
             else if (data.status === "finished") showResult(data.winner);
-            else if (data.status === "ready_to_move") closeModal('quizModal');
+            else if (data.status === "ready_to_move") document.getElementById('quizModal').classList.remove('active');
 
             if (gameMode === "ai" && data.currentPlayer === "O" && data.status === "playing") {
                 setTimeout(() => aiMove(data), 800);
@@ -165,26 +147,40 @@
         }
 
         async function aiMove(data) {
-            let bestMove = data.board.map((v, i) => v === "" ? i : null).filter(v => v !== null)[0];
-            if (bestMove !== undefined) executeMove("O", bestMove);
+            const emptyCells = data.board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            if (emptyCells.length > 0) executeMove("O", emptyCells[Math.floor(Math.random() * emptyCells.length)]);
         }
 
         async function executeMove(role, idx) {
             let currentData = gameMode === "online" ? (await getDoc(doc(db, 'games', gameId))).data() : localState;
+            
+            if (currentData.board[idx] !== "") return; // הגנה מהחלפה
+
             let newBoard = [...currentData.board];
             newBoard[idx] = role;
+            
             let turns = {...currentData.playerTurns};
             turns[role]++;
 
-            if (turns[role] >= 4) {
-                const indices = newBoard.map((v,i) => v === role ? i : null).filter(v => v !== null);
-                newBoard[indices[Math.floor(Math.random()*indices.length)]] = "";
-                turns[role] = 0;
-                showFlashMsg();
+            // חוק 4 הסימנים: הסרת הכי ישן אם הגענו ל-5
+            if (turns[role] >= 5) {
+                const myIndices = [];
+                newBoard.forEach((v, i) => { if (v === role && i !== idx) myIndices.push(i); });
+                if (myIndices.length > 0) {
+                    newBoard[myIndices[0]] = ""; // מסיר את הראשון שנמצא (הכי ישן)
+                    showFlashMsg();
+                }
+                turns[role] = 4;
             }
 
             const win = checkWinner(newBoard);
-            const updates = { board: newBoard, playerTurns: turns, status: win ? "finished" : "playing", winner: win || null, currentPlayer: role === "X" ? "O" : "X" };
+            const updates = { 
+                board: newBoard, 
+                playerTurns: turns, 
+                status: win ? "finished" : "playing", 
+                winner: win || null, 
+                currentPlayer: role === "X" ? "O" : "X" 
+            };
 
             if (gameMode === "online") {
                 await updateDoc(doc(db, 'games', gameId), updates);
@@ -195,14 +191,10 @@
         }
 
         window.handleCellClick = async (idx) => {
-            let status;
-            if (gameMode === "online") {
-                const snap = await getDoc(doc(db, 'games', gameId));
-                status = snap.data().status;
-            } else {
-                status = localState.status;
+            let data = gameMode === "online" ? (await getDoc(doc(db, 'games', gameId))).data() : localState;
+            if (data.status === "ready_to_move" && data.currentPlayer === myRole && data.board[idx] === "") {
+                executeMove(myRole, idx);
             }
-            if (status === "ready_to_move") executeMove(myRole, idx);
         };
 
         function showQuiz() {
@@ -226,7 +218,7 @@
                     const updates = isCorrect ? { status: 'ready_to_move' } : { currentPlayer: myRole === "X" ? "O" : "X" };
                     if (gameMode === "online") await updateDoc(doc(db, 'games', gameId), updates);
                     else { Object.assign(localState, updates); renderGame(localState); }
-                    closeModal('quizModal');
+                    document.getElementById('quizModal').classList.remove('active');
                 };
                 container.appendChild(b);
             });
@@ -258,29 +250,43 @@
             window.speechSynthesis.speak(u);
         }
 
+        window.openVocabEditor = () => {
+            document.getElementById('vocabInput').value = vocabulary.map(item => `${item.en}:${item.he}`).join('\n');
+            document.getElementById('vocabModal').classList.add('active');
+        };
+
+        window.saveVocab = () => {
+            const lines = document.getElementById('vocabInput').value.split('\n');
+            const newVocab = lines.map(line => {
+                const parts = line.split(':');
+                if (parts.length === 2) return { en: parts[0].trim(), he: parts[1].trim() };
+                return null;
+            }).filter(i => i !== null);
+            if (newVocab.length >= 3) vocabulary = newVocab;
+            document.getElementById('vocabModal').classList.remove('active');
+        };
+
+        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
         window.playAgain = () => location.reload();
     </script>
     <style>
-        body { background: #000; color: #fff; font-family: 'Varela Round', sans-serif; margin: 0; padding: 0; overflow: hidden; }
-        .turn-bar { height: 70px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; }
-        .turn-x { color: #00f2ff; border-bottom: 1px solid rgba(0, 242, 255, 0.2); }
-        .turn-o { color: #bc13fe; border-bottom: 1px solid rgba(188, 19, 254, 0.2); }
-        .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 85vw; max-width: 320px; margin: 40px auto; }
-        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: bold; cursor: pointer; }
-        .cell:nth-child(3n-1), .cell:nth-child(3n-2) { border-left: 4px solid #222; }
-        .cell:nth-child(n+4) { border-top: 4px solid #222; }
-        .cell.highlight { background: rgba(255, 255, 255, 0.05); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        body { background: #000; color: #fff; font-family: 'Varela Round', sans-serif; margin: 0; padding: 0; overflow: hidden; touch-action: manipulation; }
+        .turn-bar { height: 70px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; border-bottom: 1px solid #222; }
+        .turn-x { color: #00f2ff; }
+        .turn-o { color: #bc13fe; }
+        .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 85vw; max-width: 320px; margin: 40px auto; gap: 0; }
+        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: bold; cursor: pointer; border: 2px solid #222; }
+        .cell.highlight { background: rgba(255, 255, 255, 0.1); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .x-neon { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .o-neon { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; text-align: center; backdrop-filter: blur(10px); }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; text-align: center; }
         .modal.active { display: flex; }
         .btn-option { background: #111; border: 1px solid #333; padding: 20px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
-        .removal-alert { color: #ff4444; font-weight: bold; opacity: 0; transition: 0.3s; text-align: center; font-size: 0.9rem; }
+        .removal-alert { color: #ff4444; font-weight: bold; opacity: 0; transition: 0.3s; text-align: center; font-size: 0.9rem; margin-top: 10px; }
         .removal-alert.visible { opacity: 1; }
-        .wa-btn { background: #25D366; color: white; padding: 14px 24px; border-radius: 16px; font-weight: bold; text-decoration: none; margin-top: 20px; display: block; }
-        textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; }
-        .btn-primary { background: #facc15; color: #000; padding: 20px; border-radius: 16px; font-weight: bold; }
+        .wa-btn { background: #25D366; color: white; padding: 16px; border-radius: 16px; font-weight: bold; text-decoration: none; display: block; margin-top: 20px; }
+        textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -295,39 +301,41 @@
             <span id="playerTurnCounter" class="text-2xl font-light">0</span>
             <span class="text-gray-600 text-sm">/ 4</span>
         </div>
-        <p id="gameStatus" class="text-[11px] text-gray-600 mt-3 italic">מתחבר...</p>
+        <p id="gameStatus" class="text-[11px] text-gray-600 mt-2">טוען...</p>
     </div>
 
     <div class="board">
-        <div class="cell" onclick="handleCellClick(2)"></div>
-        <div class="cell" onclick="handleCellClick(1)"></div>
         <div class="cell" onclick="handleCellClick(0)"></div>
-        <div class="cell" onclick="handleCellClick(5)"></div>
-        <div class="cell" onclick="handleCellClick(4)"></div>
+        <div class="cell" onclick="handleCellClick(1)"></div>
+        <div class="cell" onclick="handleCellClick(2)"></div>
         <div class="cell" onclick="handleCellClick(3)"></div>
-        <div class="cell" onclick="handleCellClick(8)"></div>
-        <div class="cell" onclick="handleCellClick(7)"></div>
+        <div class="cell" onclick="handleCellClick(4)"></div>
+        <div class="cell" onclick="handleCellClick(5)"></div>
         <div class="cell" onclick="handleCellClick(6)"></div>
+        <div class="cell" onclick="handleCellClick(7)"></div>
+        <div class="cell" onclick="handleCellClick(8)"></div>
     </div>
 
     <div id="removalMsg" class="removal-alert">סימן ישן הוסר מהלוח</div>
 
     <div id="lobbyModal" class="modal">
-        <h1 class="text-4xl font-black mb-8">SUPER <span class="text-yellow-400">TIC TAC TOE</span></h1>
+        <h1 class="text-4xl font-black mb-8 text-yellow-400">SUPER TIC TAC TOE</h1>
         <div id="lobbyInputs" class="w-full max-w-xs space-y-4 pointer-events-none" style="opacity:0.5;">
-            <button onclick="startAI()" class="btn-primary w-full">שחקן יחיד</button>
+            <button onclick="startAI()" class="bg-white text-black w-full py-5 rounded-2xl font-bold text-xl">שחקן יחיד (AI)</button>
             <div class="flex gap-2">
-                <button onclick="openVocabEditor()" class="bg-zinc-900 flex-1 py-3 rounded-xl text-xs text-gray-400">עריכה ⚙️</button>
-                <button onclick="openTutorial()" class="bg-zinc-900 flex-1 py-3 rounded-xl text-xs text-gray-400">מדריך 📖</button>
+                <button onclick="openVocabEditor()" class="bg-zinc-900 flex-1 py-3 rounded-xl text-xs">מילים ⚙️</button>
+                <button onclick="location.reload()" class="bg-zinc-900 flex-1 py-3 rounded-xl text-xs">רענן 🔄</button>
             </div>
-            <button onclick="createOnline()" class="bg-blue-600 w-full py-4 rounded-xl font-bold">צור קוד משחק</button>
-            <input type="text" id="gameIdInput" placeholder="הכנס קוד" class="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center w-full">
+            <hr class="border-zinc-800 my-4">
+            <button onclick="createOnline()" class="bg-blue-600 w-full py-4 rounded-xl font-bold">צור משחק אונליין</button>
+            <input type="text" id="gameIdInput" placeholder="הכנס קוד מחבר" class="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center w-full">
             <button onclick="joinOnline()" class="bg-zinc-800 w-full py-4 rounded-xl font-bold">הצטרף</button>
         </div>
-        <div id="codeDisplayArea" style="display:none" class="bg-zinc-900 p-8 rounded-3xl mt-4">
-            <p class="text-gray-500 text-xs">הקוד שלך:</p>
-            <div id="displayCode" class="text-6xl font-mono font-bold my-4"></div>
+        <div id="codeDisplayArea" style="display:none" class="bg-zinc-900 p-8 rounded-3xl mt-4 w-full max-w-xs">
+            <p class="text-gray-500 text-xs uppercase tracking-widest">הקוד שלך:</p>
+            <div id="displayCode" class="text-6xl font-mono font-bold my-4 text-white"></div>
             <a id="waLink" href="#" target="_blank" class="wa-btn">שתף בוואטסאפ</a>
+            <p class="text-zinc-500 text-[10px] mt-4">המשחק יתחיל אוטומטית כשהחבר יצטרף</p>
         </div>
     </div>
 
@@ -343,16 +351,10 @@
 
     <div id="vocabModal" class="modal">
         <div class="w-full max-w-md bg-zinc-900 p-6 rounded-3xl">
+            <h2 class="text-white mb-4">עריכת מילים (English:Hebrew)</h2>
             <textarea id="vocabInput"></textarea>
             <button onclick="saveVocab()" class="bg-white text-black w-full py-4 rounded-xl mt-4 font-bold">שמור</button>
-        </div>
-    </div>
-
-    <div id="tutorialModal" class="modal">
-        <div class="bg-zinc-900 p-8 rounded-3xl text-right max-w-xs">
-            <h2 class="text-xl font-bold mb-4">איך משחקים?</h2>
-            <p class="text-gray-400 text-sm">עונים נכון על שאלה כדי לסמן בלוח. שימו לב: מותר רק 4 סימנים, החמישי ימחק את הראשון!</p>
-            <button onclick="closeModal('tutorialModal')" class="mt-6 bg-blue-600 w-full py-3 rounded-xl font-bold">הבנתי</button>
+            <button onclick="closeModal('vocabModal')" class="text-zinc-500 mt-4 text-sm">ביטול</button>
         </div>
     </div>
 
