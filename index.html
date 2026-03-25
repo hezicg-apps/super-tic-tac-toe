@@ -259,19 +259,19 @@
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         .btn-option { background: #111; border: 2px solid #333; padding: 18px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
         
-        .game-title { font-size: 2.2rem; font-weight: 900; line-height: 1.1; font-style: italic; color: #fff; }
+        /* כותרות מוגדלות */
+        .game-title { font-size: 3.5rem; font-weight: 950; line-height: 0.9; font-style: italic; color: #fff; letter-spacing: -2px; }
         .title-top { text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .title-bottom { text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
 
         .btn-game { height: 60px; display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 1rem; font-weight: bold; text-transform: uppercase; transition: all 0.2s; }
         .btn-outline-yellow { background: transparent; border: 2px solid #facc15; color: #facc15; }
         .btn-yellow-solid { background: #facc15; color: #000; }
-        .btn-blue-solid { background: #2563eb; color: #fff; }
+        .btn-wa-style { background: #16a34a; color: #fff; border: none; } /* ירוק וואטסאפ */
 
         textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 0 !important; font-family: monospace; }
         .rule-item { background: #111; border-right: 4px solid #00f2ff; padding: 10px; margin-bottom: 10px; text-align: right; }
         
-        /* סגנון מיוחד לקלט הקוד */
         #gameIdInput { border: 2px solid #facc15; background: rgba(250, 204, 21, 0.05); color: #fff; }
         #gameIdInput::placeholder { color: #facc15; opacity: 0.4; }
     </style>
@@ -293,7 +293,7 @@
             <button onclick="document.getElementById('rulesModal').classList.add('active')" class="bg-zinc-900 border border-zinc-800 w-10 h-10 rounded-full text-lg">❓</button>
         </div>
 
-        <div class="mb-10 text-center uppercase tracking-tighter italic">
+        <div class="mb-12 text-center uppercase tracking-tighter italic">
             <div class="game-title title-top">SUPER</div>
             <div class="game-title title-bottom">TIC TAC TOE</div>
         </div>
@@ -301,13 +301,12 @@
         <div id="lobbyInputs" class="w-full max-w-xs space-y-4 pointer-events-none" style="opacity:0.5;">
             <button onclick="openVocabEditor()" class="btn-game btn-outline-yellow text-lg italic">לחצו להוספת מילים למשחק</button>
             <button onclick="startLocalGame('ai')" class="btn-game btn-yellow-solid text-xl">משחק נגד AI</button>
-            
             <button onclick="startLocalGame('friend')" class="btn-game btn-outline-yellow">משחק 1:1</button>
             
             <div class="pt-2">
-                <p class="text-yellow-400 text-[10px] uppercase tracking-widest font-bold mb-2">Multiplayer Mode</p>
+                <p class="text-yellow-400 text-[10px] uppercase tracking-widest font-bold mb-2 text-center">Multiplayer Mode</p>
                 <div class="space-y-4">
-                    <button onclick="createOnline()" class="btn-game btn-blue-solid">משחק אונליין</button>
+                    <button onclick="createOnline()" class="btn-game btn-wa-style">משחק אונליין</button>
                     <input type="text" id="gameIdInput" placeholder="קיבלתם קוד? פה מדביקים" class="h-[60px] p-4 rounded-xl text-center w-full font-bold outline-none">
                     <button onclick="joinOnline()" class="btn-game btn-outline-yellow">הצטרף לחבר</button>
                 </div>
@@ -317,20 +316,20 @@
         <div id="codeDisplayArea" style="display:none" class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-3xl mt-4 w-full max-w-xs text-center">
             <p class="text-gray-500 text-xs uppercase tracking-widest">קוד המשחק שלך:</p>
             <div id="displayCode" class="text-6xl font-mono font-bold my-4 text-white"></div>
-            <a id="waLink" href="#" target="_blank" class="btn-game bg-green-600 text-white shadow-lg">שלח הזמנה ב-WhatsApp</a>
+            <a id="waLink" href="#" target="_blank" class="btn-game btn-wa-style shadow-lg">שלח הזמנה ב-WhatsApp</a>
         </div>
     </div>
 
     <div id="rulesModal" class="modal">
         <div class="w-full max-w-xs">
-            <h2 class="text-3xl font-black mb-6 text-yellow-400 italic">איך משחקים?</h2>
+            <h2 class="text-4xl font-black mb-8 text-yellow-400 italic">איך משחקים?</h2>
             <div class="space-y-3">
                 <div class="rule-item">עונים נכון על שאלה באנגלית כדי לשים סימן בלוח.</div>
                 <div class="rule-item" style="border-color: #bc13fe;">לכל שחקן מותר רק 3 סימנים בו-זמנית.</div>
                 <div class="rule-item">הסימן הרביעי ימחק את הסימן הכי ישן שלכם.</div>
                 <div class="rule-item" style="border-color: #bc13fe;">סימן שעומד להיעלם יהיה חצי שקוף.</div>
             </div>
-            <button onclick="closeModal('rulesModal')" class="btn-game btn-outline-yellow mt-8">הבנתי!</button>
+            <button onclick="closeModal('rulesModal')" class="btn-game btn-outline-yellow mt-10">הבנתי!</button>
         </div>
     </div>
     <div id="quizModal" class="modal"><h2 id="questionText" class="text-6xl font-black mb-12"></h2><div id="optionsContainer" class="w-full max-w-xs"></div></div>
