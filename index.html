@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Tic Tac Toe - Large Icons</title>
+    <title>Super Tic Tac Toe - Synced Vocab</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
@@ -70,11 +70,22 @@
         };
 
         window.createOnline = async () => {
-            if (!firebaseReady || vocabulary.length < 3) return;
+            if (!firebaseReady || vocabulary.length < 3) {
+                alert("וודא שהזנת לפחות 3 מילים ושיש חיבור לאינטרנט");
+                return;
+            }
             gameMode = "online";
             gameId = Math.random().toString(36).substring(2, 7).toUpperCase();
             myRole = "X";
-            await setDoc(doc(db, 'games', gameId), { board: Array(9).fill(""), currentPlayer: "X", history: { X: [], O: [] }, status: "waiting", players: { X: auth.currentUser.uid, O: null } });
+            // כאן אנחנו מוסיפים את ה-vocabulary למסמך של המשחק ב-Firebase
+            await setDoc(doc(db, 'games', gameId), { 
+                board: Array(9).fill(""), 
+                currentPlayer: "X", 
+                history: { X: [], O: [] }, 
+                status: "waiting", 
+                players: { X: auth.currentUser.uid, O: null },
+                vocabulary: vocabulary // סנכרון המילים
+            });
             startListening();
             showLobbyInfo();
         };
@@ -85,6 +96,8 @@
             gameMode = "online"; gameId = inputId; myRole = "O";
             const snap = await getDoc(doc(db, 'games', gameId));
             if (snap.exists()) {
+                const data = snap.data();
+                if (data.vocabulary) vocabulary = data.vocabulary; // טעינת המילים מהשרת
                 await updateDoc(doc(db, 'games', gameId), { "players.O": auth.currentUser.uid, status: "playing" });
                 startListening();
                 document.getElementById('lobbyModal').classList.remove('active');
@@ -93,7 +106,13 @@
 
         function startListening() {
             if (unsubscribe) unsubscribe();
-            unsubscribe = onSnapshot(doc(db, 'games', gameId), (snap) => { if (snap.exists()) renderGame(snap.data()); });
+            unsubscribe = onSnapshot(doc(db, 'games', gameId), (snap) => { 
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.vocabulary) vocabulary = data.vocabulary; // עדכון מילים בזמן אמת
+                    renderGame(data);
+                }
+            });
         }
 
         function renderGame(data) {
@@ -118,11 +137,6 @@
             else if (data.status === "ready_to_move") document.getElementById('quizModal').classList.remove('active');
 
             if (gameMode === "ai" && data.currentPlayer === "O" && data.status === "playing") setTimeout(() => aiMove(data), 800);
-        }
-
-        async function aiMove(data) {
-            const emptyCells = data.board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-            if (emptyCells.length > 0) executeMove("O", emptyCells[Math.floor(Math.random() * emptyCells.length)]);
         }
 
         async function executeMove(role, idx) {
@@ -218,10 +232,7 @@
         .turn-x { color: #00f2ff; text-shadow: 0 0 5px #00f2ff; }
         .turn-o { color: #bc13fe; text-shadow: 0 0 5px #bc13fe; }
         .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 90vw; max-width: 360px; margin: 20px auto; gap: 0; }
-        
-        /* הגדלת הסמלים כאן */
         .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 5.5rem; font-weight: bold; cursor: pointer; border: 2px solid #222; line-height: 1; }
-        
         .cell.highlight { background: rgba(255, 255, 255, 0.1); animation: pulse 1.5s infinite; }
         .fading-soon { opacity: 0.3; animation: blink 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -235,12 +246,7 @@
         .removal-alert.visible { opacity: 1; }
         .wa-btn { background: #25D366; color: white; padding: 16px; border-radius: 16px; font-weight: bold; text-decoration: none; display: block; margin-top: 20px; }
         textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 12px; font-family: monospace; }
-        
-        /* התאמה למסכים קטנים מאוד */
-        @media (max-height: 600px) {
-            .cell { font-size: 4rem; }
-            .board { margin: 10px auto; }
-        }
+        @media (max-height: 600px) { .cell { font-size: 4rem; } .board { margin: 10px auto; } }
     </style>
 </head>
 <body>
