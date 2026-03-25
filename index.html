@@ -8,43 +8,38 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, getDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        let db, auth, appId;
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDqgGqCF5VzJ7I3x0O2DdQk7bY-ARajyE0",
+            authDomain: "super-tic-tac-toe-57080.firebaseapp.com",
+            projectId: "super-tic-tac-toe-57080",
+            storageBucket: "super-tic-tac-toe-57080.firebasestorage.app",
+            messagingSenderId: "32126067090",
+            appId: "1:32126067090:web:517e9f90515eec6e0d614b",
+            measurementId: "G-0476T9DDNG"
+        };
+
+        let db, auth, appId = "super-ttt-v1";
         let firebaseReady = false;
         
-        // Safe Firebase Initialization
         async function setupFirebase() {
             try {
-                const configRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-                if (configRaw) {
-                    const firebaseConfig = JSON.parse(configRaw);
-                    if (firebaseConfig && firebaseConfig.apiKey) {
-                        const app = initializeApp(firebaseConfig);
-                        auth = getAuth(app);
-                        db = getFirestore(app);
-                        appId = typeof __app_id !== 'undefined' ? __app_id : 'super-ttt-default';
-                        
-                        // Auth Logic
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
-                        
-                        firebaseReady = true;
-                        document.getElementById('gameStatus').innerHTML = "מחובר לשרת ✅";
-                        enableLobby();
-                    } else {
-                        throw new Error("Missing API Key");
-                    }
-                } else {
-                    throw new Error("No config available");
-                }
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                // התחברות אנונימית לשרת
+                await signInAnonymously(auth);
+                
+                firebaseReady = true;
+                document.getElementById('gameStatus').innerHTML = "מחובר לשרת ✅";
+                enableLobby();
             } catch (e) {
                 console.error("Firebase Setup Error:", e);
-                document.getElementById('gameStatus').innerHTML = `<span class="text-amber-500">מצב מקומי בלבד (אופליין)</span>`;
+                document.getElementById('gameStatus').innerHTML = `<span class="text-amber-500">מצב אופליין (שגיאת חיבור)</span>`;
                 enableLobby();
             }
         }
@@ -55,6 +50,7 @@
             lobby.classList.remove('pointer-events-none');
         }
 
+        // המשך לוגיקת המשחק
         let vocabulary = [
             { en: "at last", he: "סוף סוף" }, { en: "downstairs", he: "בקומה למטה" },
             { en: "give up", he: "לוותר" }, { en: "luckily", he: "למרבה המזל" },
@@ -66,7 +62,6 @@
         let gameMode = "ai"; 
         let gameId = "";
         let myRole = "X"; 
-        let user = null;
         let unsubscribe = null;
         let localState = {
             board: Array(9).fill(""),
@@ -148,14 +143,11 @@
         };
 
         window.createOnline = async () => {
-            if (!firebaseReady) {
-                alert("המשחק המקוון אינו זמין כרגע. נסה שחקן יחיד.");
-                return;
-            }
+            if (!firebaseReady) return alert("חיבור לשרת לא מוכן");
             gameMode = "online";
             gameId = Math.random().toString(36).substring(2, 7).toUpperCase();
             myRole = "X";
-            const gameRef = doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId);
+            const gameRef = doc(db, 'games', gameId);
             try {
                 await setDoc(gameRef, { 
                     board: Array(9).fill(""), 
@@ -167,22 +159,18 @@
                 startListening();
                 showLobbyInfo();
             } catch (e) {
-                console.error("Firebase Error:", e);
-                alert("שגיאת תקשורת עם השרת.");
+                console.error(e);
+                alert("שגיאה ביצירת משחק.");
             }
         };
 
         window.joinOnline = async () => {
-            if (!firebaseReady) {
-                alert("התחברות לשרת נכשלה. נסה שוב מאוחר יותר.");
-                return;
-            }
             const inputId = document.getElementById('gameIdInput').value.toUpperCase();
-            if (!inputId) return;
+            if (!inputId || !firebaseReady) return;
             gameMode = "online";
             gameId = inputId;
             myRole = "O";
-            const gameRef = doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId);
+            const gameRef = doc(db, 'games', gameId);
             try {
                 const snap = await getDoc(gameRef);
                 if (snap.exists()) {
@@ -196,12 +184,11 @@
         };
 
         function startListening() {
-            if (!firebaseReady) return;
             if (unsubscribe) unsubscribe();
-            const gameRef = doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId);
+            const gameRef = doc(db, 'games', gameId);
             unsubscribe = onSnapshot(gameRef, (snap) => {
                 if (snap.exists()) renderGame(snap.data());
-            }, (err) => console.error("Snapshot error:", err));
+            });
         }
 
         function renderGame(data) {
@@ -221,74 +208,52 @@
             else if (data.status === "finished") showResult(data.winner);
             else if (data.status === "ready_to_move") closeModal('quizModal');
 
-            // AI Logic
             if (gameMode === "ai" && data.currentPlayer === "O" && data.status === "playing") {
                 setTimeout(() => {
-                    const move = (function() {
-                        let bestScore = -Infinity; let m = -1;
-                        let tempBoard = [...localState.board];
-                        for (let i=0; i<9; i++) {
-                            if (tempBoard[i] === "") {
-                                tempBoard[i] = "O";
-                                let score = minimax(tempBoard, 0, false);
-                                tempBoard[i] = "";
-                                if (score > bestScore) { bestScore = score; m = i; }
-                            }
+                    let bestScore = -Infinity; let move = -1;
+                    let tempBoard = [...localState.board];
+                    for (let i=0; i<9; i++) {
+                        if (tempBoard[i] === "") {
+                            tempBoard[i] = "O";
+                            let score = minimax(tempBoard, 0, false);
+                            tempBoard[i] = "";
+                            if (score > bestScore) { bestScore = score; move = i; }
                         }
-                        return m;
-                    })();
-                    if (move === -1) return;
-                    localState.board[move] = "O";
-                    localState.playerTurns.O++;
-                    if (localState.playerTurns.O >= 4) {
-                        const idxs = localState.board.map((v,i) => v === "O" ? i : null).filter(v => v !== null);
-                        if(idxs.length) localState.board[idxs[Math.floor(Math.random()*idxs.length)]] = "";
-                        localState.playerTurns.O = 0;
                     }
-                    const win = checkWinner(localState.board);
-                    if (win) { localState.status = "finished"; localState.winner = win; }
-                    else { localState.currentPlayer = "X"; }
-                    renderGame(localState);
+                    if (move !== -1) executeMove("O", move);
                 }, 800);
             }
         }
 
-        window.handleCellClick = async (idx) => {
-            let currentData;
-            if (gameMode === "online") {
-                const gameRef = doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId);
-                const snap = await getDoc(gameRef);
-                currentData = snap.data();
-            } else {
-                currentData = localState;
-            }
-            
-            if (currentData.currentPlayer !== myRole || currentData.status !== 'ready_to_move' || currentData.board[idx] !== "") return;
-
+        async function executeMove(role, idx) {
+            let currentData = gameMode === "online" ? (await getDoc(doc(db, 'games', gameId))).data() : localState;
             let newBoard = [...currentData.board];
-            newBoard[idx] = myRole;
+            newBoard[idx] = role;
             let turns = {...currentData.playerTurns};
-            turns[myRole]++;
+            turns[role]++;
 
-            let updates = { board: newBoard, playerTurns: turns, status: "playing", currentPlayer: myRole === "X" ? "O" : "X" };
-            
-            // Removal Logic (Super TTT Rule)
-            if (turns[myRole] >= 4) {
-                const indices = newBoard.map((v,i) => v === myRole ? i : null).filter(v => v !== null);
-                if (indices.length > 0) newBoard[indices[Math.floor(Math.random()*indices.length)]] = "";
-                updates.board = newBoard;
-                updates.playerTurns[myRole] = 0;
+            if (turns[role] >= 4) {
+                const indices = newBoard.map((v,i) => v === role ? i : null).filter(v => v !== null);
+                newBoard[indices[Math.floor(Math.random()*indices.length)]] = "";
+                turns[role] = 0;
                 showFlashMsg();
             }
-            
+
             const win = checkWinner(newBoard);
-            if (win) { updates.status = "finished"; updates.winner = win; }
-            
+            const updates = { board: newBoard, playerTurns: turns, status: win ? "finished" : "playing", winner: win || null, currentPlayer: role === "X" ? "O" : "X" };
+
             if (gameMode === "online") {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId), updates);
+                await updateDoc(doc(db, 'games', gameId), updates);
             } else {
                 localState = {...localState, ...updates};
                 renderGame(localState);
+            }
+        }
+
+        window.handleCellClick = (idx) => {
+            const status = gameMode === "online" ? document.getElementById('gameStatus').textContent : "playing";
+            if (status.includes("ready_to_move") || localState.status === "ready_to_move") {
+                executeMove(myRole, idx);
             }
         };
 
@@ -313,7 +278,7 @@
                     const isCorrect = o === item.he;
                     const updates = isCorrect ? { status: 'ready_to_move' } : { currentPlayer: myRole === "X" ? "O" : "X" };
                     if (gameMode === "online") {
-                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId), updates);
+                        await updateDoc(doc(db, 'games', gameId), updates);
                     } else {
                         Object.assign(localState, updates);
                         renderGame(localState);
@@ -354,35 +319,18 @@
         window.playAgain = () => location.reload();
     </script>
     <style>
-        body { 
-            background: #000; 
-            color: #fff; 
-            font-family: 'Varela Round', system-ui, sans-serif; 
-            margin: 0; padding: 0; overflow: hidden; 
-        }
+        body { background: #000; color: #fff; font-family: 'Varela Round', system-ui, sans-serif; margin: 0; padding: 0; overflow: hidden; }
         .turn-bar { height: 70px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; transition: 0.3s; }
         .turn-x { color: #00f2ff; border-bottom: 1px solid rgba(0, 242, 255, 0.2); }
         .turn-o { color: #bc13fe; border-bottom: 1px solid rgba(188, 19, 254, 0.2); }
-        
-        .board { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            width: 85vw; max-width: 320px; margin: 40px auto; 
-        }
-        
-        .cell { 
-            aspect-ratio: 1; display: flex; align-items: center; justify-content: center; 
-            font-size: 3.5rem; font-weight: bold; cursor: pointer; transition: 0.2s; 
-        }
-
+        .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 85vw; max-width: 320px; margin: 40px auto; }
+        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .cell:nth-child(3n-1), .cell:nth-child(3n-2) { border-left: 4px solid #222; }
         .cell:nth-child(n+4) { border-top: 4px solid #222; }
         .cell.highlight { background: rgba(255, 255, 255, 0.05); animation: pulse 1.5s infinite; }
-        
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
         .x-neon { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .o-neon { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
-        
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; text-align: center; backdrop-filter: blur(10px); }
         .modal.active { display: flex; }
         .btn-option { background: #111; border: 1px solid #333; padding: 20px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
@@ -392,7 +340,6 @@
         .wa-btn { background: #25D366; color: white; display: flex; align-items: center; justify-content: center; padding: 14px 24px; border-radius: 16px; font-weight: bold; margin-top: 24px; width: 100%; max-width: 280px; text-decoration: none; }
         textarea { resize: none; background: #0a0a0a; color: #0f0; font-family: monospace; padding: 15px; border: 1px solid #333; border-radius: 12px; width: 100%; height: 200px; }
         .btn-primary { background: #facc15; color: #000; transition: 0.2s; }
-        .btn-primary:active { transform: scale(0.97); }
     </style>
 </head>
 <body>
@@ -408,7 +355,7 @@
             <span id="playerTurnCounter" class="text-2xl font-light">0</span>
             <span class="text-gray-600 text-sm">/ 4</span>
         </div>
-        <p id="gameStatus" class="text-[11px] text-gray-600 mt-3 italic">מכין את הלוח...</p>
+        <p id="gameStatus" class="text-[11px] text-gray-600 mt-3 italic">מתחבר ל-Firebase...</p>
     </div>
 
     <div class="board">
@@ -425,32 +372,24 @@
 
     <div id="removalMsg" class="removal-alert">סימן ישן הוסר מהלוח</div>
 
-    <!-- Lobby Modal -->
     <div id="lobbyModal" class="modal">
         <div class="mb-12">
-            <h1 class="text-5xl font-black text-white tracking-tighter leading-none">
-                SUPER<br>
-                <span class="text-yellow-400">TIC TAC TOE</span>
-            </h1>
+            <h1 class="text-5xl font-black text-white tracking-tighter leading-none">SUPER<br><span class="text-yellow-400">TIC TAC TOE</span></h1>
             <p class="text-gray-400 mt-4 tracking-wide text-sm font-medium">לומדים אנגלית תוך כדי משחק</p>
         </div>
         
         <div id="lobbyInputs" class="w-full max-w-xs space-y-4 pointer-events-none" style="opacity:0.5;">
             <button onclick="startAI()" class="btn-primary w-full py-5 rounded-2xl font-black text-xl">שחקן יחיד (OFFLINE)</button>
-            
             <div class="flex gap-2">
                 <button onclick="openVocabEditor()" class="bg-zinc-900 flex-1 py-3 rounded-xl border border-zinc-800 text-xs text-gray-400">עריכת מילים ⚙️</button>
                 <button onclick="openTutorial()" class="bg-zinc-900 flex-1 py-3 rounded-xl border border-zinc-800 text-xs text-gray-400">מדריך 📖</button>
             </div>
-            
             <div class="py-6 flex items-center gap-4">
                 <div class="h-px bg-zinc-800 flex-1"></div>
                 <span class="text-zinc-400 text-[11px] font-bold uppercase tracking-[0.2em]">מצב אונליין</span>
                 <div class="h-px bg-zinc-800 flex-1"></div>
             </div>
-            
             <button onclick="createOnline()" class="bg-blue-600 w-full py-4 rounded-xl font-bold text-white">צור קוד משחק</button>
-            
             <div class="flex flex-col gap-2">
                 <input type="text" id="gameIdInput" placeholder="הכנס קוד מחבר" class="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center text-white outline-none">
                 <button onclick="joinOnline()" class="bg-zinc-800 w-full py-4 rounded-xl font-bold text-white">הצטרף למשחק</button>
@@ -465,7 +404,6 @@
         </div>
     </div>
 
-    <!-- Other Modals -->
     <div id="quizModal" class="modal">
         <p class="text-gray-500 text-xs uppercase tracking-[0.3em] mb-4">Challenge</p>
         <h2 id="questionText" class="text-5xl font-black text-white mb-10 text-center"></h2>
