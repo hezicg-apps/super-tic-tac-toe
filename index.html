@@ -12,12 +12,21 @@
         import { getFirestore, doc, setDoc, onSnapshot, updateDoc, getDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Global variables provided by environment
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'super-ttt-production'; 
+        // Global variables provided by environment - added safety checks
+        let db, auth, appId;
+        
+        try {
+            const firebaseConfig = typeof __firebase_config !== 'undefined' 
+                ? JSON.parse(__firebase_config) 
+                : { /* Default placeholder or empty config */ };
+            
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'super-ttt-production'; 
+        } catch (e) {
+            console.error("Firebase Initialization Error:", e);
+        }
 
         let vocabulary = [
             { en: "at last", he: "סוף סוף" }, { en: "downstairs", he: "בקומה למטה" },
@@ -40,6 +49,10 @@
         };
 
         async function initAuth() {
+            if (!auth) {
+                document.getElementById('gameStatus').innerHTML = `<span class="text-red-500">חסרות הגדרות שרת</span>`;
+                return;
+            }
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -52,15 +65,17 @@
             }
         }
 
-        onAuthStateChanged(auth, (u) => {
-            user = u;
-            const lobby = document.getElementById('lobbyInputs');
-            if (user && lobby) {
-                lobby.style.opacity = "1";
-                lobby.classList.remove('pointer-events-none');
-                document.getElementById('gameStatus').textContent = "מחובר לשרת ✅";
-            }
-        });
+        if (auth) {
+            onAuthStateChanged(auth, (u) => {
+                user = u;
+                const lobby = document.getElementById('lobbyInputs');
+                if (user && lobby) {
+                    lobby.style.opacity = "1";
+                    lobby.classList.remove('pointer-events-none');
+                    document.getElementById('gameStatus').textContent = "מחובר לשרת ✅";
+                }
+            });
+        }
 
         window.addEventListener('load', () => {
             initAuth();
@@ -134,11 +149,10 @@
         };
 
         window.createOnline = async () => {
-            if (!user) return;
+            if (!user || !db) return;
             gameMode = "online";
             gameId = Math.random().toString(36).substring(2, 7).toUpperCase();
             myRole = "X";
-            // Correct path structure: /artifacts/{appId}/public/data/{collectionName}/{docId}
             const gameRef = doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId);
             try {
                 await setDoc(gameRef, { 
@@ -157,7 +171,7 @@
         };
 
         window.joinOnline = async () => {
-            if (!user) return;
+            if (!user || !db) return;
             const inputId = document.getElementById('gameIdInput').value.toUpperCase();
             if (!inputId) return;
             gameMode = "online";
@@ -178,6 +192,7 @@
         };
 
         function startListening() {
+            if (!db) return;
             if (unsubscribe) unsubscribe();
             const gameRef = doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId);
             unsubscribe = onSnapshot(gameRef, (snap) => {
@@ -233,8 +248,16 @@
         }
 
         window.handleCellClick = async (idx) => {
-            const gameRef = doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId);
-            const currentData = gameMode === "online" ? (await getDoc(gameRef)).data() : localState;
+            let currentData;
+            let gameRef;
+            
+            if (gameMode === "online") {
+                if (!db) return;
+                gameRef = doc(db, 'artifacts', appId, 'public', 'data', 'games', gameId);
+                currentData = (await getDoc(gameRef)).data();
+            } else {
+                currentData = localState;
+            }
             
             if (currentData.currentPlayer !== myRole || currentData.status !== 'ready_to_move' || currentData.board[idx] !== "") return;
 
