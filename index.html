@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Tic Tac Toe - Clean Mode</title>
+    <title>Super Tic Tac Toe - Glow & Sound</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
@@ -26,6 +26,7 @@
         let vocabulary = [{ en: "Example", he: "דוגמה" }];
         let gameMode = "ai", gameId = "", myRole = "X", unsubscribe = null;
         let localState = { board: Array(9).fill(""), currentPlayer: "X", history: { X: [], O: [] }, status: "playing" };
+        let audioCtx = null; // הקשר אודיו ליצירת צלילים
 
         async function setupFirebase() {
             try {
@@ -36,10 +37,16 @@
                 firebaseReady = true;
                 document.getElementById('gameStatus').innerHTML = "מחובר לשרת ✅";
                 enableLobby();
+                // אתחול הקשר אודיו לאחר לחיצה ראשונה (דרישת דפדפן)
+                window.addEventListener('click', initAudio, { once: true });
             } catch (e) {
                 document.getElementById('gameStatus').innerHTML = `<span class="text-amber-500">אופליין</span>`;
                 enableLobby();
             }
+        }
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
 
         function enableLobby() {
@@ -141,13 +148,33 @@
             if (emptyCells.length > 0) executeMove("O", emptyCells[Math.floor(Math.random() * emptyCells.length)]);
         }
 
+        // פונקציה ליצירת צליל "פופ" עדין בעת היעלמות סימן
+        function playRemovalSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.type = 'sine'; // גל סינוס לצליל נקי
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime); // תדר התחלתי
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1); // ירידת תדר מהירה
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); // ווליום התחלתי
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); // דעיכת ווליום מהירה
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1); // צליל קצר מאוד
+        }
+
         async function executeMove(role, idx) {
             let currentData = gameMode === "online" ? (await getDoc(doc(db, 'games', gameId))).data() : localState;
             if (currentData.board[idx] !== "") return;
             let newBoard = [...currentData.board], newHistory = { ...currentData.history };
             if (!newHistory[role]) newHistory[role] = [];
             newHistory[role].push(idx); newBoard[idx] = role;
-            if (newHistory[role].length > 3) { newBoard[newHistory[role].shift()] = ""; }
+            if (newHistory[role].length > 3) { 
+                const oldestIdx = newHistory[role].shift();
+                newBoard[oldestIdx] = ""; 
+                playRemovalSound(); // השמעת צליל כשהסימן נעלם
+            }
             const win = checkWinner(newBoard);
             const updates = { board: newBoard, history: newHistory, status: win ? "finished" : "playing", winner: win || null, currentPlayer: role === "X" ? "O" : "X" };
             if (gameMode === "online") await updateDoc(doc(db, 'games', gameId), updates);
@@ -170,7 +197,9 @@
             opts.sort(() => Math.random()-0.5);
             const color = player === 'X' ? '#00f2ff' : '#bc13fe';
             const qText = document.getElementById('questionText');
-            qText.style.color = color; qText.style.textShadow = `0 0 10px ${color}`;
+            // עדכון ה-CSS למילה לבנה עם זוהר בצבע השחקן
+            qText.style.color = '#ffffff'; 
+            qText.style.textShadow = `0 0 10px ${color}, 0 0 20px ${color}, 0 0 30px ${color}`;
             qText.textContent = item.en;
             const pLabel = document.getElementById('quizPlayerLabel');
             pLabel.textContent = `תור שחקן ${player === 'X' ? '✕' : '◯'}`; pLabel.style.color = color;
@@ -279,7 +308,7 @@
     <div id="resultModal" class="modal"><h2 id="resultTitle" class="text-6xl font-black mb-12"></h2><button onclick="playAgain()" class="bg-white text-black px-12 py-5 rounded-2xl font-bold">משחק חדש</button></div>
     <div id="vocabModal" class="modal">
         <div class="w-full max-w-md bg-zinc-900 p-6 rounded-3xl">
-            <h2 class="text-white mb-2">מחסן מילים</h2><p class="text-gray-500 text-[10px] mb-4">פורמט: English - Hebrew</p>
+            <h2 class="text-white mb-2">מחסן מילים</h2><p class="text-gray-500 text-[10px] mb-4">English - Hebrew</p>
             <textarea id="vocabInput" placeholder="Apple - תפוח"></textarea>
             <button onclick="saveVocab()" class="bg-white text-black w-full py-4 rounded-xl mt-4 font-bold">שמור</button>
             <button onclick="closeModal('vocabModal')" class="text-zinc-500 mt-4 text-sm">ביטול</button>
