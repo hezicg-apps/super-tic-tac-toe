@@ -219,7 +219,7 @@
 
         function showResult(winner) {
             const title = document.getElementById('resultTitle');
-            title.textContent = (gameMode === 'friend') ? `שחקן ${winner} ניצח!` : (winner === myRole ? "ניצחת!" : "הפסדת...");
+            title.textContent = (gameMode === 'friend') ? `שחקן ${winner} ניצח!` : (winner === myRole ? "ניצחת! 🎉" : "הפסדת... 😢");
             title.style.color = winner === 'X' ? '#00f2ff' : '#bc13fe';
             document.getElementById('resultModal').classList.add('active');
         }
@@ -244,100 +244,4 @@
     </script>
     <style>
         body { background: radial-gradient(circle at center, #111, #000); color: #fff; font-family: 'Varela Round', sans-serif; margin: 0; padding: 0; overflow: hidden; touch-action: manipulation; }
-        .turn-bar { height: 70px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; background: rgba(255,255,255,0.03); border-bottom: 1px solid #222; }
-        .turn-x { color: #00f2ff; text-shadow: 0 0 15px #00f2ff; }
-        .turn-o { color: #bc13fe; text-shadow: 0 0 15px #bc13fe; }
-        .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 90vw; max-width: 360px; margin: 20px auto; gap: 8px; }
-        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 5rem; font-weight: bold; cursor: pointer; background: #080808; border-radius: 12px; border: 1px solid #1a1a1a; }
-        .cell.highlight { border-color: #555; background: rgba(255, 255, 255, 0.05); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; border-color: #555; } 50% { opacity: 0.5; border-color: #222; } }
-        .x-neon { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
-        .o-neon { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.96); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; text-align: center; }
-        .modal.active { display: flex; }
-        .shake { animation: shake 0.4s ease-in-out; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
-        .btn-option { background: #111; border: 2px solid #333; padding: 18px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
-        
-        /* סגנון כפתור הוספת מילים ושמירה */
-        .btn-outline-yellow { background: transparent; border: 2px solid #facc15; color: #facc15; font-weight: bold; }
-        .btn-yellow-solid { background: #facc15; color: #000; font-weight: 900; }
-        
-        /* תיבת טקסט מרובעת לקריאות מקסימלית */
-        textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 0 !important; font-family: monospace; }
-        
-        .rule-item { background: #111; border-right: 4px solid #00f2ff; padding: 10px; margin-bottom: 10px; text-align: right; }
-        
-        /* Placeholder מותאם לצבע ה-O הכחול */
-        #gameIdInput::placeholder { color: #00f2ff; opacity: 0.6; }
-    </style>
-</head>
-<body>
-    <div id="turnBar" class="turn-bar turn-x"><span id="turnIcon" class="ml-3">✕</span><span class="text-sm opacity-50 font-normal">תור השחקן</span></div>
-    <div class="text-center mt-4">
-        <div class="flex justify-center items-baseline gap-1"><span id="playerTurnCounter" class="text-2xl font-light">0</span><span class="text-gray-600 text-sm">/ 3</span></div>
-        <p id="gameStatus" class="text-[10px] text-gray-600 mt-1 uppercase tracking-widest">connecting...</p>
-    </div>
-    <div class="board">
-        <div class="cell" onclick="handleCellClick(0)"></div><div class="cell" onclick="handleCellClick(1)"></div><div class="cell" onclick="handleCellClick(2)"></div>
-        <div class="cell" onclick="handleCellClick(3)"></div><div class="cell" onclick="handleCellClick(4)"></div><div class="cell" onclick="handleCellClick(5)"></div>
-        <div class="cell" onclick="handleCellClick(6)"></div><div class="cell" onclick="handleCellClick(7)"></div><div class="cell" onclick="handleCellClick(8)"></div>
-    </div>
-
-    <div id="lobbyModal" class="modal">
-        <div class="absolute top-6 left-6 flex gap-2">
-            <button onclick="document.getElementById('rulesModal').classList.add('active')" class="bg-zinc-900 border border-zinc-800 w-10 h-10 rounded-full text-lg">❓</button>
-        </div>
-
-        <div class="mb-10 w-full max-w-[280px]">
-            <img src="logo.png" alt="Super Tic Tac Toe" class="w-full h-auto">
-        </div>
-        
-        <div id="lobbyInputs" class="w-full max-w-xs space-y-4 pointer-events-none" style="opacity:0.5;">
-            <button onclick="openVocabEditor()" class="btn-outline-yellow w-full py-5 rounded-2xl text-xl shadow-xl italic">לחצו להוספת מילים למשחק</button>
-            
-            <div class="space-y-2">
-                <button onclick="startLocalGame('ai')" class="btn-yellow-solid w-full py-5 rounded-2xl text-xl shadow-xl uppercase">שחק נגד ה-AI</button>
-                <button onclick="startLocalGame('friend')" class="bg-zinc-800 text-white w-full py-4 rounded-xl font-bold border border-zinc-700 uppercase">נגד חבר (באותו מכשיר)</button>
-            </div>
-            
-            <hr class="border-zinc-900 my-4">
-            
-            <p class="text-yellow-400 text-[10px] uppercase tracking-widest font-bold">Multiplayer Mode</p>
-            
-            <button onclick="createOnline()" class="bg-blue-600 w-full py-4 rounded-xl font-bold text-white uppercase">צור משחק אונליין</button>
-            <input type="text" id="gameIdInput" placeholder="קיבלתם קוד? פה מדביקים" class="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center w-full text-white font-bold">
-            <button onclick="joinOnline()" class="bg-zinc-900 w-full py-4 rounded-xl font-bold text-zinc-400 border border-zinc-800 uppercase">הצטרף לחבר</button>
-        </div>
-
-        <div id="codeDisplayArea" style="display:none" class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-3xl mt-4 w-full max-w-xs">
-            <p class="text-gray-500 text-xs">קוד הכיתה שלך:</p>
-            <div id="displayCode" class="text-6xl font-mono font-bold my-4 text-white"></div>
-            <a id="waLink" href="#" target="_blank" class="bg-green-600 text-white p-4 rounded-xl block font-bold">שלח הזמנה</a>
-        </div>
-    </div>
-
-    <div id="rulesModal" class="modal">
-        <div class="w-full max-w-xs">
-            <h2 class="text-3xl font-black mb-6 text-yellow-400 italic">איך משחקים?</h2>
-            <div class="space-y-3">
-                <div class="rule-item">עונים נכון על שאלה באנגלית כדי לשים סימן בלוח.</div>
-                <div class="rule-item" style="border-color: #bc13fe;">לכל שחקן מותר רק 3 סימנים בו-זמנית.</div>
-                <div class="rule-item">הסימן הרביעי ימחק את הסימן הכי ישן שלכם.</div>
-                <div class="rule-item" style="border-color: #bc13fe;">סימן שעומד להיעלם יהיה חצי שקוף.</div>
-            </div>
-            <button onclick="closeModal('rulesModal')" class="bg-white text-black w-full py-4 rounded-xl mt-8 font-black uppercase">הבנתי!</button>
-        </div>
-    </div>
-    <div id="quizModal" class="modal"><h2 id="questionText" class="text-6xl font-black mb-12"></h2><div id="optionsContainer" class="w-full max-w-xs"></div></div>
-    <div id="resultModal" class="modal"><h2 id="resultTitle" class="text-7xl font-black mb-12 italic"></h2><button onclick="playAgain()" class="bg-white text-black px-16 py-5 rounded-2xl font-black text-xl">שחק שוב</button></div>
-    <div id="vocabModal" class="modal">
-        <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 p-8">
-            <h2 class="text-white text-xl font-bold mb-2">עריכת אוצר מילים</h2>
-            <textarea id="vocabInput" placeholder="Apple - תפוח"></textarea>
-            <button onclick="saveVocab()" class="btn-outline-yellow w-full py-4 mt-6 font-black uppercase">שמור רשימה</button>
-            <button onclick="closeModal('vocabModal')" class="text-zinc-600 mt-4 text-xs font-bold uppercase">סגור</button>
-        </div>
-    </div>
-</body>
-</html>
+        .turn-bar { height: 70px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-
