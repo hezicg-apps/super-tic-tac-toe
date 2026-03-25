@@ -140,7 +140,7 @@
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
             osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+            osc.frequency.exponentialRampToValueToTime(100, audioCtx.currentTime + 0.1);
             gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
             osc.connect(gainNode); gainNode.connect(audioCtx.destination);
@@ -259,7 +259,6 @@
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         .btn-option { background: #111; border: 2px solid #333; padding: 18px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
         
-        /* כותרות מוגדלות עם ריווח בין שורות */
         .game-title { font-size: 3.5rem; font-weight: 950; line-height: 1.2; font-style: italic; color: #fff; letter-spacing: -2px; }
         .title-top { text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .title-bottom { text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
@@ -268,6 +267,10 @@
         .btn-outline-yellow { background: transparent; border: 2px solid #facc15; color: #facc15; }
         .btn-yellow-solid { background: #facc15; color: #000; }
         .btn-wa-style { background: #16a34a; color: #fff; border: none; }
+
+        /* כפתור עזרה עם אנימציית פעימה */
+        .btn-help { background: #050505; border: 1.5px solid rgba(0, 242, 255, 0.4); color: #fff; width: 45px; height: 45px; border-radius: 50%; font-size: 1.5rem; font-weight: bold; text-shadow: 0 0 10px #00f2ff; animation: pulse-blue 2s infinite ease-in-out; }
+        @keyframes pulse-blue { 0%, 100% { box-shadow: 0 0 5px rgba(0, 242, 255, 0.2); border-color: rgba(0, 242, 255, 0.4); } 50% { box-shadow: 0 0 20px rgba(0, 242, 255, 0.6); border-color: #00f2ff; } }
 
         textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 0 !important; font-family: monospace; }
         .rule-item { background: #111; border-right: 4px solid #00f2ff; padding: 10px; margin-bottom: 10px; text-align: right; }
@@ -290,7 +293,7 @@
 
     <div id="lobbyModal" class="modal">
         <div class="absolute top-6 left-6 flex gap-2">
-            <button onclick="document.getElementById('rulesModal').classList.add('active')" class="bg-zinc-900 border border-zinc-800 w-10 h-10 rounded-full text-lg">❓</button>
+            <button onclick="document.getElementById('rulesModal').classList.add('active')" class="btn-help">?</button>
         </div>
 
         <div class="mb-10 text-center uppercase tracking-tighter italic">
