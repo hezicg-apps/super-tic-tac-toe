@@ -140,7 +140,7 @@
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
             osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+            osc.frequency.exponentialRampToValueToTime(100, audioCtx.currentTime + 0.1);
             gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
             osc.connect(gainNode); gainNode.connect(audioCtx.destination);
@@ -259,7 +259,6 @@
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         .btn-option { background: #111; border: 2px solid #333; padding: 18px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
         
-        /* כותרת בעיצוב ניאון לבן עם זוהר צבעוני */
         .game-title { font-size: 2.2rem; font-weight: 900; line-height: 1.1; font-style: italic; color: #fff; }
         .title-top { text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .title-bottom { text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
@@ -268,11 +267,13 @@
         .btn-outline-yellow { background: transparent; border: 2px solid #facc15; color: #facc15; }
         .btn-yellow-solid { background: #facc15; color: #000; }
         .btn-blue-solid { background: #2563eb; color: #fff; }
-        .btn-save { background: transparent; border: 2px solid #facc15; color: #facc15; border-radius: 1rem !important; }
 
         textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 0 !important; font-family: monospace; }
         .rule-item { background: #111; border-right: 4px solid #00f2ff; padding: 10px; margin-bottom: 10px; text-align: right; }
-        #gameIdInput::placeholder { color: #00f2ff; opacity: 0.6; }
+        
+        /* סגנון מיוחד לקלט הקוד */
+        #gameIdInput { border: 2px solid #facc15; background: rgba(250, 204, 21, 0.05); color: #fff; }
+        #gameIdInput::placeholder { color: #facc15; opacity: 0.4; }
     </style>
 </head>
 <body>
@@ -300,14 +301,15 @@
         <div id="lobbyInputs" class="w-full max-w-xs space-y-4 pointer-events-none" style="opacity:0.5;">
             <button onclick="openVocabEditor()" class="btn-game btn-outline-yellow text-lg italic">לחצו להוספת מילים למשחק</button>
             <button onclick="startLocalGame('ai')" class="btn-game btn-yellow-solid text-xl">משחק נגד AI</button>
-            <button onclick="startLocalGame('friend')" class="btn-game bg-zinc-800 text-white border border-zinc-700">משחק 1:1</button>
+            
+            <button onclick="startLocalGame('friend')" class="btn-game btn-outline-yellow">משחק 1:1</button>
             
             <div class="pt-2">
                 <p class="text-yellow-400 text-[10px] uppercase tracking-widest font-bold mb-2">Multiplayer Mode</p>
                 <div class="space-y-4">
                     <button onclick="createOnline()" class="btn-game btn-blue-solid">משחק אונליין</button>
-                    <input type="text" id="gameIdInput" placeholder="קיבלתם קוד? פה מדביקים" class="h-[60px] bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center w-full text-white font-bold outline-none">
-                    <button onclick="joinOnline()" class="btn-game bg-zinc-900 text-zinc-400 border border-zinc-800">הצטרף לחבר</button>
+                    <input type="text" id="gameIdInput" placeholder="קיבלתם קוד? פה מדביקים" class="h-[60px] p-4 rounded-xl text-center w-full font-bold outline-none">
+                    <button onclick="joinOnline()" class="btn-game btn-outline-yellow">הצטרף לחבר</button>
                 </div>
             </div>
         </div>
@@ -328,7 +330,7 @@
                 <div class="rule-item">הסימן הרביעי ימחק את הסימן הכי ישן שלכם.</div>
                 <div class="rule-item" style="border-color: #bc13fe;">סימן שעומד להיעלם יהיה חצי שקוף.</div>
             </div>
-            <button onclick="closeModal('rulesModal')" class="btn-game bg-white text-black mt-8">הבנתי!</button>
+            <button onclick="closeModal('rulesModal')" class="btn-game btn-outline-yellow mt-8">הבנתי!</button>
         </div>
     </div>
     <div id="quizModal" class="modal"><h2 id="questionText" class="text-6xl font-black mb-12"></h2><div id="optionsContainer" class="w-full max-w-xs"></div></div>
@@ -337,7 +339,7 @@
         <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 p-8">
             <h2 class="text-white text-xl font-bold mb-2 uppercase">עריכת אוצר מילים</h2>
             <textarea id="vocabInput" placeholder="Apple - תפוח"></textarea>
-            <button onclick="saveVocab()" class="btn-game btn-save mt-6">שמור רשימה</button>
+            <button onclick="saveVocab()" class="btn-game btn-outline-yellow mt-6">שמור רשימה</button>
             <button onclick="closeModal('vocabModal')" class="text-zinc-600 mt-4 text-xs font-bold uppercase">סגור</button>
         </div>
     </div>
