@@ -140,7 +140,7 @@
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
             osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueToTime(100, audioCtx.currentTime + 0.1);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
             gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
             osc.connect(gainNode); gainNode.connect(audioCtx.destination);
@@ -259,15 +259,15 @@
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         .btn-option { background: #111; border: 2px solid #333; padding: 18px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
         
-        /* כותרות מוגדלות */
-        .game-title { font-size: 3.5rem; font-weight: 950; line-height: 0.9; font-style: italic; color: #fff; letter-spacing: -2px; }
+        /* כותרות מוגדלות עם ריווח בין שורות */
+        .game-title { font-size: 3.5rem; font-weight: 950; line-height: 1.2; font-style: italic; color: #fff; letter-spacing: -2px; }
         .title-top { text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .title-bottom { text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
 
         .btn-game { height: 60px; display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 1rem; font-weight: bold; text-transform: uppercase; transition: all 0.2s; }
         .btn-outline-yellow { background: transparent; border: 2px solid #facc15; color: #facc15; }
         .btn-yellow-solid { background: #facc15; color: #000; }
-        .btn-wa-style { background: #16a34a; color: #fff; border: none; } /* ירוק וואטסאפ */
+        .btn-wa-style { background: #16a34a; color: #fff; border: none; }
 
         textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 0 !important; font-family: monospace; }
         .rule-item { background: #111; border-right: 4px solid #00f2ff; padding: 10px; margin-bottom: 10px; text-align: right; }
@@ -293,9 +293,9 @@
             <button onclick="document.getElementById('rulesModal').classList.add('active')" class="bg-zinc-900 border border-zinc-800 w-10 h-10 rounded-full text-lg">❓</button>
         </div>
 
-        <div class="mb-12 text-center uppercase tracking-tighter italic">
+        <div class="mb-10 text-center uppercase tracking-tighter italic">
             <div class="game-title title-top">SUPER</div>
-            <div class="game-title title-bottom">TIC TAC TOE</div>
+            <div class="game-title title-bottom mt-2">TIC TAC TOE</div>
         </div>
         
         <div id="lobbyInputs" class="w-full max-w-xs space-y-4 pointer-events-none" style="opacity:0.5;">
