@@ -25,16 +25,10 @@
 
         let db, auth;
         let firebaseReady = false;
-        let vocabulary = []; // מתחיל ריק כדי לאלץ הזנה
+        let vocabulary = []; 
         let gameMode = "ai", gameId = "", myRole = "X", unsubscribe = null;
         let localState = { board: Array(9).fill(""), currentPlayer: "X", history: { X: [], O: [] }, status: "playing" };
         let audioCtx = null;
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed:', err));
-            });
-        }
 
         async function setupFirebase() {
             try {
@@ -72,10 +66,13 @@
             return null;
         }
 
-        function showWarning(msg) {
+        // פונקציית האזהרה המעודכנת
+        window.showWarning = (msg) => {
+            const modal = document.getElementById('warningModal');
             document.getElementById('warningText').textContent = msg;
-            document.getElementById('warningModal').classList.add('active');
-        }
+            modal.style.display = 'flex';
+            modal.classList.add('active');
+        };
 
         window.startLocalGame = (mode) => {
             if (vocabulary.length < 3) { showWarning("חובה להוסיף לפחות 3 מילים לפני שמתחילים!"); return; }
@@ -220,7 +217,6 @@
             document.getElementById('lobbyInputs').style.display = 'none';
             document.getElementById('codeDisplayArea').style.display = 'block';
             document.getElementById('displayCode').textContent = gameId;
-            const shareUrl = window.location.href;
             document.getElementById('waLink').href = `https://wa.me/?text=${encodeURIComponent('בוא לשחק איתי סופר איקס עיגול!\nהזן את הקוד: ' + gameId)}`;
         }
 
@@ -230,7 +226,6 @@
             title.style.color = winner === 'X' ? '#00f2ff' : '#bc13fe';
             document.getElementById('resultModal').classList.add('active');
             
-            // הפעלת קונפטי אם המשתמש ניצח או במשחק מקומי
             if (winner === myRole || gameMode === 'friend') {
                 confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00f2ff', '#bc13fe', '#facc15'] });
             }
@@ -251,7 +246,11 @@
             if (newVocab.length >= 3) { vocabulary = newVocab; document.getElementById('vocabModal').classList.remove('active'); }
             else showWarning("נא להזין לפחות 3 מילים תקינות");
         };
-        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
+        window.closeModal = (id) => {
+            const modal = document.getElementById(id);
+            modal.classList.remove('active');
+            if (id === 'warningModal') modal.style.display = 'none';
+        };
         window.playAgain = () => location.reload();
     </script>
     <style>
@@ -265,8 +264,12 @@
         @keyframes pulse { 0%, 100% { opacity: 1; border-color: #555; } 50% { opacity: 0.5; border-color: #222; } }
         .x-neon { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .o-neon { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
+        
+        /* מודלים - שיפור סדר השכבות */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.96); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; text-align: center; }
         .modal.active { display: flex; }
+        #warningModal { z-index: 2000; background: rgba(0,0,0,0.85); }
+
         .shake { animation: shake 0.4s ease-in-out; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         .btn-option { background: #111; border: 2px solid #333; padding: 18px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
@@ -275,7 +278,7 @@
         .title-top { text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .title-bottom { text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
 
-        .btn-game { height: 60px; display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 1rem; font-weight: bold; text-transform: uppercase; transition: all 0.2s; }
+        .btn-game { height: 60px; display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 1rem; font-weight: bold; text-transform: uppercase; transition: all 0.2s; cursor: pointer; }
         .btn-outline-yellow { background: transparent; border: 2px solid #facc15; color: #facc15; }
         .btn-yellow-solid { background: #facc15; color: #000; }
         .btn-wa-style { background: #16a34a; color: #fff; border: none; }
@@ -287,10 +290,7 @@
         .rule-item { background: #111; border-right: 4px solid #00f2ff; padding: 10px; margin-bottom: 10px; text-align: right; }
         
         #gameIdInput { border: 2px solid #facc15; background: rgba(250, 204, 21, 0.05); color: #fff; }
-        #gameIdInput::placeholder { color: #facc15; opacity: 0.4; }
-
-        /* סגנון למודל אזהרה */
-        .warning-box { background: #111; border: 2px solid #f87171; border-radius: 24px; padding: 30px; width: 100%; max-width: 300px; box-shadow: 0 0 30px rgba(248, 113, 113, 0.2); }
+        .warning-box { background: #000; border: 2px solid #f87171; border-radius: 24px; padding: 30px; width: 100%; max-width: 300px; box-shadow: 0 0 40px rgba(248, 113, 113, 0.3); }
     </style>
 </head>
 <body>
@@ -299,6 +299,7 @@
         <div class="flex justify-center items-baseline gap-1"><span id="playerTurnCounter" class="text-2xl font-light">0</span><span class="text-gray-600 text-sm">/ 3</span></div>
         <p id="gameStatus" class="text-[10px] text-gray-600 mt-1 uppercase tracking-widest">connecting...</p>
     </div>
+    
     <div class="board">
         <div class="cell" onclick="handleCellClick(0)"></div><div class="cell" onclick="handleCellClick(1)"></div><div class="cell" onclick="handleCellClick(2)"></div>
         <div class="cell" onclick="handleCellClick(3)"></div><div class="cell" onclick="handleCellClick(4)"></div><div class="cell" onclick="handleCellClick(5)"></div>
@@ -317,7 +318,7 @@
         <div class="absolute top-6 left-6 flex gap-2">
             <button onclick="document.getElementById('rulesModal').classList.add('active')" class="btn-help">?</button>
         </div>
-        <div class="mb-10 text-center uppercase tracking-tighter italic">
+        <div class="mb-10 text-center italic">
             <div class="game-title title-top">SUPER</div>
             <div class="game-title title-bottom mt-2">TIC TAC TOE</div>
         </div>
@@ -348,7 +349,6 @@
                 <div class="rule-item">עונים נכון על שאלה באנגלית כדי לשים סימן בלוח.</div>
                 <div class="rule-item" style="border-color: #bc13fe;">לכל שחקן מותר רק 3 סימנים בו-זמנית.</div>
                 <div class="rule-item">הסימן הרביעי ימחק את הסימן הכי ישן שלכם.</div>
-                <div class="rule-item" style="border-color: #bc13fe;">סימן שעומד להיעלם יהיה חצי שקוף.</div>
             </div>
             <button onclick="closeModal('rulesModal')" class="btn-game btn-outline-yellow mt-10">הבנתי!</button>
         </div>
