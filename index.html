@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Tic Tac Toe</title>
-    <link rel="manifest" href="manifest.json">
+    <title>Super Tic Tac Toe - Teacher Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -53,25 +52,44 @@
             lobby.classList.remove('pointer-events-none');
         }
 
+        // טעינת מילים שנשמרו בטלפון מהשיעור הקודם
         window.addEventListener('load', () => {
             setupFirebase();
+            const savedVocab = localStorage.getItem('teacher_last_vocab');
+            if (savedVocab) {
+                document.getElementById('vocabInput').value = savedVocab;
+                parseVocab(savedVocab);
+            }
             document.getElementById('lobbyModal').classList.add('active');
         });
 
-        function checkWinner(board) {
-            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            for (let p of wins) {
-                if (board[p[0]] && board[p[0]] === board[p[1]] && board[p[0]] === board[p[2]]) return board[p[0]];
-            }
-            return null;
+        function parseVocab(text) {
+            const lines = text.split('\n');
+            vocabulary = lines.map(line => {
+                const parts = line.split(/[-:,/|]|\s{2,}/); 
+                if (parts.length >= 2) {
+                    return { en: parts[0].trim(), he: parts[1].trim() };
+                }
+                return null;
+            }).filter(i => i !== null);
         }
 
-        // פונקציית האזהרה המעודכנת
         window.showWarning = (msg) => {
             const modal = document.getElementById('warningModal');
             document.getElementById('warningText').textContent = msg;
             modal.style.display = 'flex';
             modal.classList.add('active');
+        };
+
+        window.saveVocab = () => {
+            const rawText = document.getElementById('vocabInput').value;
+            parseVocab(rawText);
+            if (vocabulary.length >= 3) {
+                localStorage.setItem('teacher_last_vocab', rawText);
+                document.getElementById('vocabModal').classList.remove('active');
+            } else {
+                showWarning("נא להזין לפחות 3 מילים בפורמט: Word - מילה");
+            }
         };
 
         window.startLocalGame = (mode) => {
@@ -232,20 +250,7 @@
         }
 
         function speak(t) { const u = new SpeechSynthesisUtterance(t); u.lang = 'en-US'; window.speechSynthesis.speak(u); }
-        window.openVocabEditor = () => {
-            document.getElementById('vocabInput').value = vocabulary.length > 0 ? vocabulary.map(item => `${item.en} - ${item.he}`).join('\n') : "";
-            document.getElementById('vocabModal').classList.add('active');
-        };
-        window.saveVocab = () => {
-            const lines = document.getElementById('vocabInput').value.split('\n');
-            const newVocab = lines.map(line => {
-                const parts = line.includes('-') ? line.split('-') : line.split(':');
-                if (parts.length === 2) return { en: parts[0].trim(), he: parts[1].trim() };
-                return null;
-            }).filter(i => i !== null);
-            if (newVocab.length >= 3) { vocabulary = newVocab; document.getElementById('vocabModal').classList.remove('active'); }
-            else showWarning("נא להזין לפחות 3 מילים תקינות");
-        };
+        window.openVocabEditor = () => document.getElementById('vocabModal').classList.add('active');
         window.closeModal = (id) => {
             const modal = document.getElementById(id);
             modal.classList.remove('active');
@@ -259,13 +264,12 @@
         .turn-x { color: #00f2ff; text-shadow: 0 0 15px #00f2ff; }
         .turn-o { color: #bc13fe; text-shadow: 0 0 15px #bc13fe; }
         .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 90vw; max-width: 360px; margin: 20px auto; gap: 8px; }
-        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 5rem; font-weight: bold; cursor: pointer; background: #080808; border-radius: 12px; border: 1px solid #1a1a1a; }
+        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 5rem; font-weight: bold; cursor: pointer; background: #080808; border-radius: 12px; border: 1px solid #1a1a1a; transition: all 0.2s; }
         .cell.highlight { border-color: #555; background: rgba(255, 255, 255, 0.05); animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; border-color: #555; } 50% { opacity: 0.5; border-color: #222; } }
         .x-neon { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .o-neon { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
         
-        /* מודלים - שיפור סדר השכבות */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.96); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; text-align: center; }
         .modal.active { display: flex; }
         #warningModal { z-index: 2000; background: rgba(0,0,0,0.85); }
@@ -286,8 +290,8 @@
         .btn-help { background: #050505; border: 1.5px solid rgba(0, 242, 255, 0.4); color: #fff; width: 45px; height: 45px; border-radius: 50%; font-size: 1.5rem; font-weight: bold; text-shadow: 0 0 10px #00f2ff; animation: pulse-blue 2s infinite ease-in-out; }
         @keyframes pulse-blue { 0%, 100% { box-shadow: 0 0 5px rgba(0, 242, 255, 0.2); border-color: rgba(0, 242, 255, 0.4); } 50% { box-shadow: 0 0 20px rgba(0, 242, 255, 0.6); border-color: #00f2ff; } }
 
-        textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 0 !important; font-family: monospace; }
-        .rule-item { background: #111; border-right: 4px solid #00f2ff; padding: 10px; margin-bottom: 10px; text-align: right; }
+        textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 250px; border-radius: 12px; font-family: monospace; outline: none; text-align: left; direction: ltr; }
+        .rule-item { background: #111; border-right: 4px solid #00f2ff; padding: 10px; margin-bottom: 10px; text-align: right; font-size: 0.9rem; }
         
         #gameIdInput { border: 2px solid #facc15; background: rgba(250, 204, 21, 0.05); color: #fff; }
         .warning-box { background: #000; border: 2px solid #f87171; border-radius: 24px; padding: 30px; width: 100%; max-width: 300px; box-shadow: 0 0 40px rgba(248, 113, 113, 0.3); }
@@ -315,7 +319,7 @@
     </div>
 
     <div id="lobbyModal" class="modal">
-        <div class="absolute top-6 left-6 flex gap-2">
+        <div class="absolute top-6 left-6">
             <button onclick="document.getElementById('rulesModal').classList.add('active')" class="btn-help">?</button>
         </div>
         <div class="mb-10 text-center italic">
@@ -323,22 +327,38 @@
             <div class="game-title title-bottom mt-2">TIC TAC TOE</div>
         </div>
         <div id="lobbyInputs" class="w-full max-w-xs space-y-4 pointer-events-none" style="opacity:0.5;">
-            <button onclick="openVocabEditor()" class="btn-game btn-outline-yellow text-lg italic">לחצו להוספת מילים למשחק</button>
+            <button onclick="openVocabEditor()" class="btn-game btn-outline-yellow text-lg italic">לחצו להזנת מילים מהספר</button>
             <button onclick="startLocalGame('ai')" class="btn-game btn-yellow-solid text-xl">משחק נגד AI</button>
-            <button onclick="startLocalGame('friend')" class="btn-game btn-outline-yellow">משחק 1:1</button>
+            <button onclick="startLocalGame('friend')" class="btn-game btn-outline-yellow">משחק 1:1 בכיתה</button>
             <div class="pt-2 text-center">
                 <p class="text-yellow-400 text-[10px] uppercase tracking-widest font-bold mb-2">Multiplayer Mode</p>
                 <div class="space-y-4">
-                    <button onclick="createOnline()" class="btn-game btn-wa-style">משחק אונליין</button>
-                    <input type="text" id="gameIdInput" placeholder="קיבלתם קוד? פה מדביקים" class="h-[60px] p-4 rounded-xl text-center w-full font-bold outline-none">
+                    <button onclick="createOnline()" class="btn-game btn-wa-style">פתח משחק אונליין</button>
+                    <input type="text" id="gameIdInput" placeholder="הכנס קוד מחבר" class="h-[60px] p-4 rounded-xl text-center w-full font-bold outline-none">
                     <button onclick="joinOnline()" class="btn-game btn-outline-yellow">הצטרף לחבר</button>
                 </div>
             </div>
         </div>
         <div id="codeDisplayArea" style="display:none" class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-3xl mt-4 w-full max-w-xs text-center">
-            <p class="text-gray-500 text-xs uppercase tracking-widest">קוד המשחק שלך:</p>
+            <p class="text-gray-500 text-xs uppercase tracking-widest">קוד המשחק:</p>
             <div id="displayCode" class="text-6xl font-mono font-bold my-4 text-white"></div>
             <a id="waLink" href="#" target="_blank" class="btn-game btn-wa-style shadow-lg">שלח הזמנה ב-WhatsApp</a>
+        </div>
+    </div>
+
+    <div id="vocabModal" class="modal">
+        <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 p-6 rounded-2xl">
+            <h2 class="text-white text-lg font-bold mb-2 uppercase italic text-right">רשימת מילים לשיעור</h2>
+            <p class="text-zinc-500 text-[10px] text-right mb-4">ניתן להדביק רשימה ישירות מהספר או מה-WhatsApp</p>
+            
+            <textarea id="vocabInput" placeholder="Dog - כלב
+Cat - חתול
+Apple - תפוח"></textarea>
+            
+            <div class="mt-6 flex flex-col gap-2">
+                <button onclick="saveVocab()" class="btn-game btn-yellow-solid">שמור מילים והתחל</button>
+                <button onclick="closeModal('vocabModal')" class="text-zinc-500 text-xs font-bold py-2">סגור</button>
+            </div>
         </div>
     </div>
 
@@ -347,21 +367,14 @@
             <h2 class="text-4xl font-black mb-8 text-yellow-400 italic">איך משחקים?</h2>
             <div class="space-y-3">
                 <div class="rule-item">עונים נכון על שאלה באנגלית כדי לשים סימן בלוח.</div>
-                <div class="rule-item" style="border-color: #bc13fe;">לכל שחקן מותר רק 3 סימנים בו-זמנית.</div>
-                <div class="rule-item">הסימן הרביעי ימחק את הסימן הכי ישן שלכם.</div>
+                <div class="rule-item" style="border-color: #bc13fe;">מותר רק 3 סימנים לכל שחקן.</div>
+                <div class="rule-item">הסימן הרביעי מוחק את הסימן הכי ישן.</div>
             </div>
             <button onclick="closeModal('rulesModal')" class="btn-game btn-outline-yellow mt-10">הבנתי!</button>
         </div>
     </div>
+
     <div id="quizModal" class="modal"><h2 id="questionText" class="text-6xl font-black mb-12"></h2><div id="optionsContainer" class="w-full max-w-xs"></div></div>
     <div id="resultModal" class="modal"><h2 id="resultTitle" class="text-7xl font-black mb-12 italic"></h2><button onclick="playAgain()" class="btn-game bg-white text-black px-16 text-xl">שחק שוב</button></div>
-    <div id="vocabModal" class="modal">
-        <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 p-8">
-            <h2 class="text-white text-xl font-bold mb-2 uppercase">עריכת אוצר מילים</h2>
-            <textarea id="vocabInput" placeholder="Apple - תפוח"></textarea>
-            <button onclick="saveVocab()" class="btn-game btn-outline-yellow mt-6">שמור רשימה</button>
-            <button onclick="closeModal('vocabModal')" class="text-zinc-600 mt-4 text-xs font-bold uppercase">סגור</button>
-        </div>
-    </div>
 </body>
 </html>
