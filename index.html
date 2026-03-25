@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Tic Tac Toe - Glow & Sound</title>
+    <title>Super Tic Tac Toe</title>
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -140,7 +140,7 @@
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
             osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+            osc.frequency.exponentialRampToValueToTime(100, audioCtx.currentTime + 0.1);
             gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
             osc.connect(gainNode); gainNode.connect(audioCtx.destination);
@@ -259,15 +259,19 @@
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         .btn-option { background: #111; border: 2px solid #333; padding: 18px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
         
-        .btn-outline-yellow { background: transparent; border: 2px solid #facc15; color: #facc15; font-weight: bold; }
-        .btn-yellow-solid { background: #facc15; color: #000; font-weight: 900; }
-        
-        /* תיבת טקסט מרובעת בלבד */
+        /* עיצוב כותרת טקסט חלופית */
+        .game-title { font-size: 2.2rem; font-weight: 900; line-height: 1.1; font-style: italic; }
+        .title-top { color: #00f2ff; text-shadow: 0 0 10px #00f2ff; }
+        .title-bottom { color: #bc13fe; text-shadow: 0 0 10px #bc13fe; }
+
+        /* כפתורים בגובה אחיד */
+        .btn-game { height: 60px; display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 1rem; font-weight: bold; text-transform: uppercase; }
+        .btn-outline-yellow { background: transparent; border: 2px solid #facc15; color: #facc15; }
+        .btn-yellow-solid { background: #facc15; color: #000; }
+        .btn-blue-solid { background: #2563eb; color: #fff; }
+        .btn-save { background: transparent; border: 2px solid #facc15; color: #facc15; border-radius: 1rem !important; }
+
         textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 0 !important; font-family: monospace; }
-        
-        /* כפתור שמור - מעוגל חזרה */
-        .btn-save { background: transparent; border: 2px solid #facc15; color: #facc15; font-weight: bold; border-radius: 1rem !important; }
-        
         .rule-item { background: #111; border-right: 4px solid #00f2ff; padding: 10px; margin-bottom: 10px; text-align: right; }
         #gameIdInput::placeholder { color: #00f2ff; opacity: 0.6; }
     </style>
@@ -289,27 +293,32 @@
             <button onclick="document.getElementById('rulesModal').classList.add('active')" class="bg-zinc-900 border border-zinc-800 w-10 h-10 rounded-full text-lg">❓</button>
         </div>
 
-        <div class="mb-10 w-full max-w-[280px]">
-            <img src="logo.png" alt="Super Tic Tac Toe" class="w-full h-auto">
+        <div class="mb-10 text-center uppercase tracking-tighter italic">
+            <div class="game-title title-top">SUPER</div>
+            <div class="game-title title-bottom">TIC TAC TOE</div>
         </div>
         
         <div id="lobbyInputs" class="w-full max-w-xs space-y-4 pointer-events-none" style="opacity:0.5;">
-            <button onclick="openVocabEditor()" class="btn-outline-yellow w-full py-5 rounded-2xl text-xl shadow-xl italic">לחצו להוספת מילים למשחק</button>
-            <div class="space-y-2">
-                <button onclick="startLocalGame('ai')" class="btn-yellow-solid w-full py-5 rounded-2xl text-xl shadow-xl uppercase">שחק נגד ה-AI</button>
-                <button onclick="startLocalGame('friend')" class="bg-zinc-800 text-white w-full py-4 rounded-xl font-bold border border-zinc-700 uppercase">נגד חבר (באותו מכשיר)</button>
+            <button onclick="openVocabEditor()" class="btn-game btn-outline-yellow text-lg italic">לחצו להוספת מילים למשחק</button>
+            
+            <button onclick="startLocalGame('ai')" class="btn-game btn-yellow-solid text-xl">שחק נגד ה-AI</button>
+            
+            <button onclick="startLocalGame('friend')" class="btn-game bg-zinc-800 text-white border border-zinc-700">נגד חבר (באותו מכשיר)</button>
+            
+            <div class="pt-2">
+                <p class="text-yellow-400 text-[10px] uppercase tracking-widest font-bold mb-2">Multiplayer Mode</p>
+                <div class="space-y-4">
+                    <button onclick="createOnline()" class="btn-game btn-blue-solid">צור משחק אונליין</button>
+                    <input type="text" id="gameIdInput" placeholder="קיבלתם קוד? פה מדביקים" class="h-[60px] bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center w-full text-white font-bold">
+                    <button onclick="joinOnline()" class="btn-game bg-zinc-900 text-zinc-400 border border-zinc-800">הצטרף לחבר</button>
+                </div>
             </div>
-            <hr class="border-zinc-900 my-4">
-            <p class="text-yellow-400 text-[10px] uppercase tracking-widest font-bold">Multiplayer Mode</p>
-            <button onclick="createOnline()" class="bg-blue-600 w-full py-4 rounded-xl font-bold text-white uppercase">צור משחק אונליין</button>
-            <input type="text" id="gameIdInput" placeholder="קיבלתם קוד? פה מדביקים" class="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center w-full text-white font-bold">
-            <button onclick="joinOnline()" class="bg-zinc-900 w-full py-4 rounded-xl font-bold text-zinc-400 border border-zinc-800 uppercase">הצטרף לחבר</button>
         </div>
 
         <div id="codeDisplayArea" style="display:none" class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-3xl mt-4 w-full max-w-xs">
             <p class="text-gray-500 text-xs">קוד הכיתה שלך:</p>
             <div id="displayCode" class="text-6xl font-mono font-bold my-4 text-white"></div>
-            <a id="waLink" href="#" target="_blank" class="bg-green-600 text-white p-4 rounded-xl block font-bold">שלח הזמנה</a>
+            <a id="waLink" href="#" target="_blank" class="bg-green-600 text-white h-[60px] flex items-center justify-center rounded-xl font-bold">שלח הזמנה</a>
         </div>
     </div>
 
@@ -322,16 +331,16 @@
                 <div class="rule-item">הסימן הרביעי ימחק את הסימן הכי ישן שלכם.</div>
                 <div class="rule-item" style="border-color: #bc13fe;">סימן שעומד להיעלם יהיה חצי שקוף.</div>
             </div>
-            <button onclick="closeModal('rulesModal')" class="bg-white text-black w-full py-4 rounded-xl mt-8 font-black uppercase">הבנתי!</button>
+            <button onclick="closeModal('rulesModal')" class="bg-white text-black w-full h-[60px] rounded-xl mt-8 font-black uppercase">הבנתי!</button>
         </div>
     </div>
     <div id="quizModal" class="modal"><h2 id="questionText" class="text-6xl font-black mb-12"></h2><div id="optionsContainer" class="w-full max-w-xs"></div></div>
-    <div id="resultModal" class="modal"><h2 id="resultTitle" class="text-7xl font-black mb-12 italic"></h2><button onclick="playAgain()" class="bg-white text-black px-16 py-5 rounded-2xl font-black text-xl">שחק שוב</button></div>
+    <div id="resultModal" class="modal"><h2 id="resultTitle" class="text-7xl font-black mb-12 italic"></h2><button onclick="playAgain()" class="bg-white text-black px-16 h-[60px] rounded-2xl font-black text-xl">שחק שוב</button></div>
     <div id="vocabModal" class="modal">
         <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 p-8">
-            <h2 class="text-white text-xl font-bold mb-2">עריכת אוצר מילים</h2>
+            <h2 class="text-white text-xl font-bold mb-2 uppercase">עריכת אוצר מילים</h2>
             <textarea id="vocabInput" placeholder="Apple - תפוח"></textarea>
-            <button onclick="saveVocab()" class="btn-save w-full py-4 mt-6 font-black uppercase">שמור רשימה</button>
+            <button onclick="saveVocab()" class="btn-game btn-save mt-6">שמור רשימה</button>
             <button onclick="closeModal('vocabModal')" class="text-zinc-600 mt-4 text-xs font-bold uppercase">סגור</button>
         </div>
     </div>
