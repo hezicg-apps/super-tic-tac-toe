@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Tic Tac Toe - 3 Marks Rule</title>
+    <title>Super Tic Tac Toe - Colored Quiz</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
@@ -23,7 +23,6 @@
 
         let db, auth;
         let firebaseReady = false;
-        let moveHistory = { X: [], O: [] }; // מעקב אחרי סדר המהלכים להסרה מדויקת
 
         async function setupFirebase() {
             try {
@@ -129,7 +128,6 @@
             document.getElementById('turnBar').className = `turn-bar turn-${data.currentPlayer.toLowerCase()}`;
             document.getElementById('turnIcon').textContent = data.currentPlayer === "X" ? "✕" : "◯";
             
-            // הצגת מספר הסימנים הנוכחי על הלוח (מתוך 3)
             const currentMarksCount = data.history[data.currentPlayer] ? data.history[data.currentPlayer].length : 0;
             document.getElementById('playerTurnCounter').textContent = currentMarksCount;
 
@@ -138,7 +136,6 @@
                 cell.textContent = val === "X" ? "✕" : (val === "O" ? "◯" : "");
                 cell.className = `cell ${val === "X" ? 'x-neon' : (val === "O" ? 'o-neon' : '')} ${val === "" && isMyTurn && data.status === 'ready_to_move' ? 'highlight' : ''}`;
                 
-                // אפקט ויזואלי לסימן שעומד להיעלם (הראשון בתור)
                 if (data.history[data.currentPlayer] && data.history[data.currentPlayer].length === 3 && data.history[data.currentPlayer][0] === i) {
                     cell.classList.add('fading-soon');
                 } else {
@@ -146,7 +143,7 @@
                 }
             });
 
-            if (data.status === "playing" && isMyTurn) showQuiz();
+            if (data.status === "playing" && isMyTurn) showQuiz(data.currentPlayer);
             else if (data.status === "finished") showResult(data.winner);
             else if (data.status === "ready_to_move") document.getElementById('quizModal').classList.remove('active');
 
@@ -168,13 +165,11 @@
             let newHistory = { ...currentData.history };
             if (!newHistory[role]) newHistory[role] = [];
 
-            // הוספת המהלך החדש להיסטוריה
             newHistory[role].push(idx);
             newBoard[idx] = role;
 
-            // חוק ה-3 סימנים: אם יש עכשיו 4, מסירים את הכי ישן (האינדקס הראשון במערך)
             if (newHistory[role].length > 3) {
-                const oldestIdx = newHistory[role].shift(); // מסיר מהמערך ומחזיר את הערך
+                const oldestIdx = newHistory[role].shift();
                 newBoard[oldestIdx] = "";
                 showFlashMsg();
             }
@@ -203,7 +198,7 @@
             }
         };
 
-        function showQuiz() {
+        function showQuiz(player) {
             if (document.getElementById('quizModal').classList.contains('active')) return;
             const item = vocabulary[Math.floor(Math.random()*vocabulary.length)];
             const opts = [item.he];
@@ -212,23 +207,42 @@
                 if(!opts.includes(r)) opts.push(r);
             }
             opts.sort(() => Math.random()-0.5);
-            document.getElementById('questionText').textContent = item.en;
+
+            const modal = document.getElementById('quizModal');
+            const questionText = document.getElementById('questionText');
+            const playerLabel = document.getElementById('quizPlayerLabel');
+            
+            // שינוי צבע הטקסט לפי השחקן
+            if (player === 'X') {
+                questionText.className = "text-5xl font-black mb-10 text-[#00f2ff] drop-shadow-[0_0_10px_#00f2ff]";
+                playerLabel.textContent = "תור שחקן ✕";
+                playerLabel.className = "text-[#00f2ff] text-xs mb-2 font-bold";
+            } else {
+                questionText.className = "text-5xl font-black mb-10 text-[#bc13fe] drop-shadow-[0_0_10px_#bc13fe]";
+                playerLabel.textContent = "תור שחקן ◯";
+                playerLabel.className = "text-[#bc13fe] text-xs mb-2 font-bold";
+            }
+
+            questionText.textContent = item.en;
             const container = document.getElementById('optionsContainer');
             container.innerHTML = '';
+            
             opts.forEach(o => {
                 const b = document.createElement('button');
-                b.className = 'btn-option w-full text-white';
+                // הוספת צבע גבול לכפתורים לפי השחקן
+                b.className = `btn-option w-full text-white border-${player === 'X' ? '[#00f2ff]' : '[#bc13fe]'} opacity-90`;
+                b.style.borderColor = player === 'X' ? '#00f2ff' : '#bc13fe';
                 b.textContent = o;
                 b.onclick = async () => {
                     const isCorrect = o === item.he;
                     const updates = isCorrect ? { status: 'ready_to_move' } : { currentPlayer: myRole === "X" ? "O" : "X" };
                     if (gameMode === "online") await updateDoc(doc(db, 'games', gameId), updates);
                     else { Object.assign(localState, updates); renderGame(localState); }
-                    document.getElementById('quizModal').classList.remove('active');
+                    modal.classList.remove('active');
                 };
                 container.appendChild(b);
             });
-            document.getElementById('quizModal').classList.add('active');
+            modal.classList.add('active');
             speak(item.en);
         }
 
@@ -240,7 +254,9 @@
         }
 
         function showResult(winner) {
-            document.getElementById('resultTitle').textContent = winner === myRole ? "ניצחת! 🎉" : "הפסדת... 😢";
+            const title = document.getElementById('resultTitle');
+            title.textContent = winner === myRole ? "ניצחת! 🎉" : "הפסדת... 😢";
+            title.className = `text-6xl font-black mb-12 ${winner === 'X' ? 'text-[#00f2ff]' : 'text-[#bc13fe]'}`;
             document.getElementById('resultModal').classList.add('active');
         }
 
@@ -278,19 +294,20 @@
     <style>
         body { background: #000; color: #fff; font-family: 'Varela Round', sans-serif; margin: 0; padding: 0; overflow: hidden; touch-action: manipulation; }
         .turn-bar { height: 70px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; border-bottom: 1px solid #222; }
-        .turn-x { color: #00f2ff; }
-        .turn-o { color: #bc13fe; }
+        .turn-x { color: #00f2ff; text-shadow: 0 0 5px #00f2ff; }
+        .turn-o { color: #bc13fe; text-shadow: 0 0 5px #bc13fe; }
         .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 85vw; max-width: 320px; margin: 40px auto; gap: 0; }
         .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: bold; cursor: pointer; border: 2px solid #222; position: relative; }
         .cell.highlight { background: rgba(255, 255, 255, 0.1); animation: pulse 1.5s infinite; }
-        .fading-soon { opacity: 0.4; animation: blink 2s infinite; }
+        .fading-soon { opacity: 0.3; animation: blink 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        @keyframes blink { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.1; } }
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.1; } }
         .x-neon { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .o-neon { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; text-align: center; }
         .modal.active { display: flex; }
-        .btn-option { background: #111; border: 1px solid #333; padding: 20px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
+        .btn-option { background: #111; border: 2px solid #333; padding: 20px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; transition: 0.2s; }
+        .btn-option:active { transform: scale(0.95); background: #222; }
         .removal-alert { color: #ff4444; font-weight: bold; opacity: 0; transition: 0.3s; text-align: center; font-size: 0.9rem; height: 20px; }
         .removal-alert.visible { opacity: 1; }
         .wa-btn { background: #25D366; color: white; padding: 16px; border-radius: 16px; font-weight: bold; text-decoration: none; display: block; margin-top: 20px; }
@@ -310,7 +327,7 @@
             <span class="text-gray-600 text-sm">/ 3</span>
         </div>
         <div id="removalMsg" class="removal-alert">סימן ישן הוסר!</div>
-        <p id="gameStatus" class="text-[11px] text-gray-600 mt-2">טוען...</p>
+        <p id="gameStatus" class="text-[11px] text-gray-600 mt-2">טוען מערכת...</p>
     </div>
 
     <div class="board">
@@ -347,14 +364,14 @@
     </div>
 
     <div id="quizModal" class="modal">
-        <p class="text-zinc-500 text-xs mb-2">תרגם נכון כדי לסמן בלוח</p>
-        <h2 id="questionText" class="text-5xl font-black mb-10"></h2>
+        <p id="quizPlayerLabel"></p>
+        <h2 id="questionText"></h2>
         <div id="optionsContainer" class="w-full max-w-xs"></div>
     </div>
 
     <div id="resultModal" class="modal">
-        <h2 id="resultTitle" class="text-6xl font-black mb-12"></h2>
-        <button onclick="playAgain()" class="bg-white text-black px-12 py-5 rounded-2xl font-bold">משחק חדש</button>
+        <h2 id="resultTitle"></h2>
+        <button onclick="playAgain()" class="bg-white text-black px-12 py-5 rounded-2xl font-bold shadow-xl">משחק חדש</button>
     </div>
 
     <div id="vocabModal" class="modal">
