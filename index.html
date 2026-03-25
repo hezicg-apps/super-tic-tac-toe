@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Tic Tac Toe - English Edition</title>
+    <title>Super Tic Tac Toe - 3 Marks Rule</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
@@ -23,7 +23,8 @@
 
         let db, auth;
         let firebaseReady = false;
-        
+        let moveHistory = { X: [], O: [] }; // מעקב אחרי סדר המהלכים להסרה מדויקת
+
         async function setupFirebase() {
             try {
                 const app = initializeApp(firebaseConfig);
@@ -35,7 +36,7 @@
                 enableLobby();
             } catch (e) {
                 console.error(e);
-                document.getElementById('gameStatus').innerHTML = `<span class="text-amber-500">מצב אופליין</span>`;
+                document.getElementById('gameStatus').innerHTML = `<span class="text-amber-500">אופליין</span>`;
                 enableLobby();
             }
         }
@@ -58,7 +59,7 @@
         let gameId = "";
         let myRole = "X"; 
         let unsubscribe = null;
-        let localState = { board: Array(9).fill(""), currentPlayer: "X", playerTurns: { X: 0, O: 0 }, status: "playing" };
+        let localState = { board: Array(9).fill(""), currentPlayer: "X", history: { X: [], O: [] }, status: "playing" };
 
         window.addEventListener('load', () => {
             setupFirebase();
@@ -70,12 +71,12 @@
             for (let p of wins) {
                 if (board[p[0]] && board[p[0]] === board[p[1]] && board[p[0]] === board[p[2]]) return board[p[0]];
             }
-            return board.includes("") ? null : "draw";
+            return null;
         }
 
         window.startAI = () => {
             gameMode = "ai";
-            localState = { board: Array(9).fill(""), currentPlayer: "X", playerTurns: { X: 0, O: 0 }, status: "playing" };
+            localState = { board: Array(9).fill(""), currentPlayer: "X", history: { X: [], O: [] }, status: "playing" };
             document.getElementById('lobbyModal').classList.remove('active');
             renderGame(localState);
         };
@@ -89,7 +90,7 @@
             await setDoc(gameRef, { 
                 board: Array(9).fill(""), 
                 currentPlayer: "X", 
-                playerTurns: { X: 0, O: 0 }, 
+                history: { X: [], O: [] }, 
                 status: "waiting", 
                 players: { X: auth.currentUser.uid, O: null } 
             });
@@ -120,21 +121,29 @@
         }
 
         function renderGame(data) {
-            // סגירת הלובי אם המשחק התחיל
             if (data.status !== 'waiting' && document.getElementById('lobbyModal').classList.contains('active')) {
                 document.getElementById('lobbyModal').classList.remove('active');
             }
 
             const isMyTurn = data.currentPlayer === myRole;
-            const turnBar = document.getElementById('turnBar');
-            turnBar.className = `turn-bar turn-${data.currentPlayer.toLowerCase()}`;
+            document.getElementById('turnBar').className = `turn-bar turn-${data.currentPlayer.toLowerCase()}`;
             document.getElementById('turnIcon').textContent = data.currentPlayer === "X" ? "✕" : "◯";
-            document.getElementById('playerTurnCounter').textContent = data.playerTurns[data.currentPlayer];
+            
+            // הצגת מספר הסימנים הנוכחי על הלוח (מתוך 3)
+            const currentMarksCount = data.history[data.currentPlayer] ? data.history[data.currentPlayer].length : 0;
+            document.getElementById('playerTurnCounter').textContent = currentMarksCount;
 
             document.querySelectorAll('.cell').forEach((cell, i) => {
                 const val = data.board[i];
                 cell.textContent = val === "X" ? "✕" : (val === "O" ? "◯" : "");
                 cell.className = `cell ${val === "X" ? 'x-neon' : (val === "O" ? 'o-neon' : '')} ${val === "" && isMyTurn && data.status === 'ready_to_move' ? 'highlight' : ''}`;
+                
+                // אפקט ויזואלי לסימן שעומד להיעלם (הראשון בתור)
+                if (data.history[data.currentPlayer] && data.history[data.currentPlayer].length === 3 && data.history[data.currentPlayer][0] === i) {
+                    cell.classList.add('fading-soon');
+                } else {
+                    cell.classList.remove('fading-soon');
+                }
             });
 
             if (data.status === "playing" && isMyTurn) showQuiz();
@@ -153,30 +162,27 @@
 
         async function executeMove(role, idx) {
             let currentData = gameMode === "online" ? (await getDoc(doc(db, 'games', gameId))).data() : localState;
-            
-            if (currentData.board[idx] !== "") return; // הגנה מהחלפה
+            if (currentData.board[idx] !== "") return;
 
             let newBoard = [...currentData.board];
-            newBoard[idx] = role;
-            
-            let turns = {...currentData.playerTurns};
-            turns[role]++;
+            let newHistory = { ...currentData.history };
+            if (!newHistory[role]) newHistory[role] = [];
 
-            // חוק 4 הסימנים: הסרת הכי ישן אם הגענו ל-5
-            if (turns[role] >= 5) {
-                const myIndices = [];
-                newBoard.forEach((v, i) => { if (v === role && i !== idx) myIndices.push(i); });
-                if (myIndices.length > 0) {
-                    newBoard[myIndices[0]] = ""; // מסיר את הראשון שנמצא (הכי ישן)
-                    showFlashMsg();
-                }
-                turns[role] = 4;
+            // הוספת המהלך החדש להיסטוריה
+            newHistory[role].push(idx);
+            newBoard[idx] = role;
+
+            // חוק ה-3 סימנים: אם יש עכשיו 4, מסירים את הכי ישן (האינדקס הראשון במערך)
+            if (newHistory[role].length > 3) {
+                const oldestIdx = newHistory[role].shift(); // מסיר מהמערך ומחזיר את הערך
+                newBoard[oldestIdx] = "";
+                showFlashMsg();
             }
 
             const win = checkWinner(newBoard);
             const updates = { 
                 board: newBoard, 
-                playerTurns: turns, 
+                history: newHistory,
                 status: win ? "finished" : "playing", 
                 winner: win || null, 
                 currentPlayer: role === "X" ? "O" : "X" 
@@ -234,14 +240,14 @@
         }
 
         function showResult(winner) {
-            document.getElementById('resultTitle').textContent = (winner === "draw") ? "תיקו!" : (winner === myRole ? "ניצחת! 🎉" : "הפסדת... 😢");
+            document.getElementById('resultTitle').textContent = winner === myRole ? "ניצחת! 🎉" : "הפסדת... 😢";
             document.getElementById('resultModal').classList.add('active');
         }
 
         function showFlashMsg() {
             const m = document.getElementById('removalMsg');
             m.classList.add('visible');
-            setTimeout(() => m.classList.remove('visible'), 2500);
+            setTimeout(() => m.classList.remove('visible'), 2000);
         }
 
         function speak(t) {
@@ -275,15 +281,17 @@
         .turn-x { color: #00f2ff; }
         .turn-o { color: #bc13fe; }
         .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 85vw; max-width: 320px; margin: 40px auto; gap: 0; }
-        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: bold; cursor: pointer; border: 2px solid #222; }
+        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: bold; cursor: pointer; border: 2px solid #222; position: relative; }
         .cell.highlight { background: rgba(255, 255, 255, 0.1); animation: pulse 1.5s infinite; }
+        .fading-soon { opacity: 0.4; animation: blink 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes blink { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.1; } }
         .x-neon { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; }
         .o-neon { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; text-align: center; }
         .modal.active { display: flex; }
         .btn-option { background: #111; border: 1px solid #333; padding: 20px; margin: 8px 0; border-radius: 16px; font-size: 1.2rem; }
-        .removal-alert { color: #ff4444; font-weight: bold; opacity: 0; transition: 0.3s; text-align: center; font-size: 0.9rem; margin-top: 10px; }
+        .removal-alert { color: #ff4444; font-weight: bold; opacity: 0; transition: 0.3s; text-align: center; font-size: 0.9rem; height: 20px; }
         .removal-alert.visible { opacity: 1; }
         .wa-btn { background: #25D366; color: white; padding: 16px; border-radius: 16px; font-weight: bold; text-decoration: none; display: block; margin-top: 20px; }
         textarea { background: #0a0a0a; color: #0f0; padding: 15px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 12px; }
@@ -299,8 +307,9 @@
     <div class="text-center mt-6">
         <div class="flex justify-center items-baseline gap-1">
             <span id="playerTurnCounter" class="text-2xl font-light">0</span>
-            <span class="text-gray-600 text-sm">/ 4</span>
+            <span class="text-gray-600 text-sm">/ 3</span>
         </div>
+        <div id="removalMsg" class="removal-alert">סימן ישן הוסר!</div>
         <p id="gameStatus" class="text-[11px] text-gray-600 mt-2">טוען...</p>
     </div>
 
@@ -316,44 +325,43 @@
         <div class="cell" onclick="handleCellClick(8)"></div>
     </div>
 
-    <div id="removalMsg" class="removal-alert">סימן ישן הוסר מהלוח</div>
-
     <div id="lobbyModal" class="modal">
         <h1 class="text-4xl font-black mb-8 text-yellow-400">SUPER TIC TAC TOE</h1>
         <div id="lobbyInputs" class="w-full max-w-xs space-y-4 pointer-events-none" style="opacity:0.5;">
-            <button onclick="startAI()" class="bg-white text-black w-full py-5 rounded-2xl font-bold text-xl">שחקן יחיד (AI)</button>
+            <button onclick="startAI()" class="bg-white text-black w-full py-5 rounded-2xl font-bold text-xl shadow-lg">שחקן יחיד (AI)</button>
             <div class="flex gap-2">
-                <button onclick="openVocabEditor()" class="bg-zinc-900 flex-1 py-3 rounded-xl text-xs">מילים ⚙️</button>
-                <button onclick="location.reload()" class="bg-zinc-900 flex-1 py-3 rounded-xl text-xs">רענן 🔄</button>
+                <button onclick="openVocabEditor()" class="bg-zinc-900 flex-1 py-3 rounded-xl text-xs">עריכת מילים ⚙️</button>
+                <button onclick="location.reload()" class="bg-zinc-900 flex-1 py-3 rounded-xl text-xs">רענון 🔄</button>
             </div>
             <hr class="border-zinc-800 my-4">
             <button onclick="createOnline()" class="bg-blue-600 w-full py-4 rounded-xl font-bold">צור משחק אונליין</button>
             <input type="text" id="gameIdInput" placeholder="הכנס קוד מחבר" class="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center w-full">
-            <button onclick="joinOnline()" class="bg-zinc-800 w-full py-4 rounded-xl font-bold">הצטרף</button>
+            <button onclick="joinOnline()" class="bg-zinc-800 w-full py-4 rounded-xl font-bold">הצטרף למשחק</button>
         </div>
-        <div id="codeDisplayArea" style="display:none" class="bg-zinc-900 p-8 rounded-3xl mt-4 w-full max-w-xs">
+        <div id="codeDisplayArea" style="display:none" class="bg-zinc-900 p-8 rounded-3xl mt-4 w-full max-w-xs border border-zinc-800">
             <p class="text-gray-500 text-xs uppercase tracking-widest">הקוד שלך:</p>
             <div id="displayCode" class="text-6xl font-mono font-bold my-4 text-white"></div>
             <a id="waLink" href="#" target="_blank" class="wa-btn">שתף בוואטסאפ</a>
-            <p class="text-zinc-500 text-[10px] mt-4">המשחק יתחיל אוטומטית כשהחבר יצטרף</p>
+            <p class="text-zinc-500 text-[10px] mt-4">המשחק יתחיל ברגע שהחבר יתחבר</p>
         </div>
     </div>
 
     <div id="quizModal" class="modal">
+        <p class="text-zinc-500 text-xs mb-2">תרגם נכון כדי לסמן בלוח</p>
         <h2 id="questionText" class="text-5xl font-black mb-10"></h2>
         <div id="optionsContainer" class="w-full max-w-xs"></div>
     </div>
 
     <div id="resultModal" class="modal">
         <h2 id="resultTitle" class="text-6xl font-black mb-12"></h2>
-        <button onclick="playAgain()" class="bg-white text-black px-12 py-5 rounded-2xl font-bold">שחק שוב</button>
+        <button onclick="playAgain()" class="bg-white text-black px-12 py-5 rounded-2xl font-bold">משחק חדש</button>
     </div>
 
     <div id="vocabModal" class="modal">
         <div class="w-full max-w-md bg-zinc-900 p-6 rounded-3xl">
-            <h2 class="text-white mb-4">עריכת מילים (English:Hebrew)</h2>
+            <h2 class="text-white mb-4">רשימת מילים (English:Hebrew)</h2>
             <textarea id="vocabInput"></textarea>
-            <button onclick="saveVocab()" class="bg-white text-black w-full py-4 rounded-xl mt-4 font-bold">שמור</button>
+            <button onclick="saveVocab()" class="bg-white text-black w-full py-4 rounded-xl mt-4 font-bold">שמור רשימה</button>
             <button onclick="closeModal('vocabModal')" class="text-zinc-500 mt-4 text-sm">ביטול</button>
         </div>
     </div>
