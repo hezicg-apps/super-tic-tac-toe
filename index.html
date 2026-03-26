@@ -3,11 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Super Tic Tac Toe - V1.2</title>
+    <title>Super Tic Tac Toe - V1.3</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDqgGqCF5VzJ7I3x0O2DdQk7bY-ARajyE0",
+            authDomain: "super-tic-tac-toe-57080.firebaseapp.com",
+            projectId: "super-tic-tac-toe-57080",
+            storageBucket: "super-tic-tac-toe-57080.firebasestorage.app",
+            messagingSenderId: "32126067090",
+            appId: "1:32126067090:web:517e9f90515eec6e0d614b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        window.startOnline = async () => {
+            if (window.vocabulary.length < 3) return alert("הכנס לפחות 3 מילים!");
+            const id = Math.random().toString(36).substring(2, 7).toUpperCase();
+            window.gameId = id; window.myRole = "X"; window.gameMode = "online";
+            await setDoc(doc(db, 'games', id), {
+                board: Array(9).fill(""), currentPlayer: "X", status: "waiting", vocabulary: window.vocabulary, history: {X:[], O:[]}
+            });
+            const link = `https://hezicg-apps.github.io/super-tic-tac-toe/?game=${id}`;
+            window.open(`https://wa.me/?text=בואו לשחק איתי! לחצו על הקישור:%0A${link}`, '_blank');
+            document.getElementById('lobbyButtons').style.display = 'none';
+            document.getElementById('onlineWaiting').style.display = 'block';
+            document.getElementById('displayCode').textContent = id;
+            listenToGame();
+        };
+
+        window.joinGame = async (id) => {
+            if (!id) return;
+            document.getElementById('lobbyModal').style.display = 'none';
+            document.getElementById('loadingModal').style.display = 'flex';
+            const snap = await getDoc(doc(db, 'games', id));
+            if (snap.exists()) {
+                window.gameId = id; window.myRole = "O"; window.gameMode = "online";
+                window.vocabulary = snap.data().vocabulary;
+                await updateDoc(doc(db, 'games', id), { status: "playing" });
+                listenToGame();
+                document.getElementById('loadingModal').style.display = 'none';
+                document.getElementById('gameContainer').style.display = 'flex';
+            } else {
+                alert("קוד לא נמצא"); location.reload();
+            }
+        };
+
+        function listenToGame() {
+            onSnapshot(doc(db, 'games', window.gameId), (snap) => {
+                const data = snap.data();
+                if (data && (data.status === "playing" || data.status === "ready_to_move")) {
+                    document.getElementById('lobbyModal').style.display = 'none';
+                    document.getElementById('gameContainer').style.display = 'flex';
+                    window.state = data;
+                    updateUI();
+                    if (data.status === "playing" && data.currentPlayer === window.myRole) showQuiz();
+                }
+            });
+        }
+
+        window.onload = async () => {
+            await signInAnonymously(auth);
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('game')) window.joinGame(params.get('game'));
+        };
+    </script>
+
     <style>
         * { box-sizing: border-box; touch-action: manipulation; }
         body, html { 
@@ -19,51 +89,60 @@
         
         .title-super { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; font-size: 3.2rem; font-weight: 900; font-style: italic; line-height: 0.8; }
         .title-ttt { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; font-size: 2.8rem; font-weight: 900; font-style: italic; }
-        .version-tag { color: #444; font-size: 0.75rem; font-weight: bold; margin-top: 4px; letter-spacing: 1px; }
+        .version-tag { color: #444; font-size: 0.75rem; font-weight: bold; margin-top: 4px; }
 
-        .btn-lobby { width: 85vw; max-width: 320px; height: 55px; border: 2px solid #facc15; border-radius: 18px; color: #facc15; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; background: none; }
+        .btn-lobby { width: 85vw; max-width: 320px; height: 50px; border: 2px solid #facc15; border-radius: 18px; color: #facc15; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; background: none; }
         .btn-fill { background: #facc15; color: #000; }
+        .input-lobby { width: 85vw; max-width: 320px; height: 50px; background: transparent; border: 2px solid #facc15; border-radius: 18px; text-align: center; color: #fff; margin-bottom: 8px; outline: none; }
         
-        /* אזור המשחק - חלוקה קשיחה למניעת קפיצות */
+        .btn-help { position: absolute; top: 15px; left: 15px; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #00f2ff; color: #00f2ff; font-size: 1.2rem; font-weight: bold; z-index: 100; display: flex; align-items: center; justify-content: center; }
+
         .game-header { height: 15vh; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #333; }
         .game-body { height: 75vh; display: flex; align-items: center; justify-content: center; }
         
         .board { 
             display: grid; grid-template-columns: repeat(3, 1fr); 
             width: 85vw; height: 85vw; max-width: 380px; max-height: 380px;
-            margin: 0 auto;
         }
         
-        .cell { 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 5rem; font-weight: bold; line-height: 1;
-        }
-        /* גבולות הלוח */
+        .cell { display: flex; align-items: center; justify-content: center; font-size: 5rem; font-weight: bold; }
         .cell:nth-child(2), .cell:nth-child(5), .cell:nth-child(8) { border-left: 5px solid #fff; border-right: 5px solid #fff; }
         .cell:nth-child(4), .cell:nth-child(5), .cell:nth-child(6) { border-top: 5px solid #fff; border-bottom: 5px solid #fff; }
         
-        /* עיצוב סימנים */
-        .x-ui { color: #00f2ff; text-shadow: 0 0 15px #00f2ff; opacity: 1; transition: opacity 0.3s; }
-        .o-ui { color: #bc13fe; text-shadow: 0 0 15px #bc13fe; opacity: 1; transition: opacity 0.3s; }
-        .fading { opacity: 0.3; } /* סימן שעומד להיעלם */
+        .x-ui { color: #00f2ff; text-shadow: 0 0 15px #00f2ff; }
+        .o-ui { color: #bc13fe; text-shadow: 0 0 15px #bc13fe; }
+        .fading { opacity: 0.25; animation: blink 1.5s infinite; }
+        @keyframes blink { 50% { opacity: 0.1; } }
 
-        .modal-full { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .quiz-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .modal-full { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; }
+        .quiz-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; }
+        
+        /* תיקון: כשמודלים סגורים הם לא חוסמים קליקים */
+        .hidden-modals { display: none !important; pointer-events: none !important; }
     </style>
 </head>
 <body>
 
     <div class="main-app">
         <div id="lobbyModal" class="modal-full p-4">
-            <div class="mb-8 text-center">
+            <button class="btn-help" onclick="alert('חוקים:\n1. עונים על שאלה.\n2. מסמנים בלוח.\n3. מותר רק 3 סימנים - הרביעי מוחק את הראשון.')">?</button>
+            <div class="mb-6 text-center">
                 <div class="title-super">SUPER</div>
                 <div class="title-ttt">TIC TAC TOE</div>
-                <div class="version-tag">VERSION 1.2</div>
+                <div class="version-tag">VERSION 1.3</div>
             </div>
-            <div class="flex flex-col items-center">
-                <button onclick="document.getElementById('vocabModal').style.display='flex'" class="btn-lobby italic">לחצו להוספת מילים למשחק</button>
+            <div id="lobbyButtons" class="flex flex-col items-center">
+                <button onclick="document.getElementById('vocabModal').style.display='flex'" class="btn-lobby italic">לחצו להוספת מילים</button>
                 <button onclick="startGame('ai')" class="btn-lobby btn-fill">משחק נגד AI</button>
-                <button onclick="startGame('friend')" class="btn-lobby">משחק 1:1</button>
+                <button onclick="startGame('friend')" class="btn-lobby btn-fill">משחק 1:1</button>
+                <div class="h-4"></div>
+                <button onclick="startOnline()" class="btn-lobby bg-green-600 border-none text-white">משחק אונליין (שלח לינק)</button>
+                <input type="text" id="joinInput" placeholder="קוד הצטרפות" class="input-lobby">
+                <button onclick="joinGame(document.getElementById('joinInput').value)" class="btn-lobby">הצטרף</button>
+            </div>
+            <div id="onlineWaiting" style="display:none;" class="text-center">
+                <div id="displayCode" class="text-6xl font-bold mb-4 text-yellow-500"></div>
+                <p class="animate-pulse text-zinc-400">מחכה לחבר/ה שייכנסו מהלינק...</p>
             </div>
         </div>
 
@@ -72,7 +151,6 @@
                 <span id="turnIcon" class="ml-3 text-5xl">✕</span>
                 <span class="text-3xl font-bold">תור השחקן</span>
             </div>
-            
             <div class="game-body">
                 <div class="board">
                     <div class="cell" onclick="cellClick(0)"></div><div class="cell" onclick="cellClick(1)"></div><div class="cell" onclick="cellClick(2)"></div>
@@ -96,6 +174,10 @@
         <div id="optionsContainer" class="flex flex-col items-center w-full px-6"></div>
     </div>
 
+    <div id="loadingModal" style="display:none;" class="modal-full z-[3000]">
+        <p class="text-2xl animate-bounce">טוען משחק...</p>
+    </div>
+
     <script>
         window.vocabulary = [];
         window.state = { board: Array(9).fill(""), currentPlayer: "X", history: {X:[], O:[]}, status: "lobby" };
@@ -104,11 +186,10 @@
         function startGame(mode) {
             if (vocabulary.length < 3) return alert("הכנס לפחות 3 מילים!");
             gameMode = mode;
-            document.getElementById('lobbyModal').style.display = 'none';
+            document.getElementById('lobbyModal').classList.add('hidden-modals');
             document.getElementById('gameContainer').style.display = 'flex';
             window.state.status = "playing";
-            updateUI(); 
-            showQuiz();
+            updateUI(); showQuiz();
         }
 
         function saveVocab() {
@@ -129,9 +210,8 @@
             }
             opts.sort(() => Math.random() - 0.5);
 
-            const qTxt = document.getElementById('qText');
-            qTxt.textContent = item.en;
-            qTxt.style.color = window.state.currentPlayer === "X" ? "#00f2ff" : "#bc13fe";
+            document.getElementById('qText').textContent = item.en;
+            document.getElementById('qText').style.color = window.state.currentPlayer === "X" ? "#00f2ff" : "#bc13fe";
             
             const container = document.getElementById('optionsContainer');
             container.innerHTML = '';
@@ -156,7 +236,7 @@
             window.state.currentPlayer = window.state.currentPlayer === "X" ? "O" : "X";
             window.state.status = "playing";
             updateUI();
-            if(gameMode === "ai" && window.state.currentPlayer === "O") setTimeout(aiMove, 1000);
+            if(gameMode === "ai" && window.state.currentPlayer === "O") setTimeout(aiMove, 800);
             else setTimeout(showQuiz, 400);
         }
 
@@ -170,29 +250,18 @@
             document.querySelectorAll('.cell').forEach((cell, i) => {
                 const val = window.state.board[i];
                 cell.textContent = val === "X" ? "✕" : (val === "O" ? "◯" : "");
-                
-                // בדיקה אם זה הסימן שעומד להיעלם
-                let isFading = false;
-                if (val && window.state.history[val].length === 3 && window.state.history[val][0] === i) {
-                    isFading = true;
-                }
-                
-                cell.className = `cell ${val === 'X' ? 'x-ui' : 'o-ui'} ${isFading ? 'fading' : ''}`;
-                if (!val) cell.className = 'cell';
+                let fade = (val && window.state.history[val].length === 3 && window.state.history[val][0] === i) ? "fading" : "";
+                cell.className = `cell ${val === 'X' ? 'x-ui' : (val === 'O' ? 'o-ui' : '')} ${fade}`;
             });
         }
 
         function cellClick(i) {
             if (window.state.status !== "ready_to_move" || window.state.board[i] !== "") return;
-            
             window.state.board[i] = window.state.currentPlayer;
             window.state.history[window.state.currentPlayer].push(i);
-            
             if(window.state.history[window.state.currentPlayer].length > 3) {
-                const oldIndex = window.state.history[window.state.currentPlayer].shift();
-                window.state.board[oldIndex] = "";
+                window.state.board[window.state.history[window.state.currentPlayer].shift()] = "";
             }
-            
             if(checkWin()) {
                 confetti();
                 setTimeout(() => { alert("ניצחון ל-" + window.state.currentPlayer); location.reload(); }, 500);
