@@ -6,6 +6,7 @@
     <title>Super Tic Tac Toe</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -25,15 +26,11 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // פונקציית הצטרפות עם מסך טעינה מהבהב
         window.joinGame = async (id) => {
             if (!id) return;
             document.getElementById('lobbyModal').style.display = 'none';
             document.getElementById('loadingModal').style.display = 'flex';
-
-            // השהיה ויזואלית לטעינה (3 שניות)
             await new Promise(r => setTimeout(r, 3000));
-
             const snap = await getDoc(doc(db, 'games', id));
             if (snap.exists()) {
                 window.gameId = id; window.myRole = "O"; window.gameMode = "online";
@@ -43,8 +40,7 @@
                 document.getElementById('loadingModal').style.display = 'none';
                 document.getElementById('gameContainer').style.display = 'block';
             } else {
-                alert("קוד לא נמצא");
-                location.reload();
+                alert("קוד לא נמצא"); location.reload();
             }
         };
 
@@ -52,14 +48,11 @@
             if (window.vocabulary.length < 3) return alert("הכנס לפחות 3 מילים!");
             const id = Math.random().toString(36).substring(2, 7).toUpperCase();
             window.gameId = id; window.myRole = "X"; window.gameMode = "online";
-            
             await setDoc(doc(db, 'games', id), {
-                board: Array(9).fill(""), currentPlayer: "X", status: "waiting", vocabulary: window.vocabulary
+                board: Array(9).fill(""), currentPlayer: "X", status: "waiting", vocabulary: window.vocabulary, history: {X:[], O:[]}
             });
-
             const link = `https://hezicg-apps.github.io/super-tic-tac-toe/?game=${id}`;
             window.open(`https://wa.me/?text=בואו לשחק איתי! לחצו על הקישור:%0A${link}`, '_blank');
-            
             document.getElementById('lobbyButtons').style.display = 'none';
             document.getElementById('onlineWaiting').style.display = 'block';
             document.getElementById('displayCode').textContent = id;
@@ -74,6 +67,7 @@
                     document.getElementById('gameContainer').style.display = 'block';
                     window.state = data;
                     updateUI();
+                    if (data.status === "playing" && data.currentPlayer === window.myRole) showQuiz();
                 }
             });
         }
@@ -90,9 +84,10 @@
         body { background-color: #000; color: #fff; font-family: 'Varela Round', sans-serif; margin: 0; overflow: hidden; }
         .title-super { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; font-size: 3.8rem; font-weight: 900; font-style: italic; line-height: 0.9; }
         .title-ttt { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; font-size: 3.2rem; font-weight: 900; font-style: italic; }
-        .btn-lobby { width: 100%; max-width: 320px; height: 60px; border: 2px solid #facc15; border-radius: 18px; color: #facc15; font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; background: none; }
+        .btn-lobby { width: 100%; max-width: 320px; height: 60px; border: 2px solid #facc15; border-radius: 18px; color: #facc15; font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; background: none; cursor: pointer; }
         .btn-fill { background: #facc15; color: #000; }
         .input-lobby { width: 100%; max-width: 320px; height: 60px; background: transparent; border: 2px solid #facc15; border-radius: 18px; text-align: center; color: #fff; margin-bottom: 12px; outline: none; }
+        .btn-help { position: absolute; top: 20px; left: 20px; width: 45px; height: 45px; border-radius: 50%; border: 2px solid #00f2ff; color: #00f2ff; font-size: 1.5rem; font-weight: bold; z-index: 60; }
         
         /* לוח משחק */
         .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 90vw; max-width: 360px; margin: 20px auto; }
@@ -110,20 +105,27 @@
         .l2 { color: #bc13fe; animation: blink 2s infinite 0.5s; }
         .l3 { color: #00f2ff; animation: blink 2s infinite 1s; }
         .l4 { color: #bc13fe; animation: blink 2s infinite 1.5s; }
+
+        .modal-full { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .quiz-overlay { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <div id="lobbyModal" class="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 p-6 text-center">
+    <div id="lobbyModal" class="modal-full p-6">
+        <button class="btn-help" onclick="alert('חוקים:\n1. עונים נכון על שאלה.\n2. מסמנים בלוח.\n3. מותר רק 3 סימנים - הרביעי מוחק את הראשון.')">?</button>
         <div class="mb-10">
             <div class="title-super">SUPER</div>
             <div class="title-ttt">TIC TAC TOE</div>
         </div>
         <div id="lobbyButtons" class="w-full flex flex-col items-center">
             <button onclick="document.getElementById('vocabModal').style.display='flex'" class="btn-lobby italic">לחצו להוספת מילים למשחק</button>
-            <button onclick="startOnline()" class="btn-lobby btn-fill">משחק אונליין (שלח לינק)</button>
-            <input type="text" id="joinInput" placeholder="הקלידו קוד הצטרפות" class="input-lobby">
-            <button onclick="joinGame(document.getElementById('joinInput').value)" class="btn-lobby">הצטרף</button>
+            <button onclick="startGame('ai')" class="btn-lobby btn-fill">משחק נגד AI</button>
+            <button onclick="startGame('friend')" class="btn-lobby">משחק 1:1</button>
+            <div class="h-4"></div>
+            <button onclick="startOnline()" class="btn-lobby bg-green-600 border-none text-white">משחק אונליין (שלח לינק)</button>
+            <input type="text" id="joinInput" placeholder="קיבלתם קוד? פה מדביקים" class="input-lobby">
+            <button onclick="joinGame(document.getElementById('joinInput').value)" class="btn-lobby">הצטרף לחבר</button>
         </div>
         <div id="onlineWaiting" style="display:none;">
             <div id="displayCode" class="text-6xl font-bold mb-4"></div>
@@ -131,7 +133,7 @@
         </div>
     </div>
 
-    <div id="loadingModal" style="display:none;" class="fixed inset-0 bg-black flex flex-col items-center justify-center z-[100]">
+    <div id="loadingModal" style="display:none;" class="modal-full z-[1500]">
         <div class="loader-grid">
             <div class="load-item l1">✕</div><div class="load-item l2">◯</div>
             <div class="load-item l4">◯</div><div class="load-item l3">✕</div>
@@ -150,17 +152,32 @@
         </div>
     </div>
 
-    <div id="vocabModal" style="display:none;" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[200] p-6">
-        <div class="bg-zinc-900 p-6 rounded-2xl w-full max-w-sm border border-zinc-700">
-            <h2 class="text-xl font-bold mb-4">הכנסת מילים (אנגלית - עברית)</h2>
-            <textarea id="vocabInput" class="w-full h-48 bg-black border p-3 mb-4 rounded"></textarea>
-            <button onclick="saveVocab()" class="btn-lobby btn-fill w-full">שמור</button>
+    <div id="vocabModal" style="display:none;" class="modal-full bg-black/95 z-[2000] p-6">
+        <div class="bg-zinc-900 p-6 rounded-3xl w-full max-w-sm border-2 border-[#facc15]">
+            <h2 class="text-white font-bold mb-4 italic">English - עברית</h2>
+            <textarea id="vocabInput" class="w-full h-48 bg-black text-white p-3 mb-4 rounded-xl border border-zinc-700 text-right" dir="ltr"></textarea>
+            <button onclick="saveVocab()" class="btn-lobby btn-fill w-full">שמור מילים</button>
         </div>
+    </div>
+
+    <div id="quizModal" class="quiz-overlay">
+        <h2 id="qText" class="text-6xl font-black mb-12 italic"></h2>
+        <div id="optionsContainer" class="w-full max-w-xs px-4"></div>
     </div>
 
     <script>
         window.vocabulary = [];
-        window.state = { board: Array(9).fill(""), currentPlayer: "X" };
+        window.state = { board: Array(9).fill(""), currentPlayer: "X", history: {X:[], O:[]}, status: "lobby" };
+        window.gameMode = "ai";
+
+        function startGame(mode) {
+            if (vocabulary.length < 3) return alert("הכנס לפחות 3 מילים!");
+            gameMode = mode;
+            document.getElementById('lobbyModal').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+            window.state.status = "playing";
+            updateUI(); showQuiz();
+        }
 
         function saveVocab() {
             const input = document.getElementById('vocabInput').value;
@@ -169,6 +186,48 @@
                 return p.length === 2 ? { en: p[0].trim(), he: p[1].trim() } : null;
             }).filter(i => i);
             document.getElementById('vocabModal').style.display = 'none';
+        }
+
+        function showQuiz() {
+            const item = vocabulary[Math.floor(Math.random()*vocabulary.length)];
+            const opts = [item.he];
+            while(opts.length < Math.min(4, vocabulary.length)) {
+                const r = vocabulary[Math.floor(Math.random()*vocabulary.length)].he;
+                if(!opts.includes(r)) opts.push(r);
+            }
+            opts.sort(() => Math.random() - 0.5);
+
+            const qTxt = document.getElementById('qText');
+            qTxt.textContent = item.en;
+            qTxt.style.color = window.state.currentPlayer === "X" ? "#00f2ff" : "#bc13fe";
+            
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            opts.forEach(o => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-lobby w-full';
+                btn.textContent = o;
+                btn.onclick = () => {
+                    if(o === item.he) {
+                        document.getElementById('quizModal').style.display = 'none';
+                        window.state.status = "ready_to_move";
+                    } else {
+                        alert("טעות!");
+                        switchTurn();
+                    }
+                };
+                container.appendChild(btn);
+            });
+            document.getElementById('quizModal').style.display = 'flex';
+        }
+
+        function switchTurn() {
+            window.state.currentPlayer = window.state.currentPlayer === "X" ? "O" : "X";
+            window.state.status = "playing";
+            document.getElementById('quizModal').style.display = 'none';
+            updateUI();
+            if(gameMode === "ai" && window.state.currentPlayer === "O") setTimeout(aiMove, 1000);
+            else setTimeout(showQuiz, 500);
         }
 
         function updateUI() {
@@ -180,6 +239,22 @@
                 cell.textContent = val === "X" ? "✕" : (val === "O" ? "◯" : "");
                 cell.className = `cell ${val === 'X' ? 'x-ui' : (val === 'O' ? 'o-ui' : '')}`;
             });
+        }
+
+        function cellClick(i) {
+            if (window.state.status !== "ready_to_move" || window.state.board[i] !== "") return;
+            window.state.board[i] = window.state.currentPlayer;
+            window.state.history[window.state.currentPlayer].push(i);
+            if(window.state.history[window.state.currentPlayer].length > 3) {
+                window.state.board[window.state.history[window.state.currentPlayer].shift()] = "";
+            }
+            if(checkWin()) { confetti(); alert(window.state.currentPlayer + " ניצח!"); location.reload(); return; }
+            switchTurn();
+        }
+
+        function checkWin() {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return wins.some(p => window.state.board[p[0]] && window.state.board[p[0]] === window.state.board[p[1]] && window.state.board[p[0]] === window.state.board[p[2]]);
         }
     </script>
 </body>
