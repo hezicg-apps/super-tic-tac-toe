@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Super Tic Tac Toe - V1.1</title>
+    <title>Super Tic Tac Toe - V1.2</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -15,11 +15,7 @@
             margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; position: fixed;
         }
         
-        /* מעטפת ראשית שתופסת 100% גובה ללא קפיצות */
-        .main-app { 
-            height: 100vh; display: flex; flex-direction: column; width: 100%; 
-            padding-bottom: env(safe-area-inset-bottom);
-        }
+        .main-app { height: 100vh; display: flex; flex-direction: column; width: 100%; }
         
         .title-super { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; font-size: 3.2rem; font-weight: 900; font-style: italic; line-height: 0.8; }
         .title-ttt { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; font-size: 2.8rem; font-weight: 900; font-style: italic; }
@@ -27,90 +23,64 @@
 
         .btn-lobby { width: 85vw; max-width: 320px; height: 55px; border: 2px solid #facc15; border-radius: 18px; color: #facc15; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; background: none; }
         .btn-fill { background: #facc15; color: #000; }
-        .input-lobby { width: 85vw; max-width: 320px; height: 55px; background: transparent; border: 2px solid #facc15; border-radius: 18px; text-align: center; color: #fff; margin-bottom: 10px; outline: none; font-size: 1.1rem; }
         
-        .btn-help { position: absolute; top: 15px; left: 15px; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #00f2ff; color: #00f2ff; font-size: 1.2rem; font-weight: bold; z-index: 100; display: flex; align-items: center; justify-content: center; }
+        /* אזור המשחק - חלוקה קשיחה למניעת קפיצות */
+        .game-header { height: 15vh; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #333; }
+        .game-body { height: 75vh; display: flex; align-items: center; justify-content: center; }
         
-        /* לוח משחק יציב - לא זז */
-        .game-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .board { 
             display: grid; grid-template-columns: repeat(3, 1fr); 
-            width: 85vw; max-width: 340px; aspect-ratio: 1; 
-            margin: 0 auto; border-collapse: collapse;
+            width: 85vw; height: 85vw; max-width: 380px; max-height: 380px;
+            margin: 0 auto;
         }
+        
         .cell { 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 4.5rem; font-weight: bold; line-height: 1;
-            transition: all 0.2s;
+            font-size: 5rem; font-weight: bold; line-height: 1;
         }
-        .cell:nth-child(1), .cell:nth-child(2), .cell:nth-child(4), .cell:nth-child(5), .cell:nth-child(7), .cell:nth-child(8) { border-left: 5px solid #fff; }
-        .cell:nth-child(1), .cell:nth-child(2), .cell:nth-child(3), .cell:nth-child(4), .cell:nth-child(5), .cell:nth-child(6) { border-bottom: 5px solid #fff; }
+        /* גבולות הלוח */
+        .cell:nth-child(2), .cell:nth-child(5), .cell:nth-child(8) { border-left: 5px solid #fff; border-right: 5px solid #fff; }
+        .cell:nth-child(4), .cell:nth-child(5), .cell:nth-child(6) { border-top: 5px solid #fff; border-bottom: 5px solid #fff; }
         
-        .x-ui { color: #00f2ff; text-shadow: 0 0 15px #00f2ff; }
-        .o-ui { color: #bc13fe; text-shadow: 0 0 15px #bc13fe; }
+        /* עיצוב סימנים */
+        .x-ui { color: #00f2ff; text-shadow: 0 0 15px #00f2ff; opacity: 1; transition: opacity 0.3s; }
+        .o-ui { color: #bc13fe; text-shadow: 0 0 15px #bc13fe; opacity: 1; transition: opacity 0.3s; }
+        .fading { opacity: 0.3; } /* סימן שעומד להיעלם */
 
         .modal-full { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        
-        /* השאלה ככיסוי צף למניעת קפיצת הלוח */
-        .quiz-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center;
-        }
-
-        .loader-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .load-item { font-size: 3.5rem; font-weight: bold; opacity: 0.1; }
-        @keyframes blink { 0%, 20% { opacity: 1; text-shadow: 0 0 15px currentColor; } 25%, 100% { opacity: 0.1; } }
-        .l1 { color: #00f2ff; animation: blink 2s infinite 0s; }
-        .l2 { color: #bc13fe; animation: blink 2s infinite 0.5s; }
-        .l3 { color: #00f2ff; animation: blink 2s infinite 1s; }
-        .l4 { color: #bc13fe; animation: blink 2s infinite 1.5s; }
+        .quiz-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div class="main-app">
-        
         <div id="lobbyModal" class="modal-full p-4">
-            <button class="btn-help" onclick="alert('חוקים:\n1. עונים נכון על שאלה.\n2. מסמנים בלוח.\n3. מותר רק 3 סימנים - הרביעי מוחק את הראשון.')">?</button>
             <div class="mb-8 text-center">
                 <div class="title-super">SUPER</div>
                 <div class="title-ttt">TIC TAC TOE</div>
-                <div class="version-tag">VERSION 1.1</div>
+                <div class="version-tag">VERSION 1.2</div>
             </div>
-            <div id="lobbyButtons" class="flex flex-col items-center">
+            <div class="flex flex-col items-center">
                 <button onclick="document.getElementById('vocabModal').style.display='flex'" class="btn-lobby italic">לחצו להוספת מילים למשחק</button>
                 <button onclick="startGame('ai')" class="btn-lobby btn-fill">משחק נגד AI</button>
                 <button onclick="startGame('friend')" class="btn-lobby">משחק 1:1</button>
-                <div class="h-4"></div>
-                <button onclick="startOnline()" class="btn-lobby bg-green-600 border-none text-white">משחק אונליין (שלח לינק)</button>
-                <input type="text" id="joinInput" placeholder="הדבק קוד הצטרפות" class="input-lobby">
-                <button onclick="joinGame(document.getElementById('joinInput').value)" class="btn-lobby">הצטרף לחבר</button>
             </div>
-        </div>
-
-        <div id="loadingModal" style="display:none;" class="modal-full z-[1500]">
-            <div class="loader-grid">
-                <div class="load-item l1">✕</div><div class="load-item l2">◯</div>
-                <div class="load-item l4">◯</div><div class="load-item l3">✕</div>
-            </div>
-            <p class="mt-8 text-zinc-600 italic">Version 1.1 - Loading Game...</p>
         </div>
 
         <div id="gameContainer" style="display:none;" class="flex flex-col h-full w-full">
-            <div id="turnBar" class="w-full h-20 flex items-center justify-center border-b-2 text-2xl font-bold">
-                <span id="turnIcon" class="ml-3 text-4xl">✕</span> תור השחקן
+            <div class="game-header" id="turnBar">
+                <span id="turnIcon" class="ml-3 text-5xl">✕</span>
+                <span class="text-3xl font-bold">תור השחקן</span>
             </div>
             
-            <div class="game-area">
+            <div class="game-body">
                 <div class="board">
                     <div class="cell" onclick="cellClick(0)"></div><div class="cell" onclick="cellClick(1)"></div><div class="cell" onclick="cellClick(2)"></div>
                     <div class="cell" onclick="cellClick(3)"></div><div class="cell" onclick="cellClick(4)"></div><div class="cell" onclick="cellClick(5)"></div>
                     <div class="cell" onclick="cellClick(6)"></div><div class="cell" onclick="cellClick(7)"></div><div class="cell" onclick="cellClick(8)"></div>
                 </div>
             </div>
-            
-            <div class="h-10"></div> </div>
-
+        </div>
     </div>
 
     <div id="vocabModal" style="display:none;" class="modal-full bg-black/95 z-[2000] p-6">
@@ -122,20 +92,17 @@
     </div>
 
     <div id="quizModal" class="quiz-overlay">
-        <div class="text-center w-full">
-            <h2 id="qText" class="text-6xl font-black mb-12 italic px-4 tracking-tight"></h2>
-            <div id="optionsContainer" class="flex flex-col items-center w-full px-6"></div>
-        </div>
+        <h2 id="qText" class="text-6xl font-black mb-12 italic text-center px-4"></h2>
+        <div id="optionsContainer" class="flex flex-col items-center w-full px-6"></div>
     </div>
 
     <script>
-        // לוגיקה פשוטה לניהול מצב (מבוססת על הקוד הקודם שלך)
         window.vocabulary = [];
         window.state = { board: Array(9).fill(""), currentPlayer: "X", history: {X:[], O:[]}, status: "lobby" };
         window.gameMode = "ai";
 
         function startGame(mode) {
-            if (vocabulary.length < 3) return alert("אנא הכנס לפחות 3 מילים בתיבת המילים!");
+            if (vocabulary.length < 3) return alert("הכנס לפחות 3 מילים!");
             gameMode = mode;
             document.getElementById('lobbyModal').style.display = 'none';
             document.getElementById('gameContainer').style.display = 'flex';
@@ -177,8 +144,7 @@
                         document.getElementById('quizModal').style.display = 'none';
                         window.state.status = "ready_to_move";
                     } else {
-                        alert("טעות! התור עובר.");
-                        switchTurn();
+                        alert("טעות!"); switchTurn();
                     }
                 };
                 container.appendChild(btn);
@@ -189,13 +155,9 @@
         function switchTurn() {
             window.state.currentPlayer = window.state.currentPlayer === "X" ? "O" : "X";
             window.state.status = "playing";
-            document.getElementById('quizModal').style.display = 'none';
             updateUI();
-            if(gameMode === "ai" && window.state.currentPlayer === "O") {
-                setTimeout(aiMove, 1000);
-            } else {
-                setTimeout(showQuiz, 400);
-            }
+            if(gameMode === "ai" && window.state.currentPlayer === "O") setTimeout(aiMove, 1000);
+            else setTimeout(showQuiz, 400);
         }
 
         function updateUI() {
@@ -204,10 +166,19 @@
             bar.style.color = isX ? "#00f2ff" : "#bc13fe";
             bar.style.borderColor = isX ? "#00f2ff" : "#bc13fe";
             document.getElementById('turnIcon').textContent = isX ? "✕" : "◯";
+            
             document.querySelectorAll('.cell').forEach((cell, i) => {
                 const val = window.state.board[i];
                 cell.textContent = val === "X" ? "✕" : (val === "O" ? "◯" : "");
-                cell.className = `cell ${val === 'X' ? 'x-ui' : (val === 'O' ? 'o-ui' : '')}`;
+                
+                // בדיקה אם זה הסימן שעומד להיעלם
+                let isFading = false;
+                if (val && window.state.history[val].length === 3 && window.state.history[val][0] === i) {
+                    isFading = true;
+                }
+                
+                cell.className = `cell ${val === 'X' ? 'x-ui' : 'o-ui'} ${isFading ? 'fading' : ''}`;
+                if (!val) cell.className = 'cell';
             });
         }
 
@@ -224,7 +195,7 @@
             
             if(checkWin()) {
                 confetti();
-                setTimeout(() => { alert("השחקן " + window.state.currentPlayer + " ניצח!"); location.reload(); }, 500);
+                setTimeout(() => { alert("ניצחון ל-" + window.state.currentPlayer); location.reload(); }, 500);
                 return;
             }
             switchTurn();
