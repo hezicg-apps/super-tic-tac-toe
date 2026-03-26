@@ -8,45 +8,41 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { background-color: #000; color: #fff; font-family: 'Varela Round', sans-serif; margin: 0; overflow: hidden; height: 100vh; width: 100vw; }
+        body { background-color: #000; color: #fff; font-family: 'Varela Round', sans-serif; margin: 0; overflow: hidden; touch-action: manipulation; }
         
-        /* לוח # פשוט וקבוע */
-        .board { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            width: 90vw; max-width: 360px; margin: 20px auto; 
-        }
-        .cell { 
-            aspect-ratio: 1; display: flex; align-items: center; justify-content: center; 
-            font-size: 5rem; font-weight: bold; cursor: pointer;
-        }
-        .cell:nth-child(1), .cell:nth-child(2), .cell:nth-child(4), .cell:nth-child(5), .cell:nth-child(7), .cell:nth-child(8) { border-left: 4px solid #fff; }
-        .cell:nth-child(1), .cell:nth-child(2), .cell:nth-child(3), .cell:nth-child(4), .cell:nth-child(5), .cell:nth-child(6) { border-bottom: 4px solid #fff; }
+        /* כותרות ניאון לפי התמונה */
+        .title-super { color: #fff; text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; font-size: 4rem; font-weight: 900; font-style: italic; line-height: 0.8; }
+        .title-ttt { color: #fff; text-shadow: 0 0 10px #bc13fe, 0 0 20px #bc13fe; font-size: 3.2rem; font-weight: 900; font-style: italic; }
+
+        /* כפתורי מסך פתיחה - העתק מדויק מהתמונה */
+        .btn-lobby { width: 100%; max-width: 340px; height: 65px; border: 2px solid #facc15; border-radius: 20px; color: #facc15; font-weight: bold; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; background: none; cursor: pointer; }
+        .btn-lobby-fill { background: #facc15; color: #000; }
+        .btn-lobby-green { background: #16a34a; border: none; color: #fff; }
+        .input-lobby { width: 100%; max-width: 340px; height: 65px; background: transparent; border: 2px solid #facc15; border-radius: 20px; text-align: center; color: #fff; margin-bottom: 12px; outline: none; }
+
+        /* סימן שאלה פועם */
+        .btn-help { position: absolute; top: 20px; left: 20px; width: 50px; height: 50px; border: 2px solid #00f2ff; border-radius: 50%; color: #00f2ff; font-weight: bold; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; background: none; }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 5px #00f2ff; transform: scale(1); } 50% { box-shadow: 0 0 20px #00f2ff; transform: scale(1.05); } }
+
+        /* לוח המשחק */
+        .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 90vw; max-width: 380px; margin: 20px auto; }
+        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 5.5rem; font-weight: bold; cursor: pointer; }
+        .cell:nth-child(1), .cell:nth-child(2), .cell:nth-child(4), .cell:nth-child(5), .cell:nth-child(7), .cell:nth-child(8) { border-left: 5px solid #fff; }
+        .cell:nth-child(1), .cell:nth-child(2), .cell:nth-child(3), .cell:nth-child(4), .cell:nth-child(5), .cell:nth-child(6) { border-bottom: 5px solid #fff; }
 
         .x-style { color: #00f2ff; text-shadow: 0 0 15px #00f2ff; }
         .o-style { color: #bc13fe; text-shadow: 0 0 15px #bc13fe; }
         .opacity-30 { opacity: 0.3 !important; }
 
-        /* מסך פתיחה מקורי */
-        .modal { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal.active { display: flex; }
-        
-        .game-title { font-size: 3.5rem; font-weight: 900; font-style: italic; text-align: center; line-height: 1; }
-        .btn-gold { width: 100%; max-width: 300px; height: 60px; border: 2px solid #facc15; border-radius: 15px; color: #facc15; font-weight: bold; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: none; }
-        .btn-gold-fill { background: #facc15; color: #000; }
-        .btn-green { background: #16a34a; border: none; color: #fff; }
-
-        .btn-help { position: absolute; top: 20px; left: 20px; width: 45px; height: 45px; border-radius: 50%; border: 2px solid #00f2ff; color: #00f2ff; font-weight: bold; animation: pulse 2s infinite; background: none; }
-        @keyframes pulse { 0%, 100% { box-shadow: 0 0 5px #00f2ff; } 50% { box-shadow: 0 0 20px #00f2ff; } }
-
-        .quiz-container { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 500; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .btn-option { width: 100%; max-width: 300px; padding: 18px; border: 2px solid #fff; border-radius: 15px; margin: 8px 0; font-size: 1.3rem; font-weight: bold; background: #111; color: #fff; }
-        
-        #next-turn-btn { margin-top: 20px; padding: 15px 40px; background: #facc15; color: #000; border-radius: 12px; font-weight: bold; display: none; }
+        /* מודלים */
+        .full-modal { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .quiz-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .btn-option { width: 100%; max-width: 320px; padding: 20px; border: 2px solid #fff; border-radius: 18px; margin: 10px 0; font-size: 1.5rem; font-weight: bold; background: #111; color: #fff; }
     </style>
 </head>
 <body>
 
-    <div id="turnBar" class="h-16 flex items-center justify-center border-b border-zinc-800 text-2xl font-bold">
+    <div id="turnBar" class="h-16 flex items-center justify-center border-b-4 text-2xl font-bold transition-all">
         <span id="turnIcon" class="ml-2">✕</span> תור השחקן
     </div>
 
@@ -56,30 +52,43 @@
         <div class="cell" onclick="cellClick(6)"></div><div class="cell" onclick="cellClick(7)"></div><div class="cell" onclick="cellClick(8)"></div>
     </div>
 
-    <div id="lobbyModal" class="modal active">
-        <button class="btn-help" onclick="alert('חוקים: 3 סימנים לכל שחקן. הרביעי מוחק את הראשון.')">?</button>
-        <div class="mb-10">
-            <div class="game-title text-cyan-400 shadow-cyan-500/50">SUPER</div>
-            <div class="game-title text-purple-500 shadow-purple-500/50">TIC TAC TOE</div>
+    <div id="lobbyModal" class="full-modal">
+        <button class="btn-help" onclick="showRules()">?</button>
+        <div class="mb-12 flex flex-col items-center">
+            <div class="title-super">SUPER</div>
+            <div class="title-ttt">TIC TAC TOE</div>
         </div>
-        <button onclick="document.getElementById('vocabEditor').style.display='flex'" class="btn-gold italic">לחצו להוספת מילים למשחק</button>
-        <button onclick="startGame('ai')" class="btn-gold btn-gold-fill">משחק נגד AI</button>
-        <button onclick="startGame('friend')" class="btn-gold">משחק 1:1</button>
-        <p class="text-yellow-500 text-[10px] font-bold tracking-widest my-2 uppercase">Multiplayer Mode</p>
-        <button onclick="alert('בקרוב!')" class="btn-gold btn-green">משחק אונליין</button>
+        <button onclick="openEditor()" class="btn-lobby italic">לחצו להוספת מילים למשחק</button>
+        <button onclick="checkAndStart('ai')" class="btn-lobby btn-lobby-fill">משחק נגד AI</button>
+        <button onclick="checkAndStart('friend')" class="btn-lobby">משחק 1:1</button>
+        <div class="text-[10px] text-yellow-500 font-bold tracking-widest my-3 uppercase">Multiplayer Mode</div>
+        <button class="btn-lobby btn-lobby-green">משחק אונליין</button>
+        <input type="text" placeholder="קיבלתם קוד? פה מדביקים" class="input-lobby">
+        <button class="btn-lobby">הצטרף לחבר</button>
     </div>
 
-    <div id="quizModal" class="quiz-container">
-        <div id="questionArea" class="w-full max-w-xs flex flex-col items-center">
-            <h2 id="questionText" class="text-5xl font-black mb-10 italic"></h2>
-            <div id="optionsContainer" class="w-full"></div>
+    <div id="quizModal" class="quiz-overlay">
+        <div id="quizContent" class="w-full flex flex-col items-center">
+            <h2 id="questionText" class="text-6xl font-black mb-12 italic"></h2>
+            <div id="optionsContainer" class="w-full flex flex-col items-center"></div>
         </div>
-        <button id="next-turn-btn" onclick="hideQuiz()">המשך ללוח</button>
+        <div id="planningArea" class="hidden flex flex-col items-center">
+            <p class="text-3xl text-green-400 font-bold mb-8">תשובה נכונה!</p>
+            <button onclick="closeQuiz()" class="btn-lobby btn-lobby-fill">המשך ללוח</button>
+        </div>
     </div>
 
-    <div id="vocabEditor" class="modal">
-        <textarea id="vocabInput" class="w-full max-w-xs h-48 bg-zinc-900 text-white p-4 border border-zinc-700 rounded-lg mb-4" placeholder="Dog - כלב"></textarea>
-        <button onclick="saveVocab()" class="btn-gold btn-gold-fill">שמור מילים</button>
+    <div id="errorModal" class="full-modal" style="display:none; background: rgba(0,0,0,0.9);">
+        <div class="bg-zinc-900 p-8 rounded-3xl border-2 border-facc15 text-center max-w-xs">
+            <p class="text-xl font-bold mb-6">יש להוסיף לפחות 3 מילים כדי להתחיל לשחק!</p>
+            <button onclick="hideError()" class="btn-lobby btn-lobby-fill">הבנתי</button>
+        </div>
+    </div>
+
+    <div id="editorModal" class="full-modal" style="display:none;">
+        <h2 class="text-2xl font-bold mb-4">הכנס מילים (פורמט: מילה - תרגום)</h2>
+        <textarea id="vocabInput" class="w-full max-w-sm h-64 bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-white mb-6" placeholder="Dog - כלב"></textarea>
+        <button onclick="saveVocab()" class="btn-lobby btn-lobby-fill">שמור מילים</button>
     </div>
 
     <script>
@@ -87,17 +96,21 @@
         let state = { board: Array(9).fill(""), currentPlayer: "X", history: { X: [], O: [] }, status: "playing" };
         let gameMode = "ai";
 
-        function startGame(mode) {
-            if (vocabulary.length < 3) return alert("הוסף לפחות 3 מילים!");
+        function checkAndStart(mode) {
+            if (vocabulary.length < 3) {
+                document.getElementById('errorModal').style.display = 'flex';
+                return;
+            }
             gameMode = mode;
-            document.getElementById('lobbyModal').classList.remove('active');
+            document.getElementById('lobbyModal').style.display = 'none';
             updateUI();
             showQuiz();
         }
 
         function updateUI() {
             const isX = state.currentPlayer === "X";
-            document.getElementById('turnBar').style.color = isX ? "#00f2ff" : "#bc13fe";
+            const bar = document.getElementById('turnBar');
+            bar.className = `h-16 flex items-center justify-center border-b-4 text-2xl font-bold transition-all ${isX ? 'x-style' : 'o-style'}`;
             document.getElementById('turnIcon').textContent = isX ? "✕" : "◯";
 
             document.querySelectorAll('.cell').forEach((cell, i) => {
@@ -105,11 +118,9 @@
                 cell.textContent = val === "X" ? "✕" : (val === "O" ? "◯" : "");
                 cell.className = "cell " + (val === "X" ? "x-style" : "o-style");
                 
-                // סימן שעומד להימחק
-                if ((state.history.X.length === 3 && state.history.X[0] === i) || 
-                    (state.history.O.length === 3 && state.history.O[0] === i)) {
-                    cell.classList.add('opacity-30');
-                }
+                const isOldest = (state.history.X.length === 3 && state.history.X[0] === i) || 
+                                 (state.history.O.length === 3 && state.history.O[0] === i);
+                if (isOldest) cell.classList.add('opacity-30');
             });
         }
 
@@ -122,39 +133,45 @@
             }
             opts.sort(() => Math.random() - 0.5);
 
-            document.getElementById('questionText').textContent = item.en;
-            document.getElementById('questionText').style.color = state.currentPlayer === "X" ? "#00f2ff" : "#bc13fe";
+            const color = state.currentPlayer === "X" ? "#00f2ff" : "#bc13fe";
+            const qTxt = document.getElementById('questionText');
+            qTxt.textContent = item.en;
+            qTxt.style.color = color;
+            qTxt.style.textShadow = `0 0 15px ${color}`;
+
+            document.getElementById('quizContent').classList.remove('hidden');
+            document.getElementById('planningArea').classList.add('hidden');
             
             const container = document.getElementById('optionsContainer');
             container.innerHTML = '';
             opts.forEach(o => {
                 const b = document.createElement('button');
                 b.className = 'btn-option';
+                b.style.borderColor = color;
                 b.textContent = o;
                 b.onclick = () => {
                     if (o === item.he) {
-                        document.getElementById('questionArea').style.display = 'none';
-                        document.getElementById('next-turn-btn').style.display = 'block';
                         state.status = "ready_to_move";
+                        document.getElementById('quizContent').classList.add('hidden');
+                        document.getElementById('planningArea').classList.remove('hidden');
                     } else {
                         alert("טעות!");
                         state.currentPlayer = state.currentPlayer === "X" ? "O" : "X";
                         updateUI();
-                        if (gameMode === "ai" && state.currentPlayer === "O") setTimeout(aiMove, 1000);
-                        else showQuiz();
+                        if (gameMode === "ai" && state.currentPlayer === "O") {
+                            document.getElementById('quizModal').style.display = 'none';
+                            setTimeout(aiMove, 1000);
+                        } else showQuiz();
                     }
                 };
                 container.appendChild(b);
             });
-            document.getElementById('questionArea').style.display = 'flex';
-            document.getElementById('next-turn-btn').style.display = 'none';
             document.getElementById('quizModal').style.display = 'flex';
+            speak(item.en);
         }
 
-        function hideQuiz() {
-            document.getElementById('quizModal').style.display = 'none';
-        }
-
+        function closeQuiz() { document.getElementById('quizModal').style.display = 'none'; }
+        
         function cellClick(i) {
             if (state.status !== "ready_to_move" || state.board[i] !== "") return;
             
@@ -168,8 +185,9 @@
             state.currentPlayer = state.currentPlayer === "X" ? "O" : "X";
             state.status = "playing";
             updateUI();
+
             if (gameMode === "ai" && state.currentPlayer === "O") setTimeout(aiMove, 1000);
-            else showQuiz();
+            else setTimeout(showQuiz, 400);
         }
 
         function aiMove() {
@@ -179,7 +197,7 @@
                 state.board[idx] = "O";
                 state.history.O.push(idx);
                 if (state.history.O.length > 3) state.board[state.history.O.shift()] = "";
-                if (checkWin()) { alert("הפסדת!"); location.reload(); return; }
+                if (checkWin()) { alert("ה-AI ניצח!"); location.reload(); return; }
                 state.currentPlayer = "X";
                 updateUI();
                 showQuiz();
@@ -191,13 +209,17 @@
             return wins.some(p => state.board[p[0]] && state.board[p[0]] === state.board[p[1]] && state.board[p[0]] === state.board[p[2]]);
         }
 
+        function openEditor() { document.getElementById('editorModal').style.display = 'flex'; }
         function saveVocab() {
             vocabulary = document.getElementById('vocabInput').value.split('\n').map(l => {
                 const p = l.split('-');
                 return p.length === 2 ? { en: p[0].trim(), he: p[1].trim() } : null;
             }).filter(i => i);
-            document.getElementById('vocabEditor').style.display = 'none';
+            document.getElementById('editorModal').style.display = 'none';
         }
+        function hideError() { document.getElementById('errorModal').style.display = 'none'; }
+        function showRules() { alert("חוקים:\n1. עונים נכון על שאלה.\n2. מסמנים בלוח.\n3. מותר רק 3 סימנים - הרביעי מוחק את הראשון (שמופיע שקוף)."); }
+        function speak(t) { const u = new SpeechSynthesisUtterance(t); u.lang = 'en-US'; window.speechSynthesis.speak(u); }
     </script>
 </body>
 </html>
