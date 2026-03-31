@@ -69,7 +69,7 @@
         .mini-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1.5px;
+            gap: 2px;
             background: #bbb;
             position: relative;
             border-radius: 4px;
@@ -82,10 +82,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             font-weight: 900;
             cursor: pointer;
             transition: background 0.1s;
+            line-height: 1; /* תיקון מרכוז אנכי */
+            padding: 0;
+            margin: 0;
         }
 
         .active-mini {
@@ -108,6 +111,7 @@
             z-index: 30;
             background: rgba(255, 255, 255, 0.9);
             pointer-events: none;
+            line-height: 1;
         }
 
         .q-btn {
@@ -117,6 +121,7 @@
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.4);
             transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            line-height: 1;
         }
         
         #statusContainer {
@@ -130,7 +135,7 @@
             text-align: center;
         }
 
-        #statusText { font-size: 2.2rem; font-weight: 900; }
+        #statusText { font-size: 2.2rem; font-weight: 900; line-height: 1.2; }
 
         .btn-main { 
             width: 280px; min-height: 60px; border-radius: 35px; font-weight: 900; 
@@ -139,6 +144,7 @@
             box-shadow: 0 5px 0 #000; transition: all 0.2s;
             padding: 8px; cursor: pointer;
             font-family: 'Varela Round', sans-serif;
+            line-height: 1;
         }
         .btn-main:active { transform: translateY(3px); box-shadow: 0 2px 0 #000; }
         
@@ -164,19 +170,20 @@
         }
 
         .footer-credit {
-            position: absolute; bottom: 15px; width: 100%; text-align: center;
+            position: absolute; bottom: 12px; width: 100%; text-align: center;
             font-size: 0.85rem; font-weight: bold; color: rgba(255,255,255,0.8);
             pointer-events: none;
+            z-index: 5;
         }
 
         .footer-area {
-            padding-bottom: 60px; /* הוספת מרווח כדי למנוע נגיעה ב-Footer */
+            margin-bottom: 65px; /* מרווח גדול כדי שהכפתור לא יסתיר את הקרדיט */
             display: flex; 
             flex-direction: column; 
             align-items: center;
+            z-index: 10;
         }
 
-        /* סגנונות חדשים למילה וההקראה */
         .quiz-word-wrapper {
             display: flex;
             align-items: center;
@@ -186,6 +193,7 @@
         }
         #qWord {
             font-family: 'Varela Round', sans-serif;
+            line-height: 1;
         }
         .speak-btn {
             background: #facc15;
@@ -218,11 +226,8 @@
         .justify-between { justify-content: space-between; }
         .gap-4 { gap: 1rem; }
         .text-white { color: #fff; }
-        .text-black { color: #000; }
-        .text-3xl { font-size: 1.875rem; }
         .text-6xl { font-size: 3.75rem; }
         .font-black { font-weight: 900; }
-        .font-bold { font-weight: 700; }
         .italic { font-style: italic; }
         .w-80 { width: 20rem; }
         .h-72 { height: 18rem; }
@@ -233,8 +238,8 @@
         .outline-none { outline: none; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .underline { text-decoration: underline; }
         .bg-yellow-400 { background-color: #facc15; }
+        .mb-4 { margin-bottom: 1rem; }
     </style>
 </head>
 <body>
@@ -259,7 +264,7 @@
     </div>
 
     <!-- מסך משחק -->
-    <div id="gameUI" class="hidden flex-col items-center justify-between" style="height: 100%; padding: 24px 0;">
+    <div id="gameUI" class="hidden flex-col items-center justify-between" style="height: 100%; padding: 20px 0;">
         <div class="top-icons">
             <div onclick="showModal('rulesModal')" class="icon-btn">ⓘ</div>
             <div onclick="location.reload()" class="icon-btn">➔</div>
@@ -402,9 +407,10 @@
 
         function speakWord() {
             if (!currentWordEn) return;
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(currentWordEn);
             utterance.lang = 'en-US';
-            utterance.rate = 0.9;
+            utterance.rate = 0.85;
             window.speechSynthesis.speak(utterance);
         }
 
@@ -441,7 +447,7 @@
                             updateQuizIcon();
                             render();
                             if(gameMode === 'pvc' && turn === 'O') executeAiMove();
-                        }, 1000);
+                        }, 800);
                     } else {
                         b.classList.add('btn-wrong');
                         buttons.forEach(btn => { if(btn.textContent === item.he) btn.classList.add('btn-correct'); });
@@ -451,14 +457,13 @@
                             turn = turn === "X" ? "O" : "X";
                             updateUI();
                             if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 600);
-                        }, 1800);
+                        }, 1600);
                     }
                 };
                 cont.appendChild(b);
             });
             showModal('quizModal');
-            // הקראה אוטומטית בפתיחה
-            setTimeout(speakWord, 300);
+            setTimeout(speakWord, 400);
         }
 
         function updateQuizIcon() {
@@ -515,3 +520,4 @@
 
 </body>
 </html>
+
