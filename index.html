@@ -34,11 +34,12 @@
         /* Layout & Game UI */
         .header-controls {
             display: flex;
-            flex-direction: column;
             align-items: center;
+            justify-content: center;
             width: 100%;
-            margin-top: 15px;
-            gap: 12px;
+            margin-top: 20px;
+            gap: 15px;
+            padding: 0 10px;
         }
 
         #statusContainer {
@@ -46,42 +47,33 @@
             padding: 10px 0;
             border-radius: 50px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            width: 90vw;
-            max-width: 360px;
+            flex: 1;
+            max-width: 280px;
             text-align: center;
             border: 3px solid #000;
         }
         #statusText { font-size: 2.2rem; font-weight: 900; line-height: 1; }
 
-        .sub-nav {
-            display: flex;
-            gap: 25px;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .nav-btn {
-            background: #fff;
-            color: #000;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
+        .side-btn {
+            color: #fff;
+            background: none;
+            border: none;
+            font-size: 2.2rem;
             font-weight: 900;
-            border: 3px solid #000;
             cursor: pointer;
-            box-shadow: 0 4px 0 #000;
-            transition: transform 0.1s;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        .nav-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #000; }
+        .side-btn:active { opacity: 0.7; transform: scale(0.9); }
 
         /* Board Styles */
         .board-container {
             position: relative;
-            margin: 10px auto;
+            margin: 15px auto;
         }
         .super-grid {
             display: grid;
@@ -123,7 +115,7 @@
         }
 
         .footer-area {
-            margin-bottom: 60px;
+            margin-bottom: 50px;
             display: flex; flex-direction: column; align-items: center;
         }
 
@@ -195,13 +187,15 @@
     <div id="gameUI" class="hidden flex-col items-center justify-between" style="height: 100%;">
         
         <div class="header-controls">
+            <!-- כפתור חזרה מימין -->
+            <button onclick="location.reload()" class="side-btn" title="חזרה לתפריט">➔</button>
+            
             <div id="statusContainer">
                 <div id="statusText">תור X</div>
             </div>
-            <div class="sub-nav">
-                <div onclick="showModal('rulesModal')" class="nav-btn" title="חוקים">ⓘ</div>
-                <div onclick="location.reload()" class="nav-btn" title="חזרה לתפריט">➔</div>
-            </div>
+            
+            <!-- כפתור חוקים משמאל -->
+            <button onclick="showModal('rulesModal')" class="side-btn" title="חוקים">ⓘ</button>
         </div>
 
         <div class="board-container">
@@ -242,7 +236,7 @@
 
     <!-- מודאל מילים -->
     <div id="vocabModal" class="modal">
-        <div onclick="hideModal('vocabModal')" class="nav-btn" style="position: absolute; top: 20px; right: 20px;">➔</div>
+        <div onclick="hideModal('vocabModal')" class="side-btn" style="position: absolute; top: 20px; right: 20px;">➔</div>
         <h2 style="color: #fff; font-size: 2rem; margin-bottom: 10px;">עריכת מילים</h2>
         <textarea id="vInput" style="width: 300px; height: 300px; padding: 15px; border-radius: 15px; border: 4px solid #000; font-family: 'Varela Round'; font-size: 1.1rem; text-align: right;"></textarea>
         <button onclick="hideModal('vocabModal')" class="btn-main" style="margin-top: 15px; background: #facc15;">שמור</button>
@@ -255,7 +249,7 @@
         let quizActive = false, currentWordEn = "";
 
         window.onload = () => {
-            const saved = localStorage.getItem('sttt_bolt_v7');
+            const saved = localStorage.getItem('sttt_bolt_v8');
             document.getElementById('vInput').value = saved || "red - אדום\nblue - כחול\ngreen - ירוק\nyellow - צהוב\napple - תפוח\ndog - כלב\ncat - חתול\nsun - שמש";
         };
 
@@ -275,7 +269,7 @@
             document.getElementById('gameUI').classList.add('flex');
             initBoard();
             updateUI();
-            localStorage.setItem('sttt_bolt_v7', raw);
+            localStorage.setItem('sttt_bolt_v8', raw);
         }
 
         function initBoard() {
