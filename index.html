@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Super Tic Tac Toe v1.3</title>
+    <title>Super Tic Tac Toe v1.4</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -12,28 +12,25 @@
             --x-color: #1976d2;
             --o-color: #d32f2f;
             --yellow: #facc15;
-            --grid-border: #000000;
+            --black: #000000;
         }
 
         * { 
             box-sizing: border-box; 
             -webkit-tap-highlight-color: transparent; 
             user-select: none;
-            outline: none;
+            margin: 0; padding: 0;
         }
 
         body, html { 
             background: var(--bg-color); 
             color: #fff; 
             font-family: 'Varela Round', sans-serif; 
-            margin: 0; padding: 0; 
             height: 100vh; width: 100vw;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
 
-        /* ניהול מסכים */
+        /* ניהול דפים */
         .page {
             display: none;
             flex-direction: column;
@@ -41,17 +38,19 @@
             justify-content: center;
             height: 100%;
             width: 100%;
+            position: absolute;
+            inset: 0;
         }
         .page.active { display: flex; }
 
-        /* מסך פתיחה - חזרה לעיצוב 1.1 */
-        .logo-container { text-align: center; margin-bottom: 40px; }
-        .super-text { font-size: 4rem; font-weight: 900; color: var(--yellow); margin: 0; line-height: 1; }
-        .ttt-text { font-size: 2.4rem; font-weight: 900; margin-top: 5px; text-shadow: 2px 2px 0px #000; }
+        /* מסך פתיחה - לוגו באמצע */
+        .logo-container { text-align: center; margin-bottom: 50px; }
+        .super-text { font-size: 4.5rem; font-weight: 900; color: var(--yellow); line-height: 1; }
+        .ttt-text { font-size: 2.5rem; font-weight: 900; margin-top: 5px; text-shadow: 2px 2px 0px #000; }
 
-        .btn-container { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+        .btn-container { display: flex; flex-direction: column; gap: 20px; width: 100%; align-items: center; }
         .btn-main { 
-            width: 280px; height: 60px; border-radius: 40px; font-weight: 900; 
+            width: 280px; height: 65px; border-radius: 40px; font-weight: 900; 
             border: 4px solid #000; background: #fff; color: #000; 
             font-size: 1.5rem; display: flex; align-items: center; justify-content: center; 
             box-shadow: 0 6px 0 #000; cursor: pointer; transition: transform 0.1s;
@@ -61,20 +60,20 @@
         /* לוח המשחק */
         .header-controls { 
             display: flex; align-items: center; justify-content: space-between; 
-            width: 95vw; max-width: 400px; margin-top: 15px;
+            width: 90vw; max-width: 400px; margin-top: 20px;
         }
-        #statusBox { 
+        #statusDisplay { 
             background: #fff; height: 50px; border-radius: 50px; 
-            border: 3px solid #000; flex: 1; margin: 0 10px;
+            border: 3px solid #000; flex: 1; margin: 0 15px;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 4px 0 #000;
         }
-        #statusText { font-size: 1.6rem; font-weight: 900; color: #000; }
+        #statusText { font-size: 1.7rem; font-weight: 900; color: #000; }
 
         .super-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-            background: #000; border: 5px solid #000; border-radius: 12px;
-            width: 92vw; max-width: 380px; aspect-ratio: 1/1; gap: 5px; margin: 15px auto;
+            background: #000; border: 6px solid #000; border-radius: 12px;
+            width: 92vw; max-width: 380px; aspect-ratio: 1/1; gap: 6px; margin: 20px auto;
         }
         
         .mini-grid { 
@@ -84,15 +83,15 @@
 
         /* קו מתאר צהוב פשוט */
         .active-mini { 
-            outline: 5px solid var(--yellow);
+            outline: 6px solid var(--yellow);
             outline-offset: -3px;
             z-index: 10;
         }
 
         .cell { 
             background: #fff; display: flex; align-items: center; justify-content: center; 
-            font-size: 1.6rem; font-weight: 900; height: 100%; width: 100%;
-            padding: 0; line-height: 1;
+            font-size: 1.8rem; font-weight: 900; height: 100%; width: 100%;
+            padding: 0; margin: 0; line-height: 1; text-align: center;
         }
 
         .x-color { color: var(--x-color); }
@@ -100,97 +99,99 @@
 
         .mini-win-overlay { 
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; 
-            font-size: 5rem; font-weight: 900; background: rgba(255, 255, 255, 0.85); z-index: 20;
+            font-size: 6rem; font-weight: 900; background: rgba(255, 255, 255, 0.9); z-index: 20;
         }
 
-        /* כפתור שאלה ללא הצללה */
+        /* כפתור שאלה - ללא הצללה */
         .q-btn { 
-            width: 80px; height: 80px; border-radius: 50%; background: #fff; 
-            border: 6px solid #000; font-size: 3.5rem; font-weight: 900; 
+            width: 85px; height: 85px; border-radius: 50%; background: #fff; 
+            border: 6px solid #000; font-size: 4rem; font-weight: 900; 
             display: flex; align-items: center; justify-content: center; 
             cursor: pointer; box-shadow: none !important;
         }
 
-        /* מודאל */
+        /* מודאלים */
         .modal { 
-            position: fixed; inset: 0; background: var(--bg-color); z-index: 9999; 
+            position: fixed; inset: 0; background: var(--bg-color); z-index: 10000; 
             display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; 
         }
         
-        #qWord { font-size: 3.5rem; font-weight: 900; text-shadow: 2px 2px 0 #000; margin: 0; }
+        #quizWord { font-size: 4rem; font-weight: 900; text-shadow: 2px 2px 0 #000; margin: 0; }
 
-        /* כפתור הקראה ללא עיגול */
-        .speak-btn-minimal {
+        /* הקראה - רק אייקון ללא רקע */
+        .speak-icon-only {
             background: none; border: none; padding: 10px; cursor: pointer; color: #fff;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        .footer-text { font-size: 0.8rem; margin-top: auto; padding: 10px; opacity: 0.8; text-align: center; width: 100%; }
-        .version-tag { font-weight: 900; margin: 20px 0; font-size: 1rem; opacity: 0.7; }
+        .footer-tag { font-size: 0.8rem; margin-top: auto; padding-bottom: 20px; opacity: 0.7; text-align: center; }
+        .version { font-weight: 900; opacity: 0.8; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <!-- מסך פתיחה -->
-    <div id="lobby-page" class="page active">
+    <div id="lobby" class="page active">
         <div class="logo-container">
             <h1 class="super-text">SUPER</h1>
             <div class="ttt-text">TIC TAC TOE</div>
         </div>
         <div class="btn-container">
-            <button id="vocab-btn" class="btn-main" style="background: var(--yellow);">הוספת מילים</button>
-            <button id="pvp-btn" class="btn-main" style="color: var(--x-color);">שחקן נגד שחקן</button>
-            <button id="pvc-btn" class="btn-main" style="color: var(--o-color);">שחקן נגד מחשב</button>
+            <button onclick="openVocab()" class="btn-main" style="background: var(--yellow);">הוספת מילים</button>
+            <button onclick="startSession('pvp')" class="btn-main" style="color: var(--x-color);">שחקן נגד שחקן</button>
+            <button onclick="startSession('pvc')" class="btn-main" style="color: var(--o-color);">שחקן נגד מחשב</button>
         </div>
-        <div class="version-tag">v1.3</div>
-        <div class="footer-text">פותח ע"י חזי כהן גלמן 2026 ©</div>
+        <div class="version">v1.4</div>
+        <div class="footer-tag">פותח ע"י חזי כהן גלמן 2026 ©</div>
     </div>
 
-    <!-- מסך משחק -->
-    <div id="game-page" class="page">
+    <!-- מסך המשחק -->
+    <div id="game" class="page">
         <div class="header-controls">
-            <button onclick="location.reload()" style="background:none; border:none; font-size:2rem; color:#fff; cursor:pointer;">➔</button>
-            <div id="statusBox"><div id="statusText">תור X</div></div>
-            <button id="info-btn" style="background:none; border:none; font-size:2rem; color:#fff; cursor:pointer;">ⓘ</button>
+            <button onclick="location.reload()" style="background:none; border:none; font-size:2.5rem; color:#fff; cursor:pointer;">➔</button>
+            <div id="statusDisplay"><div id="statusText">תור X</div></div>
+            <button onclick="openVideo()" style="background:none; border:none; font-size:2.5rem; color:#fff; cursor:pointer;">ⓘ</button>
         </div>
         
         <div id="mainGrid" class="super-grid"></div>
         
         <div id="qButton" onclick="openQuiz()" class="q-btn x-color">?</div>
         
-        <div class="footer-text">v1.3 | SUPER TIC TAC TOE © 2026</div>
+        <div class="version">v1.4</div>
+        <div class="footer-tag">SUPER TIC TAC TOE © 2026</div>
     </div>
 
     <!-- מודאל שאלה -->
-    <div id="modal-quiz" class="modal">
-        <div style="display:flex; align-items:center; gap:20px; margin-bottom: 30px;">
-            <button class="speak-btn-minimal" onclick="speakWord()">
-                <svg viewBox="0 0 24 24" width="45" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+    <div id="quizModal" class="modal">
+        <div style="display:flex; align-items:center; gap:25px; margin-bottom: 40px;">
+            <button class="speak-icon-only" onclick="playVoice()">
+                <svg viewBox="0 0 24 24" width="55" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
             </button>
-            <h2 id="qWord"></h2>
+            <h2 id="quizWord"></h2>
         </div>
-        <div id="qOptions" style="display:flex; flex-direction:column; gap:15px; width:100%; align-items:center;"></div>
+        <div id="quizOptions" style="display:flex; flex-direction:column; gap:15px; width:100%; align-items:center;"></div>
     </div>
 
-    <!-- מודאל אוצר מילים -->
-    <div id="modal-vocab" class="modal">
-        <h2 style="margin-bottom:20px;">עריכת מילים</h2>
-        <textarea id="vocabInput" style="width:85%; height:50vh; border-radius:15px; padding:15px; border:4px solid #000; font-size:1.2rem; text-align:right; font-family: inherit;"></textarea>
-        <button id="save-vocab-btn" class="btn-main" style="margin-top:25px; background:var(--yellow);">שמור וחזור</button>
+    <!-- מודאל הגדרות מילים -->
+    <div id="vocabModal" class="modal">
+        <h2 style="margin-bottom:20px;">עריכת אוצר מילים</h2>
+        <textarea id="vocabArea" style="width:85%; height:50vh; border-radius:20px; padding:20px; border:5px solid #000; font-size:1.2rem; text-align:right; font-family: inherit;"></textarea>
+        <button onclick="closeVocab()" class="btn-main" style="margin-top:25px; background:var(--yellow);">שמור וחזור</button>
     </div>
 
-    <!-- מודאל וידאו -->
-    <div id="modal-video" class="modal">
+    <!-- מודאל סרטון -->
+    <div id="videoModal" class="modal">
         <h2 style="margin-bottom:20px;">איך משחקים?</h2>
-        <iframe id="videoFrame" style="width:90%; aspect-ratio:9/16; border:5px solid #000; border-radius:15px;" src="" allowfullscreen></iframe>
-        <button id="close-video-btn" class="btn-main" style="margin-top:25px;">סגור</button>
+        <iframe id="vidFrame" style="width:90%; aspect-ratio:9/16; border:5px solid #000; border-radius:20px;" src="" allowfullscreen></iframe>
+        <button onclick="closeVideo()" class="btn-main" style="margin-top:25px;">סגור</button>
     </div>
 
     <!-- מודאל ניצחון -->
-    <div id="modal-win" class="modal" style="background:rgba(0,0,0,0.95);">
-        <div style="background:#fff; padding:35px; border-radius:30px; border:8px solid var(--yellow); text-align:center; color:#000;">
-            <h2 style="font-size:3rem; margin:0;">ניצחון!</h2>
-            <div id="winnerIcon" style="font-size:6rem; font-weight:900; margin:10px 0;">✕</div>
-            <p id="winnerMsg" style="font-size:1.5rem; font-weight:900; margin-bottom:25px;"></p>
+    <div id="winModal" class="modal" style="background:rgba(0,0,0,0.95);">
+        <div style="background:#fff; padding:40px; border-radius:40px; border:10px solid var(--yellow); text-align:center; color:#000;">
+            <h2 style="font-size:3.5rem; margin:0;">ניצחון!</h2>
+            <div id="winIcon" style="font-size:7rem; font-weight:900; margin:10px 0;">✕</div>
+            <p id="winMsg" style="font-size:1.8rem; font-weight:900; margin-bottom:30px;"></p>
             <button onclick="location.reload()" class="btn-main" style="width:100%; background:var(--yellow);">משחק חדש</button>
         </div>
     </div>
@@ -201,151 +202,137 @@
         let miniWinners = Array(9).fill("");
         let currentWord = null;
 
-        // חיבור אירועים מפורש למניעת תקלות לחיצה
+        // טעינה ראשונית
         window.onload = () => {
-            const saved = localStorage.getItem('sttt_vocab_v13');
-            document.getElementById('vocabInput').value = saved || "apple - תפוח\nbanana - בננה\nred - אדום\nblue - כחול\ndog - כלב\ncat - חתול\nsun - שמש\nwater - מים";
-
-            document.getElementById('pvp-btn').addEventListener('click', () => startGame('pvp'));
-            document.getElementById('pvc-btn').addEventListener('click', () => startGame('pvc'));
-            document.getElementById('vocab-btn').addEventListener('click', () => showModal('modal-vocab'));
-            document.getElementById('save-vocab-btn').addEventListener('click', saveVocab);
-            document.getElementById('info-btn').addEventListener('click', () => showModal('modal-video'));
-            document.getElementById('close-video-btn').addEventListener('click', () => hideModal('modal-video'));
+            const saved = localStorage.getItem('sttt_vocab_v14');
+            document.getElementById('vocabArea').value = saved || "apple - תפוח\nbanana - בננה\nred - אדום\nblue - כחול\ndog - כלב\ncat - חתול\nsun - שמש\nwater - מים";
             
-            // "חימום" ה-SpeechSynthesis
-            window.speechSynthesis.getVoices();
+            // אתחול מנוע הדיבור
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+            }
         };
 
-        function showModal(id) {
-            if(id === 'modal-video') {
-                document.getElementById('videoFrame').src = "https://www.youtube.com/embed/xLcUtltJk2c?autoplay=1";
-            }
-            document.getElementById(id).style.display = 'flex';
-        }
-
-        function hideModal(id) {
-            if(id === 'modal-video') {
-                document.getElementById('videoFrame').src = "";
-            }
-            document.getElementById(id).style.display = 'none';
-        }
-
-        function saveVocab() {
-            localStorage.setItem('sttt_vocab_v13', document.getElementById('vocabInput').value);
-            hideModal('modal-vocab');
-        }
-
-        function startGame(mode) {
-            const raw = document.getElementById('vocabInput').value;
-            vocab = raw.split('\n').map(line => {
-                const parts = line.split(/[-–:]/);
-                return parts.length >= 2 ? { en: parts[0].trim(), he: parts[1].trim() } : null;
+        function startSession(mode) {
+            const raw = document.getElementById('vocabArea').value;
+            vocab = raw.split('\n').map(l => {
+                const p = l.split(/[-–:]/);
+                return p.length >= 2 ? { en: p[0].trim(), he: p[1].trim() } : null;
             }).filter(v => v);
 
-            if(vocab.length < 4) {
-                alert("נא להזין לפחות 4 מילים");
-                return;
-            }
+            if(vocab.length < 4) return alert("יש להזין לפחות 4 מילים");
             
             gameMode = mode;
-            // "ירייה" ראשונה של שקט כדי לאפשר הקראה בהמשך (הגנת דפדפנים)
-            const s = new SpeechSynthesisUtterance("");
-            window.speechSynthesis.speak(s);
+            // "התעוררות" למנוע הדיבור על ידי צליל שקט בלחיצה הראשונה
+            const silence = new SpeechSynthesisUtterance("");
+            window.speechSynthesis.speak(silence);
+
+            document.getElementById('lobby').classList.remove('active');
+            document.getElementById('game').classList.add('active');
             
-            document.getElementById('lobby-page').classList.remove('active');
-            document.getElementById('game-page').classList.add('active');
-            
-            initBoard();
-            updateUI();
+            buildBoard();
+            refreshUI();
         }
 
-        function initBoard() {
+        function openVocab() { document.getElementById('vocabModal').style.display = 'flex'; }
+        function closeVocab() { 
+            localStorage.setItem('sttt_vocab_v14', document.getElementById('vocabArea').value);
+            document.getElementById('vocabModal').style.display = 'none'; 
+        }
+
+        function openVideo() {
+            document.getElementById('vidFrame').src = "https://www.youtube.com/embed/xLcUtltJk2c?autoplay=1";
+            document.getElementById('videoModal').style.display = 'flex';
+        }
+        function closeVideo() {
+            document.getElementById('vidFrame').src = "";
+            document.getElementById('videoModal').style.display = 'none';
+        }
+
+        function buildBoard() {
             const grid = document.getElementById('mainGrid');
             grid.innerHTML = '';
             for(let i=0; i<9; i++) {
                 const mini = document.createElement('div');
-                mini.id = `board-${i}`;
+                mini.id = `mini-${i}`;
                 mini.className = 'mini-grid';
                 for(let j=0; j<9; j++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
-                    cell.onclick = () => onCellClick(i, j);
+                    cell.onclick = () => onCellTap(i, j);
                     mini.appendChild(cell);
                 }
                 grid.appendChild(mini);
             }
         }
 
-        function onCellClick(bIdx, cIdx) {
+        function onCellTap(bIdx, cIdx) {
             if(!canMove || miniWinners[bIdx] || superData[bIdx][cIdx]) return;
             if(activeBoard !== -1 && activeBoard !== bIdx) return;
 
             superData[bIdx][cIdx] = turn;
-            const cell = document.getElementById(`board-${bIdx}`).children[cIdx];
+            const cell = document.getElementById(`mini-${bIdx}`).children[cIdx];
             cell.textContent = turn === 'X' ? '✕' : '◯';
-            cell.classList.add(turn === 'X' ? 'x-color' : 'o-color');
+            cell.className = 'cell ' + (turn === 'X' ? 'x-color' : 'o-color');
 
-            if(checkWin(superData[bIdx], turn)) {
+            if(checkMatch(superData[bIdx], turn)) {
                 miniWinners[bIdx] = turn;
             }
 
-            const isFull = superData[cIdx].every(v => v !== "");
-            activeBoard = (miniWinners[cIdx] || isFull) ? -1 : cIdx;
+            const nextIsFull = superData[cIdx].every(v => v !== "");
+            activeBoard = (miniWinners[cIdx] || nextIsFull) ? -1 : cIdx;
 
-            if(checkWin(miniWinners, turn)) {
-                endGame(turn);
+            if(checkMatch(miniWinners, turn)) {
+                showWin(turn);
                 return;
             }
 
             turn = turn === 'X' ? 'O' : 'X';
             canMove = false;
-            updateUI();
+            refreshUI();
 
-            if(gameMode === 'pvc' && turn === 'O') {
-                setTimeout(openQuiz, 600);
-            }
+            if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 600);
         }
 
-        function speakWord() {
+        function playVoice() {
             if(!currentWord) return;
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(currentWord.en);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.8;
-            window.speechSynthesis.speak(utterance);
+            const msg = new SpeechSynthesisUtterance(currentWord.en);
+            msg.lang = 'en-US';
+            msg.rate = 0.8;
+            window.speechSynthesis.speak(msg);
         }
 
         function openQuiz() {
             currentWord = vocab[Math.floor(Math.random() * vocab.length)];
-            const options = [currentWord.he];
-            while(options.length < 4) {
+            const opts = [currentWord.he];
+            while(opts.length < 4) {
                 const r = vocab[Math.floor(Math.random()*vocab.length)].he;
-                if(!options.includes(r)) options.push(r);
+                if(!opts.includes(r)) opts.push(r);
             }
-            options.sort(() => Math.random() - 0.5);
+            opts.sort(() => Math.random() - 0.5);
 
-            const qWordEl = document.getElementById('qWord');
-            qWordEl.textContent = currentWord.en;
-            qWordEl.className = turn === 'X' ? 'x-color' : 'o-color';
+            const qText = document.getElementById('quizWord');
+            qText.textContent = currentWord.en;
+            qText.className = turn === 'X' ? 'x-color' : 'o-color';
 
-            const container = document.getElementById('qOptions');
+            const container = document.getElementById('quizOptions');
             container.innerHTML = '';
-            options.forEach(opt => {
+            opts.forEach(o => {
                 const btn = document.createElement('button');
                 btn.className = 'btn-main';
-                btn.textContent = opt;
-                btn.onclick = () => handleAnswer(opt === currentWord.he, btn);
+                btn.textContent = o;
+                btn.onclick = () => checkAns(o === currentWord.he, btn);
                 container.appendChild(btn);
             });
 
-            showModal('modal-quiz');
-            setTimeout(speakWord, 300);
+            document.getElementById('quizModal').style.display = 'flex';
+            setTimeout(playVoice, 400);
         }
 
-        function handleAnswer(correct, btn) {
-            const btns = document.querySelectorAll('#qOptions .btn-main');
-            btns.forEach(b => {
+        function checkAns(isCorrect, btn) {
+            const all = document.querySelectorAll('#quizOptions .btn-main');
+            all.forEach(b => {
                 b.disabled = true;
                 if(b.textContent === currentWord.he) {
                     b.style.background = "#4caf50";
@@ -353,72 +340,72 @@
                 }
             });
 
-            if(!correct) {
+            if(!isCorrect) {
                 btn.style.background = "#f44336";
                 btn.style.color = "#fff";
             }
 
             setTimeout(() => {
-                hideModal('modal-quiz');
-                if(correct) {
+                document.getElementById('quizModal').style.display = 'none';
+                if(isCorrect) {
                     canMove = true;
-                    updateUI();
-                    if(gameMode === 'pvc' && turn === 'O') setTimeout(aiMove, 500);
+                    refreshUI();
+                    if(gameMode === 'pvc' && turn === 'O') setTimeout(aiPlay, 500);
                 } else {
                     turn = turn === 'X' ? 'O' : 'X';
-                    updateUI();
+                    refreshUI();
                     if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 600);
                 }
-            }, 1200);
+            }, 1300);
         }
 
-        function aiMove() {
-            const boards = activeBoard === -1 ? 
+        function aiPlay() {
+            const targets = activeBoard === -1 ? 
                 miniWinners.map((w,i) => w==="" && !superData[i].every(c=>c!=="") ? i : null).filter(v=>v!==null) : [activeBoard];
-            const b = boards[Math.floor(Math.random()*boards.length)];
+            const b = targets[Math.floor(Math.random()*targets.length)];
             const cells = superData[b].map((v,i)=>v===""?i:null).filter(v=>v!==null);
             const c = cells[Math.floor(Math.random()*cells.length)];
-            onCellClick(b, c);
+            onCellTap(b, c);
         }
 
-        function checkWin(arr, p) {
-            const combos = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            return combos.some(s => s.every(i => arr[i] === p));
+        function checkMatch(arr, p) {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return wins.some(s => s.every(i => arr[i] === p));
         }
 
-        function updateUI() {
-            const statusText = document.getElementById('statusText');
-            statusText.textContent = `תור ${turn}`;
-            statusText.style.color = turn === 'X' ? 'var(--x-color)' : 'var(--o-color)';
+        function refreshUI() {
+            const st = document.getElementById('statusText');
+            st.textContent = `תור ${turn}`;
+            st.style.color = turn === 'X' ? 'var(--x-color)' : 'var(--o-color)';
 
-            const qBtn = document.getElementById('qButton');
-            qBtn.textContent = canMove ? '!' : '?';
-            qBtn.className = `q-btn ${turn === 'X' ? 'x-color' : 'o-color'}`;
+            const q = document.getElementById('qButton');
+            q.textContent = canMove ? '!' : '?';
+            q.className = `q-btn ${turn === 'X' ? 'x-color' : 'o-color'}`;
 
             for(let i=0; i<9; i++) {
-                const board = document.getElementById(`board-${i}`);
-                board.classList.remove('active-mini');
+                const m = document.getElementById(`mini-${i}`);
+                m.classList.remove('active-mini');
                 if(canMove && (activeBoard === -1 || activeBoard === i) && !miniWinners[i]) {
-                    board.classList.add('active-mini');
+                    m.classList.add('active-mini');
                 }
 
                 if(miniWinners[i]) {
-                    if(!board.querySelector('.mini-win-overlay')) {
-                        const over = document.createElement('div');
-                        over.className = 'mini-win-overlay ' + (miniWinners[i] === 'X' ? 'x-color' : 'o-color');
-                        over.textContent = miniWinners[i] === 'X' ? '✕' : '◯';
-                        board.appendChild(over);
+                    if(!m.querySelector('.mini-win-overlay')) {
+                        const ov = document.createElement('div');
+                        ov.className = 'mini-win-overlay ' + (miniWinners[i] === 'X' ? 'x-color' : 'o-color');
+                        ov.textContent = miniWinners[i] === 'X' ? '✕' : '◯';
+                        m.appendChild(ov);
                     }
                 }
             }
         }
 
-        function endGame(winner) {
-            confetti({ particleCount: 200, spread: 70, origin: { y: 0.6 } });
-            document.getElementById('winnerIcon').textContent = winner === 'X' ? '✕' : '◯';
-            document.getElementById('winnerIcon').className = winner === 'X' ? 'x-color' : 'o-color';
-            document.getElementById('winnerMsg').textContent = `שחקן ${winner} ניצח את כל הלוח!`;
-            showModal('modal-win');
+        function showWin(w) {
+            confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
+            document.getElementById('winIcon').textContent = w === 'X' ? '✕' : '◯';
+            document.getElementById('winIcon').className = w === 'X' ? 'x-color' : 'o-color';
+            document.getElementById('winMsg').textContent = `שחקן ${w} ניצח את המשחק!`;
+            document.getElementById('winModal').style.display = 'flex';
         }
     </script>
 </body>
