@@ -3,373 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate Tic Tac Toe Bolt</title>
+    <title>Super Tic Tac Toe Bolt</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body, html { 
-            background: #000; color: #fff; font-family: 'Varela Round', sans-serif; 
+            background: #1a7b4e; 
+            color: #fff; font-family: 'Varela Round', sans-serif; 
             margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; 
         }
         
-        /* Main Layout */
-        .game-container {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; width: 100vw; padding: 10px;
-        }
+        .logo-container { margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .super-text { font-size: 5rem; font-weight: 900; color: #facc15; margin: 0; line-height: 0.9; text-shadow: 4px 4px 0px #000; }
+        .ttt-text { color: #fff; font-size: 2.2rem; font-weight: 900; margin-top: 5px; }
 
-        /* The Grid System */
-        .ultimate-board {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 8px; width: 95vw; height: 95vw; max-width: 420px; max-height: 420px;
-            background: #222; padding: 8px; border-radius: 15px; border: 2px solid #333;
-        }
+        .header-controls { display: flex; align-items: center; justify-content: center; width: 100%; margin-top: 20px; gap: 15px; padding: 0 10px; }
+        #statusContainer { background: rgba(255, 255, 255, 0.95); padding: 10px 0; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); flex: 1; max-width: 280px; text-align: center; border: 3px solid #000; }
+        #statusText { font-size: 2.2rem; font-weight: 900; line-height: 1; }
 
-        .small-board {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 2px; background: #444; padding: 3px; border-radius: 8px;
-            position: relative; transition: all 0.3s ease;
-        }
+        .side-btn { color: #fff; background: none; border: none; font-size: 2.2rem; font-weight: 900; cursor: pointer; padding: 5px; -webkit-tap-highlight-color: transparent; }
 
-        /* Active Board Indicator */
-        .active-board {
-            outline: 3px solid #facc15;
-            box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
-            background: #333;
-            z-index: 10;
-        }
+        .super-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 8px; background: #000; border-radius: 12px; width: 92vw; max-width: 380px; aspect-ratio: 1 / 1; margin: 15px auto; }
+        .mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: #bbb; position: relative; border-radius: 4px; overflow: hidden; }
+        .cell { background: #fff; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 900; cursor: pointer; }
+        .active-mini { outline: 5px solid #facc15; z-index: 20; box-shadow: 0 0 20px rgba(250, 204, 21, 0.6); }
+        .x-color { color: #1976d2; }
+        .o-color { color: #d32f2f; }
 
-        .cell {
-            background: #000; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem; font-weight: 900; cursor: pointer; border-radius: 2px;
-        }
+        .mini-win-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 7.5rem; font-weight: 900; z-index: 30; background: rgba(255, 255, 255, 0.9); pointer-events: none; }
 
-        /* Symbols & Effects */
-        .x-color { color: #00f2ff; text-shadow: 0 0 8px #00f2ff; }
-        .o-color { color: #bc13fe; text-shadow: 0 0 8px #bc13fe; }
-        .ghost { opacity: 0.25; filter: blur(1px); }
-
-        /* Board Win Overlays */
-        .won-x::after { content: '✕'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 5rem; color: rgba(0, 242, 255, 0.3); background: rgba(0, 242, 255, 0.1); border-radius: 8px; pointer-events: none; z-index: 5; }
-        .won-o::after { content: '◯'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 5rem; color: rgba(188, 19, 254, 0.3); background: rgba(188, 19, 254, 0.1); border-radius: 8px; pointer-events: none; z-index: 5; }
-
-        /* UI Elements */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .btn-ui { width: 280px; padding: 16px; border-radius: 20px; font-weight: 900; border: 2px solid; margin-bottom: 12px; transition: 0.2s; text-align: center; cursor: pointer; }
+        .q-btn { width: 85px; height: 85px; border-radius: 50%; background: #fff; border: 6px solid #000; font-size: 4rem; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.4); margin: 20px auto; }
+        .btn-main { width: 280px; min-height: 60px; border-radius: 35px; font-weight: 900; margin-bottom: 12px; border: 4px solid #000; background: #fff; color: #000; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 0 #000; cursor: pointer; text-align: center; }
         
-        .q-trigger {
-            width: 80px; height: 80px; border-radius: 50%; border: 4px solid #facc15;
-            color: #facc15; font-size: 3.5rem; font-weight: 900; display: flex; align-items: center; justify-content: center;
-            margin-top: 20px; animation: pulse 2s infinite; cursor: pointer;
-        }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .modal { position: fixed; inset: 0; background: rgba(26, 123, 78, 0.98); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .hidden { display: none; }
+        .flex { display: flex; }
 
-        .timer-bar { position: fixed; top: 0; left: 0; height: 8px; background: #facc15; width: 0%; z-index: 3000; box-shadow: 0 0 10px #facc15; }
-        
-        .back-btn { position: absolute; top: 20px; right: 20px; font-size: 2rem; color: #555; cursor: pointer; }
+        /* תיקון למילים ארוכות במודאל השאלה */
+        .question-container { display: flex; align-items: center; justify-content: center; width: 100%; max-width: 90vw; margin-bottom: 25px; gap: 10px; }
+        #qWord { 
+            font-size: clamp(2.5rem, 12vw, 4.5rem); 
+            font-weight: 900; 
+            word-break: break-word; 
+            max-width: 75%; 
+            text-align: center; 
+            line-height: 1;
+        }
+
+        .speak-btn { background: #facc15; border: 3px solid #000; border-radius: 50%; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; font-size: 1.5rem; }
     </style>
 </head>
 <body>
 
-    <div id="speedTimer" class="timer-bar"></div>
-
-    <!-- Lobby Screen -->
     <div id="lobby" class="modal" style="display: flex;">
-        <div onclick="showModal('helpModal')" class="absolute top-5 left-5 w-12 h-12 border-2 border-[#facc15] text-[#facc15] rounded-full flex items-center justify-center font-bold text-2xl cursor-pointer">?</div>
-        <div class="text-center mb-10">
-            <h2 class="text-[#00f2ff] text-2xl font-black italic tracking-widest">ULTIMATE</h2>
-            <h1 class="text-[#facc15] text-8xl font-black italic -mt-2">BOLT</h1>
-            <div class="text-6xl mt-4">⚡</div>
+        <div class="logo-container">
+            <h1 class="super-text">SUPER</h1>
+            <div class="ttt-text">TIC TAC TOE</div>
         </div>
-        <div class="flex flex-col gap-2">
-            <button onclick="showModal('vocabModal')" class="btn-ui border-[#facc15] text-[#facc15]">אוצר מילים</button>
-            <button onclick="setupGame('pvp')" class="btn-ui border-white text-white">2 שחקנים</button>
-            <button onclick="setupGame('speed')" class="btn-ui border-orange-500 text-orange-500">Speed Run ⚡</button>
-            <button onclick="showModal('aiDifficultyModal')" class="btn-ui border-[#bc13fe] text-[#bc13fe]">נגד המחשב</button>
+        <button onclick="showModal('vocabModal')" class="btn-main" style="background-color: #facc15;">הוספת מילים</button>
+        <button onclick="startGame('pvp')" class="btn-main" style="color: #1976d2;">שחקן נגד שחקן</button>
+        <button onclick="startGame('pvc')" class="btn-main" style="color: #d32f2f;">שחקן נגד מחשב</button>
+    </div>
+
+    <div id="gameUI" class="hidden flex flex-col items-center justify-between" style="height: 100%;">
+        <div class="header-controls">
+            <button onclick="location.reload()" class="side-btn">➔</button>
+            <div id="statusContainer"><div id="statusText">תור X</div></div>
+            <button onclick="alert('חוקים: נצח 3 לוחות ברצף. כל מהלך קובע איפה היריב ישחק. אם הלוח מלא או תפוס - תקבל מהלך חופשי (Wildcard)!')" class="side-btn">ⓘ</button>
         </div>
+        <div id="mainGrid" class="super-grid"></div>
+        <div id="qButton" onclick="openQuiz()" class="q-btn x-color">?</div>
+        <div style="font-size: 0.8rem; padding-bottom: 10px;">פותח ע"י חזי כהן גלמן 2026 ©</div>
     </div>
 
-    <!-- Help Modal -->
-    <div id="helpModal" class="modal">
-        <div class="bg-zinc-900 p-8 rounded-3xl border-2 border-[#facc15] max-w-sm w-full">
-            <h2 class="text-[#facc15] text-3xl font-black mb-6 text-center italic">חוקי המשחק</h2>
-            <div class="space-y-4 text-right text-lg">
-                <p>1. <b>הניתוב:</b> המקום שבו תסמנו בלוח הקטן קובע באיזה לוח היריב ישחק עכשיו (מסומן בזהב).</p>
-                <p>2. <b>ה-Bolt:</b> בתוך כל לוח קטן מותר רק 3 סימנים. בסימן ה-4 הראשון נעלם!</p>
-                <p>3. <b>שאלות:</b> עליכם לפתור שאלה באנגלית כדי לקבל את התור שלכם.</p>
-                <p>4. <b>ניצחון:</b> רצף של 3 לוחות קטנים בלוח הגדול.</p>
-            </div>
-            <button onclick="hideModal('helpModal')" class="btn-ui bg-[#facc15] text-black border-none w-full mt-8">הבנתי!</button>
-        </div>
-    </div>
-
-    <!-- AI Difficulty -->
-    <div id="aiDifficultyModal" class="modal">
-        <h2 class="text-white text-3xl font-black mb-8 italic">רמת קושי</h2>
-        <button onclick="hideModal('aiDifficultyModal'); setupGame('pvc', 'easy')" class="btn-ui border-[#00f2ff] text-[#00f2ff]">קל (אקראי)</button>
-        <button onclick="hideModal('aiDifficultyModal'); setupGame('pvc', 'hard')" class="btn-ui border-[#bc13fe] text-[#bc13fe]">מאתגר (אסטרטגי)</button>
-    </div>
-
-    <!-- Vocab Modal -->
-    <div id="vocabModal" class="modal">
-        <h2 class="text-[#facc15] text-2xl font-black mb-4">רשימת מילים (אנגלית - עברית)</h2>
-        <textarea id="vIn" class="w-80 h-64 bg-black border-2 border-zinc-800 text-white p-4 rounded-2xl mb-4 text-right outline-none focus:border-[#facc15]"></textarea>
-        <button onclick="hideModal('vocabModal'); saveVocab();" class="btn-ui bg-[#facc15] text-black border-none">שמור</button>
-    </div>
-
-    <!-- Question Modal -->
     <div id="quizModal" class="modal">
-        <div id="qText" class="text-6xl font-black mb-12 italic text-center" dir="ltr"></div>
-        <div id="qOptions" class="flex flex-col gap-4 w-80"></div>
+        <div class="question-container">
+            <div id="qWord"></div>
+            <button onclick="speakWord()" class="speak-btn">🔊</button>
+        </div>
+        <div id="qOptions" class="flex flex-col gap-4" style="width: 280px; max-width: 90vw;"></div>
     </div>
 
-    <!-- Game View -->
-    <div id="gameUI" class="hidden game-container">
-        <div onclick="location.reload()" class="back-btn">➔</div>
-        <div id="statusHeader" class="text-3xl font-black italic mb-6"></div>
-        
-        <div id="ultimateBoard" class="ultimate-board"></div>
-
-        <div id="nextQuestionBtn" onclick="openQuiz()" class="q-trigger">?</div>
-    </div>
-
-    <!-- Winner Modal -->
-    <div id="winModal" class="modal text-center">
-        <h2 id="winTitle" class="text-7xl font-black mb-10"></h2>
-        <button onclick="location.reload()" class="btn-ui border-[#facc15] text-[#facc15]">משחק חדש</button>
+    <div id="vocabModal" class="modal">
+        <h2 style="color: #fff; font-size: 2rem; margin-bottom: 10px;">עריכת מילים</h2>
+        <textarea id="vInput" style="width: 85vw; max-width: 400px; height: 300px; padding: 15px; border-radius: 15px; text-align: right; font-family: sans-serif; font-size: 1.1rem;"></textarea>
+        <button onclick="hideModal('vocabModal')" class="btn-main" style="margin-top: 15px; background: #facc15;">שמור</button>
     </div>
 
     <script>
-        let vocab = [], gameMode = 'pvp', difficulty = 'hard';
-        let turn = "X", canMove = false, isGameOver = false;
-        let activeBoardIdx = null; // null means any board
-        
-        // Data Structures
-        let boards = Array.from({length: 9}, () => Array(9).fill(""));
-        let histories = Array.from({length: 9}, () => ({ X: [], O: [] }));
-        let bigBoardStatus = Array(9).fill(""); // Stores winners of small boards
-
-        // Timer
-        let speedInterval, timeLeft = 100;
+        let vocab = [], turn = "X", activeBoard = -1, canMove = false, gameMode = 'pvp';
+        let superData = Array(9).fill(null).map(() => Array(9).fill(""));
+        let miniWinners = Array(9).fill("");
+        let quizActive = false, currentEn = "";
 
         window.onload = () => {
-            const saved = localStorage.getItem('ttt_bolt_ultimate_v');
-            document.getElementById('vIn').value = saved || "Hello - שלום\nDog - כלב\nRed - אדום\nHouse - בית\nApple - תפוח\nSky - שמיים";
-            saveVocab();
+            const saved = localStorage.getItem('sttt_bolt_v8');
+            document.getElementById('vInput').value = saved || "red - אדום\nblue - כחול\ngreen - ירוק\nyellow - צהוב\napple - תפוח\ndog - כלב";
         };
 
         const showModal = id => document.getElementById(id).style.display = 'flex';
         const hideModal = id => document.getElementById(id).style.display = 'none';
 
-        function saveVocab() {
-            const raw = document.getElementById('vIn').value;
-            localStorage.setItem('ttt_bolt_ultimate_v', raw);
-            vocab = raw.split('\n').map(line => {
-                const parts = line.split(/[-:]/);
-                return parts.length >= 2 ? { en: parts[0].trim(), he: parts[1].trim() } : null;
-            }).filter(item => item);
-        }
-
-        function setupGame(mode, diff = 'hard') {
-            if (vocab.length < 2) return alert("נא להזין לפחות 2 מילים");
+        function startGame(mode) {
+            const raw = document.getElementById('vInput').value;
+            vocab = raw.split('\n').map(l => {
+                const p = l.split(/[–\-\—:]/);
+                return p.length >= 2 ? { en: p[0].trim(), he: p[1].trim() } : null;
+            }).filter(x => x);
+            if(vocab.length < 3) return alert("הוסף עוד מילים");
+            
+            localStorage.setItem('sttt_bolt_v8', raw);
             gameMode = mode;
-            difficulty = diff;
             hideModal('lobby');
-            document.getElementById('gameUI').classList.replace('hidden', 'flex');
-            initUI();
-            startTurnLogic();
+            document.getElementById('gameUI').classList.remove('hidden');
+            initBoard();
+            updateUI();
         }
 
-        function initUI() {
-            const container = document.getElementById('ultimateBoard');
+        function initBoard() {
+            const container = document.getElementById('mainGrid');
             container.innerHTML = '';
-            for (let bIdx = 0; bIdx < 9; bIdx++) {
-                const boardDiv = document.createElement('div');
-                boardDiv.className = 'small-board';
-                boardDiv.id = `b-${bIdx}`;
-                for (let cIdx = 0; cIdx < 9; cIdx++) {
+            for(let b=0; b<9; b++) {
+                const mini = document.createElement('div');
+                mini.id = `mini-${b}`;
+                mini.className = 'mini-grid';
+                for(let c=0; c<9; c++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
-                    cell.onclick = () => onCellClick(bIdx, cIdx);
-                    boardDiv.appendChild(cell);
+                    cell.onclick = () => handleCellClick(b, c);
+                    mini.appendChild(cell);
                 }
-                container.appendChild(boardDiv);
+                container.appendChild(mini);
             }
         }
 
-        function startTurnLogic() {
-            if (isGameOver) return;
-            canMove = false;
-            const color = turn === 'X' ? '#00f2ff' : '#bc13fe';
-            document.getElementById('statusHeader').innerHTML = `<span style="color:${color}">תור ${turn}</span>`;
-            document.getElementById('nextQuestionBtn').classList.remove('hidden');
-            document.getElementById('nextQuestionBtn').style.borderColor = color;
-            document.getElementById('nextQuestionBtn').style.color = color;
+        function handleCellClick(bIdx, cIdx) {
+            if(!canMove || miniWinners[bIdx] !== "" || superData[bIdx][cIdx] !== "") return;
+            if(activeBoard !== -1 && activeBoard !== bIdx) return;
             
-            updateVisuals();
-
-            if (gameMode === 'pvc' && turn === 'O') {
-                setTimeout(aiLogic, 1000);
+            superData[bIdx][cIdx] = turn;
+            canMove = false;
+            
+            if(checkCombo(superData[bIdx], turn)) {
+                miniWinners[bIdx] = turn;
             }
+
+            // לוגיקת Wildcard: אם הלוח הבא תפוס או מלא, הופך ל-1- (מהלך חופשי)
+            const isFull = superData[cIdx].every(cell => cell !== "");
+            activeBoard = (miniWinners[cIdx] !== "" || isFull) ? -1 : cIdx;
+
+            if(checkCombo(miniWinners, turn)) {
+                confetti({ particleCount: 200, spread: 80 });
+                setTimeout(() => {
+                    alert(`ניצחון ל-${turn}!`);
+                    location.reload();
+                }, 500);
+                return;
+            }
+            
+            turn = turn === "X" ? "O" : "X";
+            updateUI();
+            if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 800);
         }
 
         function openQuiz() {
+            if(canMove || quizActive) return;
+            quizActive = true;
             const item = vocab[Math.floor(Math.random() * vocab.length)];
-            const options = [item.he];
-            while (options.length < Math.min(4, vocab.length)) {
-                const rand = vocab[Math.floor(Math.random() * vocab.length)].he;
-                if (!options.includes(rand)) options.push(rand);
+            currentEn = item.en;
+            const opts = [item.he];
+            while(opts.length < 3) {
+                const r = vocab[Math.floor(Math.random()*vocab.length)].he;
+                if(!opts.includes(r)) opts.push(r);
             }
-            options.sort(() => Math.random() - 0.5);
-
-            const qT = document.getElementById('qText');
-            qT.textContent = item.en;
-            qT.style.color = turn === 'X' ? '#00f2ff' : '#bc13fe';
-
-            const optContainer = document.getElementById('qOptions');
-            optContainer.innerHTML = '';
-            options.forEach(opt => {
-                const btn = document.createElement('div');
-                btn.className = 'btn-ui border-zinc-700 text-white';
-                btn.textContent = opt;
-                btn.onclick = () => {
-                    clearInterval(speedInterval);
-                    if (opt === item.he) {
-                        btn.style.borderColor = '#22c55e';
-                        btn.style.background = 'rgba(34,197,94,0.1)';
-                        setTimeout(() => { hideModal('quizModal'); canMove = true; document.getElementById('nextQuestionBtn').classList.add('hidden'); }, 600);
+            opts.sort(() => Math.random() - 0.5);
+            
+            document.getElementById('qWord').textContent = item.en;
+            const cont = document.getElementById('qOptions'); 
+            cont.innerHTML = '';
+            
+            opts.forEach(o => {
+                const b = document.createElement('button');
+                b.className = 'btn-main'; 
+                b.textContent = o;
+                b.onclick = () => {
+                    quizActive = false;
+                    hideModal('quizModal');
+                    if(o === item.he) {
+                        canMove = true; 
+                        updateUI();
+                        if(gameMode === 'pvc' && turn === 'O') setTimeout(executeAiMove, 400);
                     } else {
-                        btn.style.borderColor = '#ef4444';
-                        btn.style.background = 'rgba(239,68,68,0.1)';
-                        setTimeout(() => { hideModal('quizModal'); switchTurn(); }, 1000);
+                        turn = turn === "X" ? "O" : "X"; 
+                        updateUI();
+                        if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 600);
                     }
                 };
-                optContainer.appendChild(btn);
+                cont.appendChild(b);
             });
-
             showModal('quizModal');
-            if (gameMode === 'speed') runTimer();
+            speakWord();
         }
 
-        function runTimer() {
-            timeLeft = 100;
-            clearInterval(speedInterval);
-            speedInterval = setInterval(() => {
-                timeLeft -= 1.5;
-                document.getElementById('speedTimer').style.width = timeLeft + "%";
-                if (timeLeft <= 0) {
-                    clearInterval(speedInterval);
-                    hideModal('quizModal');
-                    switchTurn();
-                }
-            }, 100);
+        function speakWord() {
+            if (!currentEn) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(currentEn);
+            u.lang = 'en-US';
+            u.rate = 0.9; // קצב דיבור מעט איטי יותר לבהירות
+            window.speechSynthesis.speak(u);
         }
 
-        function onCellClick(bIdx, cIdx) {
-            if (!canMove || isGameOver) return;
-            if (activeBoardIdx !== null && activeBoardIdx !== bIdx) return;
-            if (boards[bIdx][cIdx] !== "") return;
-
-            // Execute Move
-            boards[bIdx][cIdx] = turn;
-            histories[bIdx][turn].push(cIdx);
-
-            // Bolt Mechanic: Only 3 signs per player in each board
-            if (histories[bIdx][turn].length > 3) {
-                const removedIdx = histories[bIdx][turn].shift();
-                boards[bIdx][removedIdx] = "";
-            }
-
-            // Check if board was won
-            if (checkWinPattern(boards[bIdx], turn)) {
-                bigBoardStatus[bIdx] = turn;
-            } else {
-                bigBoardStatus[bIdx] = ""; // Can un-win if signs disappear!
-            }
-
-            // Routing Logic
-            const nextPotential = cIdx;
-            // If targeted board is already finished or full, player gets free move
-            const isFinished = bigBoardStatus[nextPotential] !== "" || boards[nextPotential].every(c => c !== "");
-            activeBoardIdx = isFinished ? null : nextPotential;
-
-            // Check Final Win
-            if (checkWinPattern(bigBoardStatus, turn)) {
-                updateVisuals();
-                triggerGameOver();
-                return;
-            }
-
-            switchTurn();
+        function executeAiMove() {
+            let boards = activeBoard === -1 ? 
+                miniWinners.map((w,i)=>w==="" && !superData[i].every(c=>c!=="") ?i:null).filter(v=>v!==null) : [activeBoard];
+            
+            if (boards.length === 0) return;
+            
+            let b = boards[Math.floor(Math.random()*boards.length)];
+            let cells = superData[b].map((v,i)=>v===""?i:null).filter(v=>v!==null);
+            let c = cells[Math.floor(Math.random()*cells.length)];
+            handleCellClick(b, c);
         }
 
-        function switchTurn() {
-            turn = turn === "X" ? "O" : "X";
-            document.getElementById('speedTimer').style.width = "0%";
-            startTurnLogic();
-        }
-
-        function updateVisuals() {
-            for (let b = 0; b < 9; b++) {
-                const boardDiv = document.getElementById(`b-${b}`);
-                
-                // Active status
-                boardDiv.classList.remove('active-board');
-                if (activeBoardIdx === null || activeBoardIdx === b) {
-                    if (!isGameOver) boardDiv.classList.add('active-board');
-                }
-
-                // Win Overlay
-                boardDiv.classList.remove('won-x', 'won-o');
-                if (bigBoardStatus[b] === 'X') boardDiv.classList.add('won-x');
-                if (bigBoardStatus[b] === 'O') boardDiv.classList.add('won-o');
-
-                // Cells
-                const cellDivs = boardDiv.querySelectorAll('.cell');
-                cellDivs.forEach((div, c) => {
-                    const val = boards[b][c];
-                    div.textContent = val === 'X' ? '✕' : (val === 'O' ? '◯' : '');
-                    div.className = `cell ${val === 'X' ? 'x-color' : (val === 'O' ? 'o-color' : '')}`;
-                    
-                    // Ghost effect for the oldest sign
-                    if (val && histories[b][val].length === 3 && histories[b][val][0] === c) {
-                        div.classList.add('ghost');
-                    }
-                });
-            }
-        }
-
-        function checkWinPattern(arr, p) {
+        function checkCombo(arr, p) {
             const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            return wins.some(w => w.every(idx => arr[idx] === p && p !== ""));
+            return wins.some(s => s.every(i => arr[i] === p));
         }
 
-        function triggerGameOver() {
-            isGameOver = true;
-            confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
-            const title = document.getElementById('winTitle');
-            title.textContent = `ניצחון ל-${turn}!`;
-            title.style.color = turn === 'X' ? '#00f2ff' : '#bc13fe';
-            setTimeout(() => showModal('winModal'), 800);
-        }
-
-        function aiLogic() {
-            // AI simple simulation
-            let targetBoard = activeBoardIdx;
-            if (targetBoard === null) {
-                const availableBoards = bigBoardStatus.map((s, i) => (s==="" && boards[i].includes("")) ? i : null).filter(v => v !== null);
-                targetBoard = availableBoards[Math.floor(Math.random() * availableBoards.length)];
+        function render() {
+            for(let b=0; b<9; b++) {
+                const mini = document.getElementById(`mini-${b}`);
+                mini.classList.remove('active-mini');
+                const isFull = superData[b].every(cell => cell !== "");
+                
+                if(canMove && (activeBoard === -1 || activeBoard === b) && miniWinners[b] === "" && !isFull) {
+                    mini.classList.add('active-mini');
+                }
+                
+                const cells = mini.querySelectorAll('.cell');
+                superData[b].forEach((val, i) => {
+                    cells[i].textContent = val === 'X' ? '✕' : (val === 'O' ? '◯' : '');
+                    cells[i].className = 'cell ' + (val === 'X' ? 'x-color' : (val === 'O' ? 'o-color' : ''));
+                });
+                
+                if(miniWinners[b] !== "" && !mini.querySelector('.mini-win-overlay')) {
+                    const over = document.createElement('div');
+                    over.className = 'mini-win-overlay ' + (miniWinners[b] === 'X' ? 'x-color' : 'o-color');
+                    over.textContent = miniWinners[b] === 'X' ? '✕' : '◯';
+                    mini.appendChild(over);
+                }
             }
-            
-            const availableCells = boards[targetBoard].map((v, i) => v === "" ? i : null).filter(v => v !== null);
-            const move = availableCells[Math.floor(Math.random() * availableCells.length)];
-            
-            // AI always "answers" correct for flow
-            setTimeout(() => {
-                canMove = true;
-                onCellClick(targetBoard, move);
-            }, 600);
+        }
+
+        function updateUI() {
+            const st = document.getElementById('statusText');
+            st.textContent = `תור ${turn}`;
+            st.className = turn === 'X' ? 'x-color' : 'o-color';
+            const btn = document.getElementById('qButton');
+            btn.textContent = canMove ? '!' : '?';
+            btn.className = `q-btn ${turn === 'X' ? 'x-color' : 'o-color'}`;
+            render();
         }
     </script>
 </body>
