@@ -16,12 +16,15 @@
             --wrong: #f44336;
         }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body, html { 
             background: var(--bg-color); 
             color: #fff; font-family: 'Varela Round', sans-serif; 
             margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; 
         }
         
+        /* לוגו ותפריט */
         .logo-container { margin-top: 40px; margin-bottom: 30px; text-align: center; }
         .super-text { font-size: 5.5rem; font-weight: 900; color: var(--yellow); margin: 0; line-height: 0.8; text-shadow: 4px 4px 0px #000; letter-spacing: 2px; }
         .ttt-text { color: #fff; font-size: 2.4rem; font-weight: 900; margin-top: 5px; text-shadow: 2px 2px 0px #000; }
@@ -31,65 +34,83 @@
             margin-bottom: 15px; border: 4px solid #000; background: #fff; 
             color: #000; font-size: 1.6rem; display: flex; align-items: center; 
             justify-content: center; box-shadow: 0 5px 0 #000; cursor: pointer; 
-            transition: transform 0.1s; -webkit-tap-highlight-color: transparent;
+            transition: transform 0.1s;
         }
         .btn-main:active { transform: translateY(3px); box-shadow: 0 2px 0 #000; }
 
-        .header-controls { display: flex; align-items: center; justify-content: space-between; width: 92vw; max-width: 400px; margin: 20px auto 10px; }
-        #statusContainer { background: #fff; padding: 8px 25px; border-radius: 50px; box-shadow: 0 4px 0px #000; border: 3px solid #000; flex: 1; margin: 0 10px; text-align: center; }
+        /* כותרת משחק */
+        .header-controls { 
+            display: flex; align-items: center; justify-content: space-between; 
+            width: 92vw; max-width: 400px; margin: 20px auto 10px; height: 60px;
+        }
+        #statusContainer { 
+            background: #fff; height: 55px; border-radius: 50px; 
+            box-shadow: 0 4px 0px #000; border: 3px solid #000; 
+            flex: 1; margin: 0 10px; display: flex; align-items: center; justify-content: center;
+        }
         #statusText { font-size: 1.8rem; font-weight: 900; color: #000; }
 
         .icon-btn { background: none; border: none; font-size: 2.2rem; cursor: pointer; color: #fff; text-shadow: 2px 2px 0 #000; padding: 5px; }
 
-        /* לוח משחק משופר - יישור שורות */
+        /* לוח משחק מיושר */
         .super-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); 
             background: #000; border: 4px solid #000; border-radius: 12px; 
             width: 92vw; max-width: 380px; aspect-ratio: 1 / 1; margin: 10px auto; 
-            overflow: hidden;
+            overflow: hidden; gap: 4px;
         }
         .mini-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); 
-            background: #fff; position: relative; border: 2px solid #000;
+            background: #fff; position: relative; gap: 1px; padding: 1px;
         }
         .cell { 
-            border: 0.5px solid #ddd; aspect-ratio: 1 / 1; 
+            background: #fff; aspect-ratio: 1 / 1; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 1.5rem; font-weight: 900; 
+            font-size: 1.5rem; font-weight: 900; border: 0.5px solid #eee;
         }
-        .active-mini { background: #fff9c4; box-shadow: inset 0 0 15px var(--yellow); }
+        .active-mini { background: #fff9c4; }
+        .active-mini .cell { background: #fff9c4; }
         
         .x-color { color: var(--x-color); }
         .o-color { color: var(--o-color); }
 
-        .mini-win-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 6.5rem; font-weight: 900; z-index: 20; background: rgba(255, 255, 255, 0.95); }
+        .mini-win-overlay { 
+            position: absolute; inset: 0; display: flex; align-items: center; 
+            justify-content: center; font-size: 6.5rem; font-weight: 900; 
+            z-index: 20; background: rgba(255, 255, 255, 0.95); 
+        }
 
-        /* כפתור שאלה ללא הצללה */
+        /* כפתור שאלה שטוח */
         .q-btn { 
             width: 90px; height: 90px; border-radius: 50%; background: #fff; 
             border: 6px solid #000; font-size: 4rem; font-weight: 900; 
             display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; margin: 20px auto;
-            -webkit-tap-highlight-color: transparent;
+            cursor: pointer; margin: 20px auto; box-shadow: none;
         }
 
+        /* מודאל שאלות */
         .modal { position: fixed; inset: 0; background: var(--bg-color); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         
-        .video-container { width: 100%; max-width: 350px; aspect-ratio: 9/16; background: #000; border: 5px solid #000; border-radius: 15px; overflow: hidden; position: relative; }
-        .video-container iframe { width: 100%; height: 100%; border: none; }
+        .word-row { 
+            display: flex; align-items: center; justify-content: center; 
+            gap: 15px; margin-bottom: 20px; width: 100%;
+        }
+        #qWord { font-size: clamp(2.5rem, 10vw, 4.2rem); font-weight: 900; text-shadow: 3px 3px 0 #000; margin: 0; }
         
-        #qWord { font-size: clamp(2.5rem, 12vw, 4.5rem); font-weight: 900; text-align: center; margin-bottom: 10px; text-shadow: 3px 3px 0 #000; }
-        
-        /* כפתור הקראה */
-        .speaker-btn { background: #fff; border: 3px solid #000; border-radius: 50%; width: 50px; height: 50px; font-size: 1.5rem; cursor: pointer; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
+        /* כפתור הקראה שקוף משמאל */
+        .speaker-btn { 
+            background: none; border: none; padding: 0; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+            width: 45px; height: 45px; order: -1; /* מעביר לשמאל ב-flex */
+        }
+        .speaker-btn svg { width: 40px; height: 40px; fill: white; filter: drop-shadow(2px 2px 0 #000); }
 
-        /* משוב תשובות */
         .opt-btn { transition: background 0.3s, transform 0.1s; }
         .opt-correct { background: var(--correct) !important; color: white !important; }
         .opt-wrong { background: var(--wrong) !important; color: white !important; }
 
         .hidden { display: none; }
-        .footer-text { font-size: 0.9rem; margin-top: auto; padding-bottom: 15px; opacity: 0.8; }
+        .footer-text { font-size: 0.9rem; margin-top: auto; padding-bottom: 15px; opacity: 0.8; text-align: center; }
     </style>
 </head>
 <body>
@@ -113,21 +134,25 @@
         </div>
         <div id="mainGrid" class="super-grid"></div>
         <div id="qButton" onclick="openQuiz()" class="q-btn x-color">?</div>
-        <div class="footer-text" style="text-align: center;">SUPER TIC TAC TOE © 2026</div>
-    </div>
-
-    <div id="videoModal" class="modal">
-        <h2 style="margin-bottom: 15px; font-size: 2rem;">איך משחקים?</h2>
-        <div class="video-container">
-            <iframe id="rulesVideo" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-        </div>
-        <button onclick="closeVideoModal()" class="btn-main" style="margin-top: 20px;">סגור</button>
+        <div class="footer-text">SUPER TIC TAC TOE © 2026</div>
     </div>
 
     <div id="quizModal" class="modal">
-        <div id="qWord"></div>
-        <button class="speaker-btn" onclick="speakWord()">🔊</button>
+        <div class="word-row">
+            <div id="qWord"></div>
+            <button class="speaker-btn" onclick="speakWord()">
+                <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
+        </div>
         <div id="qOptions" style="display: flex; flex-direction: column; width: 100%; align-items: center; gap: 10px;"></div>
+    </div>
+
+    <div id="videoModal" class="modal">
+        <h2 style="margin-bottom: 15px;">איך משחקים?</h2>
+        <div style="width: 100%; max-width: 350px; aspect-ratio: 9/16; background: #000; border-radius: 15px; overflow: hidden;">
+            <iframe id="rulesVideo" style="width:100%; height:100%; border:none;" src="" allowfullscreen></iframe>
+        </div>
+        <button onclick="closeVideoModal()" class="btn-main" style="margin-top: 20px;">סגור</button>
     </div>
 
     <div id="vocabModal" class="modal">
@@ -146,6 +171,8 @@
         window.onload = () => {
             const saved = localStorage.getItem('sttt_bolt_final');
             document.getElementById('vInput').value = saved || "apple - תפוח\nbanana - בננה\nred - אדום\nblue - כחול\ndog - כלב\ncat - חתול";
+            // Pre-warm TTS
+            window.speechSynthesis.getVoices();
         };
 
         const showModal = id => {
@@ -218,8 +245,10 @@
 
         function speakWord() {
             if(!currentWord) return;
+            window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(currentWord.en);
             u.lang = 'en-US';
+            u.rate = 0.9;
             window.speechSynthesis.speak(u);
         }
 
@@ -285,11 +314,21 @@
             return wins.some(s => s.every(i => arr[i] === p));
         }
 
-        function render() {
+        function updateUI() {
+            const stText = document.getElementById('statusText');
+            stText.textContent = `תור ${turn}`;
+            stText.style.color = turn === 'X' ? 'var(--x-color)' : 'var(--o-color)';
+            
+            const qBtn = document.getElementById('qButton');
+            qBtn.textContent = canMove ? '!' : '?';
+            qBtn.className = `q-btn ${turn === 'X' ? 'x-color' : 'o-color'}`;
+
             for(let b=0; b<9; b++) {
                 const mini = document.getElementById(`mini-${b}`);
-                mini.classList.remove('active-mini');
-                if(canMove && (activeBoard === -1 || activeBoard === b) && miniWinners[b] === "") mini.classList.add('active-mini');
+                mini.className = 'mini-grid';
+                if(canMove && (activeBoard === -1 || activeBoard === b) && miniWinners[b] === "") {
+                    mini.classList.add('active-mini');
+                }
                 
                 const cells = mini.querySelectorAll('.cell');
                 superData[b].forEach((val, i) => {
@@ -305,18 +344,7 @@
                 }
             }
         }
-
-        function updateUI() {
-            const st = document.getElementById('statusText');
-            st.textContent = `תור ${turn}`;
-            st.style.color = turn === 'X' ? 'var(--x-color)' : 'var(--o-color)';
-            const btn = document.getElementById('qButton');
-            btn.textContent = canMove ? '!' : '?';
-            btn.className = `q-btn ${turn === 'X' ? 'x-color' : 'o-color'}`;
-            render();
-        }
     </script>
 </body>
 </html>
-
 
