@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Super Tic Tac Toe v1.4</title>
+    <title>Super Tic Tac Toe v1.5</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -28,52 +28,52 @@
             font-family: 'Varela Round', sans-serif; 
             height: 100vh; width: 100vw;
             overflow: hidden;
+            position: relative;
         }
 
-        /* ניהול דפים */
+        /* ניהול דפים - מסך פתיחה במרכז */
         .page {
             display: none;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             height: 100%;
             width: 100%;
-            position: absolute;
-            inset: 0;
+            padding: 20px;
         }
         .page.active { display: flex; }
 
-        /* מסך פתיחה - לוגו באמצע */
-        .logo-container { text-align: center; margin-bottom: 50px; }
-        .super-text { font-size: 4.5rem; font-weight: 900; color: var(--yellow); line-height: 1; }
-        .ttt-text { font-size: 2.5rem; font-weight: 900; margin-top: 5px; text-shadow: 2px 2px 0px #000; }
+        /* מרכוז לוגו - חזרה ל-1.1 */
+        #lobby { justify-content: center; }
+        .logo-group { text-align: center; margin-bottom: 40px; }
+        .super-title { font-size: 4.5rem; font-weight: 900; color: var(--yellow); line-height: 0.9; }
+        .ttt-title { font-size: 2.2rem; font-weight: 900; margin-top: 5px; text-shadow: 2px 2px 0px #000; }
 
-        .btn-container { display: flex; flex-direction: column; gap: 20px; width: 100%; align-items: center; }
-        .btn-main { 
-            width: 280px; height: 65px; border-radius: 40px; font-weight: 900; 
+        .btn-stack { display: flex; flex-direction: column; gap: 15px; width: 100%; align-items: center; }
+        .btn-action { 
+            width: 280px; height: 60px; border-radius: 40px; font-weight: 900; 
             border: 4px solid #000; background: #fff; color: #000; 
-            font-size: 1.5rem; display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 6px 0 #000; cursor: pointer; transition: transform 0.1s;
+            font-size: 1.4rem; display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 6px 0 #000; cursor: pointer; transition: 0.1s;
         }
-        .btn-main:active { transform: translateY(4px); box-shadow: 0 2px 0 #000; }
+        .btn-action:active { transform: translateY(4px); box-shadow: 0 2px 0 #000; }
 
         /* לוח המשחק */
-        .header-controls { 
+        .game-header { 
             display: flex; align-items: center; justify-content: space-between; 
-            width: 90vw; max-width: 400px; margin-top: 20px;
+            width: 100%; max-width: 400px; margin-top: 10px;
         }
-        #statusDisplay { 
-            background: #fff; height: 50px; border-radius: 50px; 
-            border: 3px solid #000; flex: 1; margin: 0 15px;
+        .status-pill { 
+            background: #fff; height: 45px; border-radius: 40px; 
+            border: 3px solid #000; flex: 1; margin: 0 10px;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 4px 0 #000;
         }
-        #statusText { font-size: 1.7rem; font-weight: 900; color: #000; }
+        #statusLabel { font-size: 1.5rem; font-weight: 900; color: #000; }
 
         .super-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-            background: #000; border: 6px solid #000; border-radius: 12px;
-            width: 92vw; max-width: 380px; aspect-ratio: 1/1; gap: 6px; margin: 20px auto;
+            background: #000; border: 5px solid #000; border-radius: 12px;
+            width: 90vw; max-width: 370px; aspect-ratio: 1/1; gap: 5px; margin: 20px auto;
         }
         
         .mini-grid { 
@@ -81,331 +81,315 @@
             background: #ccc; gap: 1px; height: 100%; width: 100%; position: relative;
         }
 
-        /* קו מתאר צהוב פשוט */
-        .active-mini { 
-            outline: 6px solid var(--yellow);
+        /* קו מתאר צהוב פשוט ללא הילה */
+        .active-board { 
+            outline: 5px solid var(--yellow);
             outline-offset: -3px;
-            z-index: 10;
+            z-index: 5;
         }
 
         .cell { 
             background: #fff; display: flex; align-items: center; justify-content: center; 
-            font-size: 1.8rem; font-weight: 900; height: 100%; width: 100%;
-            padding: 0; margin: 0; line-height: 1; text-align: center;
+            font-size: 1.7rem; font-weight: 900; height: 100%; width: 100%;
         }
 
-        .x-color { color: var(--x-color); }
-        .o-color { color: var(--o-color); }
+        .x-player { color: var(--x-color); }
+        .o-player { color: var(--o-color); }
 
-        .mini-win-overlay { 
+        .mini-winner { 
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; 
-            font-size: 6rem; font-weight: 900; background: rgba(255, 255, 255, 0.9); z-index: 20;
+            font-size: 5rem; font-weight: 900; background: rgba(255, 255, 255, 0.85); z-index: 10;
         }
 
-        /* כפתור שאלה - ללא הצללה */
-        .q-btn { 
-            width: 85px; height: 85px; border-radius: 50%; background: #fff; 
-            border: 6px solid #000; font-size: 4rem; font-weight: 900; 
+        /* כפתור שאלה ללא צל */
+        .action-circle { 
+            width: 80px; height: 80px; border-radius: 50%; background: #fff; 
+            border: 6px solid #000; font-size: 3.5rem; font-weight: 900; 
             display: flex; align-items: center; justify-content: center; 
             cursor: pointer; box-shadow: none !important;
         }
 
-        /* מודאלים */
-        .modal { 
-            position: fixed; inset: 0; background: var(--bg-color); z-index: 10000; 
+        /* מודאל */
+        .modal-screen { 
+            position: fixed; inset: 0; background: var(--bg-color); z-index: 2000; 
             display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; 
         }
         
-        #quizWord { font-size: 4rem; font-weight: 900; text-shadow: 2px 2px 0 #000; margin: 0; }
+        #questionText { font-size: 3.5rem; font-weight: 900; text-shadow: 2px 2px 0 #000; margin: 0; }
 
-        /* הקראה - רק אייקון ללא רקע */
-        .speak-icon-only {
-            background: none; border: none; padding: 10px; cursor: pointer; color: #fff;
+        /* כפתור הקראה ללא רקע */
+        .speak-only {
+            background: none; border: none; cursor: pointer; color: #fff;
             display: flex; align-items: center; justify-content: center;
         }
 
-        .footer-tag { font-size: 0.8rem; margin-top: auto; padding-bottom: 20px; opacity: 0.7; text-align: center; }
-        .version { font-weight: 900; opacity: 0.8; margin-top: 10px; }
+        .ver-tag { font-weight: 900; margin: 15px 0; font-size: 1rem; opacity: 0.6; }
+        .credit { font-size: 0.75rem; margin-top: auto; padding-bottom: 10px; opacity: 0.7; }
     </style>
 </head>
 <body>
 
     <!-- מסך פתיחה -->
-    <div id="lobby" class="page active">
-        <div class="logo-container">
-            <h1 class="super-text">SUPER</h1>
-            <div class="ttt-text">TIC TAC TOE</div>
+    <div id="lobby-page" class="page active">
+        <div class="logo-group">
+            <h1 class="super-title">SUPER</h1>
+            <div class="ttt-title">TIC TAC TOE</div>
         </div>
-        <div class="btn-container">
-            <button onclick="openVocab()" class="btn-main" style="background: var(--yellow);">הוספת מילים</button>
-            <button onclick="startSession('pvp')" class="btn-main" style="color: var(--x-color);">שחקן נגד שחקן</button>
-            <button onclick="startSession('pvc')" class="btn-main" style="color: var(--o-color);">שחקן נגד מחשב</button>
+        <div class="btn-stack">
+            <button onclick="navTo('vocab')" class="btn-action" style="background: var(--yellow);">הוספת מילים</button>
+            <button onclick="initGame('pvp')" class="btn-action" style="color: var(--x-color);">שחקן נגד שחקן</button>
+            <button onclick="initGame('pvc')" class="btn-action" style="color: var(--o-color);">שחקן נגד מחשב</button>
         </div>
-        <div class="version">v1.4</div>
-        <div class="footer-tag">פותח ע"י חזי כהן גלמן 2026 ©</div>
+        <div class="ver-tag">v1.5</div>
+        <div class="credit">פותח ע"י חזי כהן גלמן 2026 ©</div>
     </div>
 
-    <!-- מסך המשחק -->
-    <div id="game" class="page">
-        <div class="header-controls">
-            <button onclick="location.reload()" style="background:none; border:none; font-size:2.5rem; color:#fff; cursor:pointer;">➔</button>
-            <div id="statusDisplay"><div id="statusText">תור X</div></div>
-            <button onclick="openVideo()" style="background:none; border:none; font-size:2.5rem; color:#fff; cursor:pointer;">ⓘ</button>
+    <!-- מסך משחק -->
+    <div id="game-page" class="page">
+        <div class="game-header">
+            <button onclick="location.reload()" style="background:none; border:none; font-size:2rem; color:#fff;">➔</button>
+            <div class="status-pill"><div id="statusLabel">תור X</div></div>
+            <button onclick="navTo('info')" style="background:none; border:none; font-size:2rem; color:#fff;">ⓘ</button>
         </div>
         
-        <div id="mainGrid" class="super-grid"></div>
+        <div id="boardGrid" class="super-grid"></div>
         
-        <div id="qButton" onclick="openQuiz()" class="q-btn x-color">?</div>
+        <div id="askBtn" onclick="triggerQuiz()" class="action-circle x-player">?</div>
         
-        <div class="version">v1.4</div>
-        <div class="footer-tag">SUPER TIC TAC TOE © 2026</div>
+        <div class="ver-tag">v1.5</div>
     </div>
 
     <!-- מודאל שאלה -->
-    <div id="quizModal" class="modal">
-        <div style="display:flex; align-items:center; gap:25px; margin-bottom: 40px;">
-            <button class="speak-icon-only" onclick="playVoice()">
-                <svg viewBox="0 0 24 24" width="55" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+    <div id="quiz-modal" class="modal-screen">
+        <div style="display:flex; align-items:center; gap:20px; margin-bottom: 30px;">
+            <button class="speak-only" onclick="sayWord()">
+                <svg viewBox="0 0 24 24" width="50" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
             </button>
-            <h2 id="quizWord"></h2>
+            <h2 id="questionText"></h2>
         </div>
-        <div id="quizOptions" style="display:flex; flex-direction:column; gap:15px; width:100%; align-items:center;"></div>
+        <div id="optionsContainer" style="display:flex; flex-direction:column; gap:12px; width:100%; align-items:center;"></div>
     </div>
 
-    <!-- מודאל הגדרות מילים -->
-    <div id="vocabModal" class="modal">
-        <h2 style="margin-bottom:20px;">עריכת אוצר מילים</h2>
-        <textarea id="vocabArea" style="width:85%; height:50vh; border-radius:20px; padding:20px; border:5px solid #000; font-size:1.2rem; text-align:right; font-family: inherit;"></textarea>
-        <button onclick="closeVocab()" class="btn-main" style="margin-top:25px; background:var(--yellow);">שמור וחזור</button>
+    <!-- מודאל מילים -->
+    <div id="vocab-modal" class="modal-screen">
+        <h2 style="margin-bottom:15px;">עריכת מילים</h2>
+        <textarea id="vocabTxt" style="width:85%; height:55vh; border-radius:15px; padding:15px; border:4px solid #000; font-size:1.1rem; text-align:right;"></textarea>
+        <button onclick="saveAndGo()" class="btn-action" style="margin-top:20px; background:var(--yellow);">שמור וחזור</button>
     </div>
 
-    <!-- מודאל סרטון -->
-    <div id="videoModal" class="modal">
-        <h2 style="margin-bottom:20px;">איך משחקים?</h2>
-        <iframe id="vidFrame" style="width:90%; aspect-ratio:9/16; border:5px solid #000; border-radius:20px;" src="" allowfullscreen></iframe>
-        <button onclick="closeVideo()" class="btn-main" style="margin-top:25px;">סגור</button>
+    <!-- מודאל עזרה -->
+    <div id="info-modal" class="modal-screen">
+        <h2 style="margin-bottom:15px;">איך משחקים?</h2>
+        <iframe id="helpVid" style="width:90%; aspect-ratio:9/16; border:4px solid #000; border-radius:15px;" src="" allowfullscreen></iframe>
+        <button onclick="closeInfo()" class="btn-action" style="margin-top:20px;">סגור</button>
     </div>
 
     <!-- מודאל ניצחון -->
-    <div id="winModal" class="modal" style="background:rgba(0,0,0,0.95);">
-        <div style="background:#fff; padding:40px; border-radius:40px; border:10px solid var(--yellow); text-align:center; color:#000;">
-            <h2 style="font-size:3.5rem; margin:0;">ניצחון!</h2>
-            <div id="winIcon" style="font-size:7rem; font-weight:900; margin:10px 0;">✕</div>
-            <p id="winMsg" style="font-size:1.8rem; font-weight:900; margin-bottom:30px;"></p>
-            <button onclick="location.reload()" class="btn-main" style="width:100%; background:var(--yellow);">משחק חדש</button>
+    <div id="win-modal" class="modal-screen" style="background:rgba(0,0,0,0.9);">
+        <div style="background:#fff; padding:30px; border-radius:30px; border:8px solid var(--yellow); text-align:center; color:#000;">
+            <h2 style="font-size:2.5rem; margin:0;">ניצחון!</h2>
+            <div id="winPlayer" style="font-size:5rem; font-weight:900;">✕</div>
+            <p id="winMsg" style="font-size:1.3rem; font-weight:900;"></p>
+            <button onclick="location.reload()" class="btn-action" style="width:100%; background:var(--yellow);">משחק חדש</button>
         </div>
     </div>
 
     <script>
-        let vocab = [], turn = "X", activeBoard = -1, canMove = false, gameMode = 'pvp';
-        let superData = Array(9).fill(null).map(() => Array(9).fill(""));
+        let currentVocab = [], turn = "X", currentActiveBoard = -1, canPlay = false, mode = 'pvp';
+        let gridData = Array(9).fill(null).map(() => Array(9).fill(""));
         let miniWinners = Array(9).fill("");
-        let currentWord = null;
+        let activeWord = null;
 
-        // טעינה ראשונית
         window.onload = () => {
-            const saved = localStorage.getItem('sttt_vocab_v14');
-            document.getElementById('vocabArea').value = saved || "apple - תפוח\nbanana - בננה\nred - אדום\nblue - כחול\ndog - כלב\ncat - חתול\nsun - שמש\nwater - מים";
-            
-            // אתחול מנוע הדיבור
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.getVoices();
-            }
+            const saved = localStorage.getItem('sttt_v15_data');
+            document.getElementById('vocabTxt').value = saved || "apple - תפוח\nbanana - בננה\nred - אדום\nblue - כחול\ndog - כלב\ncat - חתול\nsun - שמש\nwater - מים";
+            if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
         };
 
-        function startSession(mode) {
-            const raw = document.getElementById('vocabArea').value;
-            vocab = raw.split('\n').map(l => {
-                const p = l.split(/[-–:]/);
-                return p.length >= 2 ? { en: p[0].trim(), he: p[1].trim() } : null;
+        function navTo(screen) {
+            if(screen === 'vocab') document.getElementById('vocab-modal').style.display = 'flex';
+            if(screen === 'info') {
+                document.getElementById('helpVid').src = "https://www.youtube.com/embed/xLcUtltJk2c?autoplay=1";
+                document.getElementById('info-modal').style.display = 'flex';
+            }
+        }
+
+        function closeInfo() {
+            document.getElementById('helpVid').src = "";
+            document.getElementById('info-modal').style.display = 'none';
+        }
+
+        function saveAndGo() {
+            localStorage.setItem('sttt_v15_data', document.getElementById('vocabTxt').value);
+            document.getElementById('vocab-modal').style.display = 'none';
+        }
+
+        function initGame(m) {
+            const lines = document.getElementById('vocabTxt').value.split('\n');
+            currentVocab = lines.map(l => {
+                const parts = l.split(/[-–:]/);
+                return parts.length >= 2 ? { en: parts[0].trim(), he: parts[1].trim() } : null;
             }).filter(v => v);
 
-            if(vocab.length < 4) return alert("יש להזין לפחות 4 מילים");
+            if(currentVocab.length < 4) return alert("הזן לפחות 4 מילים");
+
+            mode = m;
+            // שפעול הקראה
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+
+            document.getElementById('lobby-page').classList.remove('active');
+            document.getElementById('game-page').classList.add('active');
             
-            gameMode = mode;
-            // "התעוררות" למנוע הדיבור על ידי צליל שקט בלחיצה הראשונה
-            const silence = new SpeechSynthesisUtterance("");
-            window.speechSynthesis.speak(silence);
-
-            document.getElementById('lobby').classList.remove('active');
-            document.getElementById('game').classList.add('active');
-            
-            buildBoard();
-            refreshUI();
+            drawBoard();
+            updateAll();
         }
 
-        function openVocab() { document.getElementById('vocabModal').style.display = 'flex'; }
-        function closeVocab() { 
-            localStorage.setItem('sttt_vocab_v14', document.getElementById('vocabArea').value);
-            document.getElementById('vocabModal').style.display = 'none'; 
-        }
-
-        function openVideo() {
-            document.getElementById('vidFrame').src = "https://www.youtube.com/embed/xLcUtltJk2c?autoplay=1";
-            document.getElementById('videoModal').style.display = 'flex';
-        }
-        function closeVideo() {
-            document.getElementById('vidFrame').src = "";
-            document.getElementById('videoModal').style.display = 'none';
-        }
-
-        function buildBoard() {
-            const grid = document.getElementById('mainGrid');
-            grid.innerHTML = '';
+        function drawBoard() {
+            const container = document.getElementById('boardGrid');
+            container.innerHTML = '';
             for(let i=0; i<9; i++) {
-                const mini = document.createElement('div');
-                mini.id = `mini-${i}`;
-                mini.className = 'mini-grid';
+                const mGrid = document.createElement('div');
+                mGrid.id = `m-${i}`;
+                mGrid.className = 'mini-grid';
                 for(let j=0; j<9; j++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.onclick = () => onCellTap(i, j);
-                    mini.appendChild(cell);
+                    const c = document.createElement('div');
+                    c.className = 'cell';
+                    c.onclick = () => handleCellClick(i, j);
+                    mGrid.appendChild(c);
                 }
-                grid.appendChild(mini);
+                container.appendChild(mGrid);
             }
         }
 
-        function onCellTap(bIdx, cIdx) {
-            if(!canMove || miniWinners[bIdx] || superData[bIdx][cIdx]) return;
-            if(activeBoard !== -1 && activeBoard !== bIdx) return;
+        function handleCellClick(b, c) {
+            if(!canPlay || miniWinners[b] || gridData[b][c]) return;
+            if(currentActiveBoard !== -1 && currentActiveBoard !== b) return;
 
-            superData[bIdx][cIdx] = turn;
-            const cell = document.getElementById(`mini-${bIdx}`).children[cIdx];
-            cell.textContent = turn === 'X' ? '✕' : '◯';
-            cell.className = 'cell ' + (turn === 'X' ? 'x-color' : 'o-color');
+            gridData[b][c] = turn;
+            const cellEl = document.getElementById(`m-${b}`).children[c];
+            cellEl.textContent = turn === 'X' ? '✕' : '◯';
+            cellEl.className = 'cell ' + (turn === 'X' ? 'x-player' : 'o-player');
 
-            if(checkMatch(superData[bIdx], turn)) {
-                miniWinners[bIdx] = turn;
-            }
+            if(checkWin(gridData[b], turn)) miniWinners[b] = turn;
 
-            const nextIsFull = superData[cIdx].every(v => v !== "");
-            activeBoard = (miniWinners[cIdx] || nextIsFull) ? -1 : cIdx;
+            const nextFull = gridData[c].every(v => v !== "");
+            currentActiveBoard = (miniWinners[c] || nextFull) ? -1 : c;
 
-            if(checkMatch(miniWinners, turn)) {
-                showWin(turn);
+            if(checkWin(miniWinners, turn)) {
+                gameOver(turn);
                 return;
             }
 
             turn = turn === 'X' ? 'O' : 'X';
-            canMove = false;
-            refreshUI();
+            canPlay = false;
+            updateAll();
 
-            if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 600);
+            if(mode === 'pvc' && turn === 'O') setTimeout(triggerQuiz, 600);
         }
 
-        function playVoice() {
-            if(!currentWord) return;
+        function sayWord() {
+            if(!activeWord) return;
             window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance(currentWord.en);
-            msg.lang = 'en-US';
-            msg.rate = 0.8;
-            window.speechSynthesis.speak(msg);
+            const u = new SpeechSynthesisUtterance(activeWord.en);
+            u.lang = 'en-US';
+            u.rate = 0.85;
+            window.speechSynthesis.speak(u);
         }
 
-        function openQuiz() {
-            currentWord = vocab[Math.floor(Math.random() * vocab.length)];
-            const opts = [currentWord.he];
+        function triggerQuiz() {
+            activeWord = currentVocab[Math.floor(Math.random() * currentVocab.length)];
+            const opts = [activeWord.he];
             while(opts.length < 4) {
-                const r = vocab[Math.floor(Math.random()*vocab.length)].he;
-                if(!opts.includes(r)) opts.push(r);
+                const pick = currentVocab[Math.floor(Math.random()*currentVocab.length)].he;
+                if(!opts.includes(pick)) opts.push(pick);
             }
             opts.sort(() => Math.random() - 0.5);
 
-            const qText = document.getElementById('quizWord');
-            qText.textContent = currentWord.en;
-            qText.className = turn === 'X' ? 'x-color' : 'o-color';
+            const qLabel = document.getElementById('questionText');
+            qLabel.textContent = activeWord.en;
+            qLabel.className = turn === 'X' ? 'x-player' : 'o-player';
 
-            const container = document.getElementById('quizOptions');
-            container.innerHTML = '';
+            const box = document.getElementById('optionsContainer');
+            box.innerHTML = '';
             opts.forEach(o => {
-                const btn = document.createElement('button');
-                btn.className = 'btn-main';
-                btn.textContent = o;
-                btn.onclick = () => checkAns(o === currentWord.he, btn);
-                container.appendChild(btn);
+                const b = document.createElement('button');
+                b.className = 'btn-action';
+                b.textContent = o;
+                b.onclick = () => checkQuiz(o === activeWord.he, b);
+                box.appendChild(b);
             });
 
-            document.getElementById('quizModal').style.display = 'flex';
-            setTimeout(playVoice, 400);
+            document.getElementById('quiz-modal').style.display = 'flex';
+            setTimeout(sayWord, 300);
         }
 
-        function checkAns(isCorrect, btn) {
-            const all = document.querySelectorAll('#quizOptions .btn-main');
-            all.forEach(b => {
+        function checkQuiz(isCorrect, el) {
+            const allBtns = document.querySelectorAll('#optionsContainer .btn-action');
+            allBtns.forEach(b => {
                 b.disabled = true;
-                if(b.textContent === currentWord.he) {
-                    b.style.background = "#4caf50";
-                    b.style.color = "#fff";
-                }
+                if(b.textContent === activeWord.he) b.style.background = "#4caf50";
             });
 
-            if(!isCorrect) {
-                btn.style.background = "#f44336";
-                btn.style.color = "#fff";
-            }
+            if(!isCorrect) el.style.background = "#f44336";
 
             setTimeout(() => {
-                document.getElementById('quizModal').style.display = 'none';
+                document.getElementById('quiz-modal').style.display = 'none';
                 if(isCorrect) {
-                    canMove = true;
-                    refreshUI();
-                    if(gameMode === 'pvc' && turn === 'O') setTimeout(aiPlay, 500);
+                    canPlay = true;
+                    updateAll();
+                    if(mode === 'pvc' && turn === 'O') setTimeout(aiLogic, 500);
                 } else {
                     turn = turn === 'X' ? 'O' : 'X';
-                    refreshUI();
-                    if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 600);
+                    updateAll();
+                    if(mode === 'pvc' && turn === 'O') setTimeout(triggerQuiz, 600);
                 }
-            }, 1300);
+            }, 1200);
         }
 
-        function aiPlay() {
-            const targets = activeBoard === -1 ? 
-                miniWinners.map((w,i) => w==="" && !superData[i].every(c=>c!=="") ? i : null).filter(v=>v!==null) : [activeBoard];
-            const b = targets[Math.floor(Math.random()*targets.length)];
-            const cells = superData[b].map((v,i)=>v===""?i:null).filter(v=>v!==null);
-            const c = cells[Math.floor(Math.random()*cells.length)];
-            onCellTap(b, c);
+        function aiLogic() {
+            const possibleBoards = currentActiveBoard === -1 ? 
+                miniWinners.map((w,i) => w==="" && !gridData[i].every(c=>c!=="") ? i : null).filter(v=>v!==null) : [currentActiveBoard];
+            const b = possibleBoards[Math.floor(Math.random()*possibleBoards.length)];
+            const emptyCells = gridData[b].map((v,i)=>v===""?i:null).filter(v=>v!==null);
+            const c = emptyCells[Math.floor(Math.random()*emptyCells.length)];
+            handleCellClick(b, c);
         }
 
-        function checkMatch(arr, p) {
-            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            return wins.some(s => s.every(i => arr[i] === p));
+        function checkWin(arr, p) {
+            const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return lines.some(l => l.every(i => arr[i] === p));
         }
 
-        function refreshUI() {
-            const st = document.getElementById('statusText');
+        function updateAll() {
+            const st = document.getElementById('statusLabel');
             st.textContent = `תור ${turn}`;
             st.style.color = turn === 'X' ? 'var(--x-color)' : 'var(--o-color)';
 
-            const q = document.getElementById('qButton');
-            q.textContent = canMove ? '!' : '?';
-            q.className = `q-btn ${turn === 'X' ? 'x-color' : 'o-color'}`;
+            const ask = document.getElementById('askBtn');
+            ask.textContent = canPlay ? '!' : '?';
+            ask.className = `action-circle ${turn === 'X' ? 'x-player' : 'o-player'}`;
 
             for(let i=0; i<9; i++) {
-                const m = document.getElementById(`mini-${i}`);
-                m.classList.remove('active-mini');
-                if(canMove && (activeBoard === -1 || activeBoard === i) && !miniWinners[i]) {
-                    m.classList.add('active-mini');
+                const mini = document.getElementById(`m-${i}`);
+                mini.classList.remove('active-board');
+                if(canPlay && (currentActiveBoard === -1 || currentActiveBoard === i) && !miniWinners[i]) {
+                    mini.classList.add('active-board');
                 }
-
-                if(miniWinners[i]) {
-                    if(!m.querySelector('.mini-win-overlay')) {
-                        const ov = document.createElement('div');
-                        ov.className = 'mini-win-overlay ' + (miniWinners[i] === 'X' ? 'x-color' : 'o-color');
-                        ov.textContent = miniWinners[i] === 'X' ? '✕' : '◯';
-                        m.appendChild(ov);
-                    }
+                if(miniWinners[i] && !mini.querySelector('.mini-winner')) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'mini-winner ' + (miniWinners[i] === 'X' ? 'x-player' : 'o-player');
+                    overlay.textContent = miniWinners[i] === 'X' ? '✕' : '◯';
+                    mini.appendChild(overlay);
                 }
             }
         }
 
-        function showWin(w) {
-            confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
-            document.getElementById('winIcon').textContent = w === 'X' ? '✕' : '◯';
-            document.getElementById('winIcon').className = w === 'X' ? 'x-color' : 'o-color';
-            document.getElementById('winMsg').textContent = `שחקן ${w} ניצח את המשחק!`;
-            document.getElementById('winModal').style.display = 'flex';
+        function gameOver(w) {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            document.getElementById('winPlayer').textContent = w === 'X' ? '✕' : '◯';
+            document.getElementById('winPlayer').className = w === 'X' ? 'x-player' : 'o-player';
+            document.getElementById('winMsg').textContent = `שחקן ${w} ניצח את כל הלוח!`;
+            document.getElementById('win-modal').style.display = 'flex';
         }
     </script>
 </body>
