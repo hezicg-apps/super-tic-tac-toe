@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Super Tic Tac Toe Bolt</title>
+    <title>Super Tic Tac Toe v1.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -24,19 +24,22 @@
             margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; 
         }
         
-        .logo-container { margin-top: 40px; margin-bottom: 30px; text-align: center; }
-        .super-text { font-size: 5.5rem; font-weight: 900; color: var(--yellow); margin: 0; line-height: 0.8; text-shadow: 4px 4px 0px #000; letter-spacing: 2px; }
+        /* מסך פתיחה */
+        .logo-container { margin-top: 30px; margin-bottom: 40px; text-align: center; }
+        .super-text { font-size: 4rem; font-weight: 900; color: var(--yellow); margin: 0; line-height: 1; letter-spacing: 1px; }
         .ttt-text { color: #fff; font-size: 2.4rem; font-weight: 900; margin-top: 5px; text-shadow: 2px 2px 0px #000; }
 
+        .btn-container { display: flex; flex-direction: column; gap: 20px; align-items: center; }
         .btn-main { 
             width: 280px; height: 60px; border-radius: 40px; font-weight: 900; 
-            margin-bottom: 15px; border: 4px solid #000; background: #fff; 
+            border: 4px solid #000; background: #fff; 
             color: #000; font-size: 1.5rem; display: flex; align-items: center; 
             justify-content: center; box-shadow: 0 5px 0 #000; cursor: pointer; 
             transition: transform 0.1s;
         }
         .btn-main:active { transform: translateY(3px); box-shadow: 0 2px 0 #000; }
 
+        /* לוח המשחק */
         .header-controls { 
             display: flex; align-items: center; justify-content: space-between; 
             width: 95vw; max-width: 400px; margin: 15px auto 5px; height: 60px;
@@ -50,7 +53,6 @@
 
         .icon-btn { background: none; border: none; font-size: 2.2rem; cursor: pointer; color: #fff; text-shadow: 2px 2px 0 #000; padding: 5px; }
 
-        /* לוח המשחק */
         .super-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
             background: var(--main-border); border: 6px solid var(--main-border); 
@@ -63,7 +65,6 @@
             transition: box-shadow 0.3s, transform 0.3s; border-radius: 4px;
         }
         
-        /* אינדיקציה ללוח פעיל */
         .active-mini { 
             box-shadow: 0 0 15px 5px var(--yellow); 
             z-index: 10; 
@@ -80,30 +81,30 @@
         .x-color { color: var(--x-color); }
         .o-color { color: var(--o-color); }
 
-        /* מרכוז מוחלט של הניצחון בלוח הקטן */
         .mini-win-overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center; 
             font-size: 5rem; font-weight: 900; z-index: 20; 
             background: rgba(255, 255, 255, 0.85); 
-            line-height: 1; pointer-events: none;
+            line-height: 0; pointer-events: none;
         }
 
-        /* כפתור סימן השאלה */
         .q-btn { 
             width: 80px; height: 80px; border-radius: 50%; background: #fff; 
             border: 6px solid #000; font-size: 3.5rem; font-weight: 900; 
             display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; margin: 15px auto; box-shadow: 0 6px 0 #000;
+            cursor: pointer; margin: 15px auto; 
+            /* הסרת הצללה לפי בקשה */
+            box-shadow: none; 
         }
-        .q-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #000; }
+        .q-btn:active { transform: scale(0.95); }
 
         /* מודאלים */
         .modal { position: fixed; inset: 0; background: var(--bg-color); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         
-        /* שאלה והקראה */
         .word-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 25px; }
-        #qWord { font-size: 3.5rem; font-weight: 900; text-shadow: 3px 3px 0 #000; margin: 0; color: #fff; }
+        #qWord { font-size: 3.5rem; font-weight: 900; text-shadow: 2px 2px 0 #000; margin: 0; }
+        
         .speaker-btn { 
             background: #fff; border: 4px solid #000; border-radius: 50%; 
             width: 60px; height: 60px; cursor: pointer; display: flex; 
@@ -111,7 +112,6 @@
         }
         .speaker-btn svg { width: 30px; height: 30px; fill: #000; }
 
-        /* מודאל ניצחון */
         #winModal { background: rgba(0,0,0,0.9); }
         .win-card { 
             background: #fff; padding: 30px; border-radius: 30px; border: 8px solid var(--yellow);
@@ -120,7 +120,7 @@
         }
         .win-card.show { transform: scale(1); }
         .win-title { font-size: 3rem; font-weight: 900; margin: 10px 0; }
-        .win-icon { font-size: 6rem; margin: 10px 0; }
+        .win-icon { font-size: 6rem; margin: 10px 0; line-height: 1; }
 
         .opt-btn { transition: background 0.2s; }
         .opt-correct { background: #4caf50 !important; color: #fff !important; border-color: #1b5e20 !important; }
@@ -128,6 +128,7 @@
 
         .hidden { display: none; }
         .footer-text { font-size: 0.85rem; margin-top: auto; padding-bottom: 10px; opacity: 0.9; text-align: center; width: 100%; pointer-events: none; }
+        .version-tag { font-weight: 900; color: #fff; margin-top: 5px; opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -138,9 +139,12 @@
             <h1 class="super-text">SUPER</h1>
             <div class="ttt-text">TIC TAC TOE</div>
         </div>
-        <button onclick="showModal('vocabModal')" class="btn-main" style="background-color: var(--yellow);">הוספת מילים</button>
-        <button onclick="startGame('pvp')" class="btn-main" style="color: var(--x-color);">שחקן נגד שחקן</button>
-        <button onclick="startGame('pvc')" class="btn-main" style="color: var(--o-color);">שחקן נגד מחשב</button>
+        <div class="btn-container">
+            <button onclick="showModal('vocabModal')" class="btn-main" style="background-color: var(--yellow);">הוספת מילים</button>
+            <button onclick="startGame('pvp')" class="btn-main" style="color: var(--x-color);">שחקן נגד שחקן</button>
+            <button onclick="startGame('pvc')" class="btn-main" style="color: var(--o-color);">שחקן נגד מחשב</button>
+        </div>
+        <div class="version-tag">v1.0</div>
         <div class="footer-text">פותח ע"י חזי כהן גלמן 2026 ©</div>
     </div>
 
@@ -153,13 +157,13 @@
         </div>
         <div id="mainGrid" class="super-grid"></div>
         <div id="qButton" onclick="openQuiz()" class="q-btn x-color">?</div>
-        <div class="footer-text">SUPER TIC TAC TOE © 2026</div>
+        <div class="footer-text">v1.0 | SUPER TIC TAC TOE © 2026</div>
     </div>
 
     <!-- מודאל שאלה -->
     <div id="quizModal" class="modal">
         <div class="word-row">
-            <button class="speaker-btn" onclick="speakWord()">
+            <button class="speaker-btn" id="speakerBtn" onclick="speakWord()">
                 <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
             </button>
             <div id="qWord"></div>
@@ -200,8 +204,14 @@
         let currentWord = null;
         let isAnswering = false;
 
+        // אתחול הקראה - פתרון לבעיית השקט בדפדפנים
+        function initSpeech() {
+            const silent = new SpeechSynthesisUtterance("");
+            window.speechSynthesis.speak(silent);
+        }
+
         window.onload = () => {
-            const saved = localStorage.getItem('sttt_bolt_final_v3');
+            const saved = localStorage.getItem('sttt_bolt_v1_0');
             document.getElementById('vInput').value = saved || "apple - תפוח\nbanana - בננה\nred - אדום\nblue - כחול\ndog - כלב\ncat - חתול\nsun - שמש\nwater - מים";
         };
 
@@ -219,6 +229,7 @@
         }
 
         function startGame(mode) {
+            initSpeech(); // הפעלת מנוע הדיבור
             const raw = document.getElementById('vInput').value;
             vocab = raw.split('\n').map(l => {
                 const p = l.split(/[–\-\—:]/);
@@ -227,7 +238,7 @@
             
             if(vocab.length < 4) return alert("הכנס לפחות 4 מילים");
             
-            localStorage.setItem('sttt_bolt_final_v3', raw);
+            localStorage.setItem('sttt_bolt_v1_0', raw);
             gameMode = mode;
             hideModal('lobby');
             document.getElementById('gameUI').style.display = 'flex';
@@ -258,7 +269,6 @@
             
             superData[bIdx][cIdx] = turn;
             
-            // עדכון ויזואלי מיידי לפני בדיקת ניצחון
             const mini = document.getElementById(`mini-${bIdx}`);
             const cell = mini.children[cIdx];
             cell.textContent = turn === 'X' ? '✕' : '◯';
@@ -290,7 +300,7 @@
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(currentWord.en);
             u.lang = 'en-US';
-            u.rate = 0.9;
+            u.rate = 0.85; // קצת יותר לאט להבנה טובה יותר
             window.speechSynthesis.speak(u);
         }
 
@@ -306,7 +316,11 @@
             }
             opts.sort(() => Math.random() - 0.5);
             
-            document.getElementById('qWord').textContent = currentWord.en;
+            const qEl = document.getElementById('qWord');
+            qEl.textContent = currentWord.en;
+            // צביעת המילה בצבע של השחקן הנוכחי
+            qEl.className = turn === 'X' ? 'x-color' : 'o-color';
+            
             const cont = document.getElementById('qOptions'); 
             cont.innerHTML = '';
             
@@ -319,7 +333,7 @@
             });
             
             showModal('quizModal');
-            setTimeout(speakWord, 400);
+            setTimeout(speakWord, 500);
         }
 
         function handleAnswer(btn, isCorrect) {
@@ -374,11 +388,8 @@
 
             for(let b=0; b<9; b++) {
                 const mini = document.getElementById(`mini-${b}`);
-                
-                // הסרת מחלקות ישנות
                 mini.classList.remove('active-mini');
                 
-                // הוספת אינדיקציה ללוח פעיל
                 if(canMove && (activeBoard === -1 || activeBoard === b) && miniWinners[b] === "") {
                     mini.classList.add('active-mini');
                 }
