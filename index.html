@@ -12,8 +12,8 @@
             --x-color: #1976d2;
             --o-color: #d32f2f;
             --yellow: #facc15;
-            --correct: #4caf50;
-            --wrong: #f44336;
+            --grid-line: #b0b0b0; /* צבע קווים ברור יותר */
+            --main-border: #000000;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -41,80 +41,102 @@
         /* כותרת משחק */
         .header-controls { 
             display: flex; align-items: center; justify-content: space-between; 
-            width: 92vw; max-width: 400px; margin: 20px auto 10px; height: 60px;
+            width: 95vw; max-width: 400px; margin: 15px auto 5px; height: 60px;
         }
         #statusContainer { 
-            background: #fff; height: 55px; border-radius: 50px; 
+            background: #fff; height: 50px; border-radius: 50px; 
             box-shadow: 0 4px 0px #000; border: 3px solid #000; 
             flex: 1; margin: 0 10px; display: flex; align-items: center; justify-content: center;
         }
-        #statusText { font-size: 1.8rem; font-weight: 900; color: #000; }
+        #statusText { font-size: 1.6rem; font-weight: 900; color: #000; }
 
         .icon-btn { background: none; border: none; font-size: 2.2rem; cursor: pointer; color: #fff; text-shadow: 2px 2px 0 #000; padding: 5px; }
 
-        /* לוח משחק מיושר */
+        /* לוח משחק משופר */
         .super-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            background: #000; border: 4px solid #000; border-radius: 12px; 
-            width: 92vw; max-width: 380px; aspect-ratio: 1 / 1; margin: 10px auto; 
-            overflow: hidden; gap: 4px;
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            grid-template-rows: repeat(3, 1fr);
+            background: var(--main-border); 
+            border: 5px solid var(--main-border); 
+            border-radius: 12px; 
+            width: 94vw; 
+            max-width: 380px; 
+            aspect-ratio: 1 / 1; 
+            margin: 10px auto; 
+            gap: 5px; /* עובי הקווים העבים */
+            overflow: hidden;
         }
         .mini-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            background: #fff; position: relative; gap: 1px; padding: 1px;
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            grid-template-rows: repeat(3, 1fr);
+            background: var(--grid-line); 
+            position: relative; 
+            gap: 1px; /* עובי הקווים הדקים */
+            height: 100%;
+            width: 100%;
         }
         .cell { 
-            background: #fff; aspect-ratio: 1 / 1; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 1.5rem; font-weight: 900; border: 0.5px solid #eee;
+            background: #fff; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.6rem; 
+            font-weight: 900; 
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* מונע מהתוכן להגדיל את התא */
         }
-        .active-mini { background: #fff9c4; }
-        .active-mini .cell { background: #fff9c4; }
+        .active-mini { background: var(--yellow); }
+        .active-mini .cell { background: #fffde7; }
         
         .x-color { color: var(--x-color); }
         .o-color { color: var(--o-color); }
 
         .mini-win-overlay { 
             position: absolute; inset: 0; display: flex; align-items: center; 
-            justify-content: center; font-size: 6.5rem; font-weight: 900; 
-            z-index: 20; background: rgba(255, 255, 255, 0.95); 
+            justify-content: center; font-size: 5.5rem; font-weight: 900; 
+            z-index: 20; background: rgba(255, 255, 255, 0.9); 
         }
 
-        /* כפתור שאלה שטוח */
+        /* כפתור שאלה */
         .q-btn { 
-            width: 90px; height: 90px; border-radius: 50%; background: #fff; 
-            border: 6px solid #000; font-size: 4rem; font-weight: 900; 
+            width: 85px; height: 85px; border-radius: 50%; background: #fff; 
+            border: 6px solid #000; font-size: 3.5rem; font-weight: 900; 
             display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; margin: 20px auto; box-shadow: none;
+            cursor: pointer; margin: 15px auto; box-shadow: 0 6px 0 #000;
         }
+        .q-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #000; }
 
         /* מודאל שאלות */
         .modal { position: fixed; inset: 0; background: var(--bg-color); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         
         .word-row { 
             display: flex; align-items: center; justify-content: center; 
-            gap: 15px; margin-bottom: 20px; width: 100%;
+            gap: 20px; margin-bottom: 30px; width: 100%;
         }
-        #qWord { font-size: clamp(2.5rem, 10vw, 4.2rem); font-weight: 900; text-shadow: 3px 3px 0 #000; margin: 0; }
+        #qWord { font-size: 3.5rem; font-weight: 900; text-shadow: 3px 3px 0 #000; margin: 0; color: #fff; }
         
         /* כפתור הקראה שקוף משמאל */
         .speaker-btn { 
-            background: none; border: none; padding: 0; cursor: pointer; 
+            background: transparent; border: none; padding: 0; cursor: pointer; 
             display: flex; align-items: center; justify-content: center;
-            width: 45px; height: 45px; order: -1; /* מעביר לשמאל ב-flex */
+            width: 50px; height: 50px; order: -1; 
         }
-        .speaker-btn svg { width: 40px; height: 40px; fill: white; filter: drop-shadow(2px 2px 0 #000); }
+        .speaker-btn svg { width: 45px; height: 45px; fill: #fff; filter: drop-shadow(2px 2px 0 #000); }
 
-        .opt-btn { transition: background 0.3s, transform 0.1s; }
-        .opt-correct { background: var(--correct) !important; color: white !important; }
-        .opt-wrong { background: var(--wrong) !important; color: white !important; }
+        .opt-btn { transition: background 0.2s; }
+        .opt-correct { background: #4caf50 !important; color: #fff !important; border-color: #1b5e20 !important; }
+        .opt-wrong { background: #f44336 !important; color: #fff !important; border-color: #b71c1c !important; }
 
         .hidden { display: none; }
-        .footer-text { font-size: 0.9rem; margin-top: auto; padding-bottom: 15px; opacity: 0.8; text-align: center; }
+        .footer-text { font-size: 0.85rem; margin-top: auto; padding-bottom: 10px; opacity: 0.9; text-align: center; width: 100%; }
     </style>
 </head>
 <body>
 
+    <!-- מסך פתיחה -->
     <div id="lobby" class="modal" style="display: flex;">
         <div class="logo-container">
             <h1 class="super-text">SUPER</h1>
@@ -126,6 +148,7 @@
         <div class="footer-text">פותח ע"י חזי כהן גלמן 2026 ©</div>
     </div>
 
+    <!-- ממשק המשחק -->
     <div id="gameUI" class="hidden" style="flex-direction: column; height: 100%;">
         <div class="header-controls">
             <button onclick="location.reload()" class="icon-btn">➔</button>
@@ -137,6 +160,7 @@
         <div class="footer-text">SUPER TIC TAC TOE © 2026</div>
     </div>
 
+    <!-- מודאל שאלה -->
     <div id="quizModal" class="modal">
         <div class="word-row">
             <div id="qWord"></div>
@@ -144,9 +168,10 @@
                 <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
             </button>
         </div>
-        <div id="qOptions" style="display: flex; flex-direction: column; width: 100%; align-items: center; gap: 10px;"></div>
+        <div id="qOptions" style="display: flex; flex-direction: column; width: 100%; align-items: center; gap: 12px;"></div>
     </div>
 
+    <!-- מודאל וידאו -->
     <div id="videoModal" class="modal">
         <h2 style="margin-bottom: 15px;">איך משחקים?</h2>
         <div style="width: 100%; max-width: 350px; aspect-ratio: 9/16; background: #000; border-radius: 15px; overflow: hidden;">
@@ -155,6 +180,7 @@
         <button onclick="closeVideoModal()" class="btn-main" style="margin-top: 20px;">סגור</button>
     </div>
 
+    <!-- מודאל עריכת מילים -->
     <div id="vocabModal" class="modal">
         <h2 style="margin-bottom: 15px;">עריכת אוצר מילים</h2>
         <textarea id="vInput" style="width: 85vw; max-width: 350px; height: 50vh; border-radius: 15px; padding: 15px; border: 4px solid #000; font-size: 1.1rem; text-align: right;"></textarea>
@@ -169,10 +195,12 @@
         let isAnswering = false;
 
         window.onload = () => {
-            const saved = localStorage.getItem('sttt_bolt_final');
-            document.getElementById('vInput').value = saved || "apple - תפוח\nbanana - בננה\nred - אדום\nblue - כחול\ndog - כלב\ncat - חתול";
-            // Pre-warm TTS
-            window.speechSynthesis.getVoices();
+            const saved = localStorage.getItem('sttt_bolt_final_v2');
+            document.getElementById('vInput').value = saved || "apple - תפוח\nbanana - בננה\nred - אדום\nblue - כחול\ndog - כלב\ncat - חתול\nsun - שמש\nwater - מים";
+            // Pre-init TTS
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+            }
         };
 
         const showModal = id => {
@@ -193,9 +221,10 @@
                 const p = l.split(/[–\-\—:]/);
                 return p.length >= 2 ? { en: p[0].trim(), he: p[1].trim() } : null;
             }).filter(x => x);
+            
             if(vocab.length < 4) return alert("הכנס לפחות 4 מילים");
             
-            localStorage.setItem('sttt_bolt_final', raw);
+            localStorage.setItem('sttt_bolt_final_v2', raw);
             gameMode = mode;
             hideModal('lobby');
             document.getElementById('gameUI').style.display = 'flex';
@@ -240,24 +269,29 @@
             
             turn = turn === "X" ? "O" : "X";
             updateUI();
-            if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 800);
+            
+            // AI Turn logic
+            if(gameMode === 'pvc' && turn === 'O') {
+                setTimeout(openQuiz, 800);
+            }
         }
 
         function speakWord() {
-            if(!currentWord) return;
+            if(!currentWord || !('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(currentWord.en);
             u.lang = 'en-US';
-            u.rate = 0.9;
+            u.rate = 0.85;
             window.speechSynthesis.speak(u);
         }
 
         function openQuiz() {
             if(canMove || isAnswering) return;
             isAnswering = true;
+            
             currentWord = vocab[Math.floor(Math.random() * vocab.length)];
             const opts = [currentWord.he];
-            while(opts.length < 3) {
+            while(opts.length < 4) {
                 const r = vocab[Math.floor(Math.random()*vocab.length)].he;
                 if(!opts.includes(r)) opts.push(r);
             }
@@ -274,7 +308,10 @@
                 b.onclick = () => handleAnswer(b, o === currentWord.he);
                 cont.appendChild(b);
             });
+            
             showModal('quizModal');
+            // Auto speak on open
+            setTimeout(speakWord, 300);
         }
 
         function handleAnswer(btn, isCorrect) {
@@ -290,22 +327,27 @@
                 hideModal('quizModal');
                 isAnswering = false;
                 if(isCorrect) {
-                    canMove = true; updateUI();
+                    canMove = true; 
+                    updateUI();
                     if(gameMode === 'pvc' && turn === 'O') setTimeout(executeAiMove, 500);
                 } else {
-                    turn = turn === "X" ? "O" : "X"; updateUI();
+                    // Wrong answer - switch turns
+                    turn = turn === "X" ? "O" : "X"; 
+                    updateUI();
                     if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 600);
                 }
-            }, 1200);
+            }, 1500);
         }
 
         function executeAiMove() {
             let boards = activeBoard === -1 ? 
                 miniWinners.map((w,i)=>w==="" && !superData[i].every(c=>c!=="") ?i:null).filter(v=>v!==null) : [activeBoard];
             if (boards.length === 0) return;
+            
             let b = boards[Math.floor(Math.random()*boards.length)];
             let cells = superData[b].map((v,i)=>v===""?i:null).filter(v=>v!==null);
             let c = cells[Math.floor(Math.random()*cells.length)];
+            
             handleCellClick(b, c);
         }
 
@@ -326,6 +368,7 @@
             for(let b=0; b<9; b++) {
                 const mini = document.getElementById(`mini-${b}`);
                 mini.className = 'mini-grid';
+                
                 if(canMove && (activeBoard === -1 || activeBoard === b) && miniWinners[b] === "") {
                     mini.classList.add('active-mini');
                 }
@@ -336,11 +379,14 @@
                     cells[i].className = 'cell ' + (val === 'X' ? 'x-color' : (val === 'O' ? 'o-color' : ''));
                 });
                 
-                if(miniWinners[b] !== "" && !mini.querySelector('.mini-win-overlay')) {
-                    const over = document.createElement('div');
-                    over.className = 'mini-win-overlay ' + (miniWinners[b] === 'X' ? 'x-color' : 'o-color');
-                    over.textContent = miniWinners[b] === 'X' ? '✕' : '◯';
-                    mini.appendChild(over);
+                if(miniWinners[b] !== "") {
+                    let over = mini.querySelector('.mini-win-overlay');
+                    if(!over) {
+                        over = document.createElement('div');
+                        over.className = 'mini-win-overlay ' + (miniWinners[b] === 'X' ? 'x-color' : 'o-color');
+                        over.textContent = miniWinners[b] === 'X' ? '✕' : '◯';
+                        mini.appendChild(over);
+                    }
                 }
             }
         }
