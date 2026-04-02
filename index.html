@@ -12,6 +12,8 @@
             --x-color: #1976d2;
             --o-color: #d32f2f;
             --yellow: #facc15;
+            --correct: #4caf50;
+            --wrong: #f44336;
         }
 
         body, html { 
@@ -20,12 +22,10 @@
             margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; 
         }
         
-        /* עיצוב הלוגו מהתמונות */
         .logo-container { margin-top: 40px; margin-bottom: 30px; text-align: center; }
         .super-text { font-size: 5.5rem; font-weight: 900; color: var(--yellow); margin: 0; line-height: 0.8; text-shadow: 4px 4px 0px #000; letter-spacing: 2px; }
         .ttt-text { color: #fff; font-size: 2.4rem; font-weight: 900; margin-top: 5px; text-shadow: 2px 2px 0px #000; }
 
-        /* כפתורים ראשיים */
         .btn-main { 
             width: 300px; height: 65px; border-radius: 40px; font-weight: 900; 
             margin-bottom: 15px; border: 4px solid #000; background: #fff; 
@@ -35,54 +35,65 @@
         }
         .btn-main:active { transform: translateY(3px); box-shadow: 0 2px 0 #000; }
 
-        /* ממשק המשחק */
         .header-controls { display: flex; align-items: center; justify-content: space-between; width: 92vw; max-width: 400px; margin: 20px auto 10px; }
         #statusContainer { background: #fff; padding: 8px 25px; border-radius: 50px; box-shadow: 0 4px 0px #000; border: 3px solid #000; flex: 1; margin: 0 10px; text-align: center; }
         #statusText { font-size: 1.8rem; font-weight: 900; color: #000; }
 
         .icon-btn { background: none; border: none; font-size: 2.2rem; cursor: pointer; color: #fff; text-shadow: 2px 2px 0 #000; padding: 5px; }
 
+        /* לוח משחק משופר - יישור שורות */
         .super-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; 
-            padding: 6px; background: #000; border-radius: 12px; 
+            display: grid; grid-template-columns: repeat(3, 1fr); 
+            background: #000; border: 4px solid #000; border-radius: 12px; 
             width: 92vw; max-width: 380px; aspect-ratio: 1 / 1; margin: 10px auto; 
+            overflow: hidden;
         }
-        .mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: #ccc; position: relative; border-radius: 4px; overflow: hidden; }
-        .cell { background: #fff; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 900; }
-        .active-mini { outline: 5px solid var(--yellow); z-index: 10; box-shadow: 0 0 15px var(--yellow); }
+        .mini-grid { 
+            display: grid; grid-template-columns: repeat(3, 1fr); 
+            background: #fff; position: relative; border: 2px solid #000;
+        }
+        .cell { 
+            border: 0.5px solid #ddd; aspect-ratio: 1 / 1; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1.5rem; font-weight: 900; 
+        }
+        .active-mini { background: #fff9c4; box-shadow: inset 0 0 15px var(--yellow); }
         
         .x-color { color: var(--x-color); }
         .o-color { color: var(--o-color); }
 
-        .mini-win-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 6.5rem; font-weight: 900; z-index: 20; background: rgba(255, 255, 255, 0.9); }
+        .mini-win-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 6.5rem; font-weight: 900; z-index: 20; background: rgba(255, 255, 255, 0.95); }
 
-        /* כפתור השאלה העגול */
+        /* כפתור שאלה ללא הצללה */
         .q-btn { 
             width: 90px; height: 90px; border-radius: 50%; background: #fff; 
             border: 6px solid #000; font-size: 4rem; font-weight: 900; 
             display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; box-shadow: 0 6px 0px #000; margin: 20px auto;
+            cursor: pointer; margin: 20px auto;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* מודאלים */
         .modal { position: fixed; inset: 0; background: var(--bg-color); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         
-        /* מודאל וידאו */
         .video-container { width: 100%; max-width: 350px; aspect-ratio: 9/16; background: #000; border: 5px solid #000; border-radius: 15px; overflow: hidden; position: relative; }
         .video-container iframe { width: 100%; height: 100%; border: none; }
         
-        /* התאמה למילים ארוכות */
-        #qWord { font-size: clamp(2rem, 10vw, 4rem); font-weight: 900; text-align: center; word-break: break-word; max-width: 90%; margin-bottom: 20px; text-shadow: 2px 2px 0 #000; }
+        #qWord { font-size: clamp(2.5rem, 12vw, 4.5rem); font-weight: 900; text-align: center; margin-bottom: 10px; text-shadow: 3px 3px 0 #000; }
+        
+        /* כפתור הקראה */
+        .speaker-btn { background: #fff; border: 3px solid #000; border-radius: 50%; width: 50px; height: 50px; font-size: 1.5rem; cursor: pointer; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
+
+        /* משוב תשובות */
+        .opt-btn { transition: background 0.3s, transform 0.1s; }
+        .opt-correct { background: var(--correct) !important; color: white !important; }
+        .opt-wrong { background: var(--wrong) !important; color: white !important; }
 
         .hidden { display: none; }
-        .flex { display: flex; }
         .footer-text { font-size: 0.9rem; margin-top: auto; padding-bottom: 15px; opacity: 0.8; }
     </style>
 </head>
 <body>
 
-    <!-- מסך פתיחה -->
     <div id="lobby" class="modal" style="display: flex;">
         <div class="logo-container">
             <h1 class="super-text">SUPER</h1>
@@ -94,7 +105,6 @@
         <div class="footer-text">פותח ע"י חזי כהן גלמן 2026 ©</div>
     </div>
 
-    <!-- ממשק המשחק -->
     <div id="gameUI" class="hidden" style="flex-direction: column; height: 100%;">
         <div class="header-controls">
             <button onclick="location.reload()" class="icon-btn">➔</button>
@@ -106,7 +116,6 @@
         <div class="footer-text" style="text-align: center;">SUPER TIC TAC TOE © 2026</div>
     </div>
 
-    <!-- מודאל וידאו (חוקים) -->
     <div id="videoModal" class="modal">
         <h2 style="margin-bottom: 15px; font-size: 2rem;">איך משחקים?</h2>
         <div class="video-container">
@@ -115,13 +124,12 @@
         <button onclick="closeVideoModal()" class="btn-main" style="margin-top: 20px;">סגור</button>
     </div>
 
-    <!-- מודאל שאלות -->
     <div id="quizModal" class="modal">
         <div id="qWord"></div>
+        <button class="speaker-btn" onclick="speakWord()">🔊</button>
         <div id="qOptions" style="display: flex; flex-direction: column; width: 100%; align-items: center; gap: 10px;"></div>
     </div>
 
-    <!-- מודאל עריכת מילים -->
     <div id="vocabModal" class="modal">
         <h2 style="margin-bottom: 15px;">עריכת אוצר מילים</h2>
         <textarea id="vInput" style="width: 85vw; max-width: 350px; height: 50vh; border-radius: 15px; padding: 15px; border: 4px solid #000; font-size: 1.1rem; text-align: right;"></textarea>
@@ -132,7 +140,8 @@
         let vocab = [], turn = "X", activeBoard = -1, canMove = false, gameMode = 'pvp';
         let superData = Array(9).fill(null).map(() => Array(9).fill(""));
         let miniWinners = Array(9).fill("");
-        let currentEn = "";
+        let currentWord = null;
+        let isAnswering = false;
 
         window.onload = () => {
             const saved = localStorage.getItem('sttt_bolt_final');
@@ -140,17 +149,14 @@
         };
 
         const showModal = id => {
-            if(id === 'videoModal') {
-                // טעינת הסרטון רק כשפותחים כדי לחסוך משאבים
-                document.getElementById('rulesVideo').src = "https://www.youtube.com/embed/xLcUtltJk2c?autoplay=1";
-            }
+            if(id === 'videoModal') document.getElementById('rulesVideo').src = "https://www.youtube.com/embed/xLcUtltJk2c?autoplay=1";
             document.getElementById(id).style.display = 'flex';
         }
         
         const hideModal = id => document.getElementById(id).style.display = 'none';
 
         function closeVideoModal() {
-            document.getElementById('rulesVideo').src = ""; // עצירת הוידאו
+            document.getElementById('rulesVideo').src = "";
             hideModal('videoModal');
         }
 
@@ -194,9 +200,7 @@
             superData[bIdx][cIdx] = turn;
             canMove = false;
             
-            if(checkCombo(superData[bIdx], turn)) {
-                miniWinners[bIdx] = turn;
-            }
+            if(checkCombo(superData[bIdx], turn)) miniWinners[bIdx] = turn;
 
             const isFull = superData[cIdx].every(cell => cell !== "");
             activeBoard = (miniWinners[cIdx] !== "" || isFull) ? -1 : cIdx;
@@ -212,42 +216,58 @@
             if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 800);
         }
 
+        function speakWord() {
+            if(!currentWord) return;
+            const u = new SpeechSynthesisUtterance(currentWord.en);
+            u.lang = 'en-US';
+            window.speechSynthesis.speak(u);
+        }
+
         function openQuiz() {
-            if(canMove) return;
-            const item = vocab[Math.floor(Math.random() * vocab.length)];
-            currentEn = item.en;
-            const opts = [item.he];
+            if(canMove || isAnswering) return;
+            isAnswering = true;
+            currentWord = vocab[Math.floor(Math.random() * vocab.length)];
+            const opts = [currentWord.he];
             while(opts.length < 3) {
                 const r = vocab[Math.floor(Math.random()*vocab.length)].he;
                 if(!opts.includes(r)) opts.push(r);
             }
             opts.sort(() => Math.random() - 0.5);
             
-            document.getElementById('qWord').textContent = item.en;
+            document.getElementById('qWord').textContent = currentWord.en;
             const cont = document.getElementById('qOptions'); 
             cont.innerHTML = '';
             
             opts.forEach(o => {
                 const b = document.createElement('button');
-                b.className = 'btn-main'; 
+                b.className = 'btn-main opt-btn'; 
                 b.textContent = o;
-                b.onclick = () => {
-                    hideModal('quizModal');
-                    if(o === item.he) {
-                        canMove = true; updateUI();
-                        if(gameMode === 'pvc' && turn === 'O') setTimeout(executeAiMove, 500);
-                    } else {
-                        turn = turn === "X" ? "O" : "X"; updateUI();
-                        if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 600);
-                    }
-                };
+                b.onclick = () => handleAnswer(b, o === currentWord.he);
                 cont.appendChild(b);
             });
             showModal('quizModal');
-            // הקראה
-            const u = new SpeechSynthesisUtterance(currentEn);
-            u.lang = 'en-US';
-            window.speechSynthesis.speak(u);
+        }
+
+        function handleAnswer(btn, isCorrect) {
+            const allBtns = document.querySelectorAll('.opt-btn');
+            allBtns.forEach(b => {
+                b.disabled = true;
+                if(b.textContent === currentWord.he) b.classList.add('opt-correct');
+            });
+
+            if(!isCorrect) btn.classList.add('opt-wrong');
+
+            setTimeout(() => {
+                hideModal('quizModal');
+                isAnswering = false;
+                if(isCorrect) {
+                    canMove = true; updateUI();
+                    if(gameMode === 'pvc' && turn === 'O') setTimeout(executeAiMove, 500);
+                } else {
+                    turn = turn === "X" ? "O" : "X"; updateUI();
+                    if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 600);
+                }
+            }, 1200);
         }
 
         function executeAiMove() {
@@ -298,4 +318,5 @@
     </script>
 </body>
 </html>
+
 
