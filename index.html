@@ -1,431 +1,344 @@
-
 <!DOCTYPE html>
-<!-- saved from url=(0048)https://hezicg-apps.github.io/super-tic-tac-toe/ -->
-<html lang="he" dir="rtl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Super Tic Tac Toe Bolt</title>
-    <link href="./INDEX_files/css2" rel="stylesheet">
-    <script src="./INDEX_files/saved_resource"></script>
-    <script src="./INDEX_files/confetti.browser.min.js.הורדה"></script>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Tic Tac Toe - Teacher Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body, html { 
-            background: #1a7b4e; 
-            color: #fff; font-family: 'Varela Round', sans-serif; 
-            margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; 
-        }
+        body { background: #f8fafc; color: #1e293b; font-family: 'Varela Round', sans-serif; overflow-x: hidden; touch-action: manipulation; }
         
-        .logo-container { 
-            margin-bottom: 30px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            text-align: center;
-        }
-        .super-text { 
-            font-size: 5rem; /* הגדלה משמעותית */
-            font-weight: 900; 
-            color: #facc15; 
-            margin: 0; 
-            line-height: 0.9;
-            letter-spacing: 0.05em;
-            text-shadow: 4px 4px 0px #000;
-        }
-        .ttt-text { 
-            color: #fff; 
-            font-size: 2.2rem; 
-            font-weight: 900; 
-            letter-spacing: 0.02em;
-            margin-top: 5px;
-            line-height: 1;
+        .main-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 8px; width: 95vw; max-width: 480px; margin: 10px auto;
+            background: #cbd5e1; padding: 8px; border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
-        .board-container {
-            position: relative;
-            margin: 5px auto;
-        }
-        
-        .board-shadow {
-            position: absolute;
-            inset: 8px -8px -8px 8px;
-            background: rgba(0,0,0,0.25);
-            border-radius: 12px;
-            z-index: 0;
-        }
-
-        .super-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            padding: 8px;
-            background: #000;
-            border-radius: 12px;
-            width: 92vw;
-            max-width: 380px;
-            aspect-ratio: 1 / 1;
-            position: relative;
-            z-index: 10;
-        }
-
-        .mini-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5px;
-            background: #bbb;
-            position: relative;
-            border-radius: 4px;
-            overflow: hidden;
+        .sub-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 3px; background: #e2e8f0; padding: 4px; border-radius: 8px;
+            position: relative; aspect-ratio: 1; transition: all 0.3s ease;
         }
 
         .cell {
-            background: #fff;
-            aspect-ratio: 1 / 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.6rem;
-            font-weight: 900;
-            cursor: pointer;
-            transition: background 0.1s;
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; font-weight: bold; background: white; border-radius: 4px;
+            cursor: pointer; transition: background 0.2s; border: 1px solid #f1f5f9;
         }
 
-        .active-mini {
-            outline: 5px solid #facc15;
-            z-index: 20;
-            box-shadow: 0 0 20px rgba(250, 204, 21, 0.6);
+        .cell:hover { background: #f1f5f9; }
+
+        .highlight-grid { 
+            background: #fef08a; /* צהוב בהיר ללוח הפעיל */
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
+            transform: scale(1.02);
+            z-index: 10;
         }
 
-        .x-color { color: #1976d2; }
-        .o-color { color: #d32f2f; }
-
-        .mini-win-overlay {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 7.5rem;
-            font-weight: 900;
-            z-index: 30;
-            background: rgba(255, 255, 255, 0.9);
-            pointer-events: none;
-        }
-
-        .q-btn {
-            width: 85px; height: 85px; border-radius: 50%;
-            background: #fff; border: 6px solid #000;
-            font-size: 4rem; font-weight: 900;
+        .sub-grid.won-x::after, .sub-grid.won-o::after {
+            position: absolute; inset: 0; 
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 4.5rem; border-radius: 8px; z-index: 20;
+            background: rgba(255, 255, 255, 0.85);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        
-        #statusContainer {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 8px 0;
-            border-radius: 50px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            width: 92vw;
-            max-width: 380px;
-            text-align: center;
-        }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
-        #statusText { font-size: 2.2rem; font-weight: 900; }
+        .sub-grid.won-x::after { content: "✕"; color: #2563eb; }
+        .sub-grid.won-o::after { content: "◯"; color: #dc2626; }
+        
+        .x-color { color: #2563eb; } 
+        .o-color { color: #dc2626; }
+
+        .modal { position: fixed; inset: 0; background: rgba(255,255,255,0.98); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal.active { display: flex; }
 
         .btn-main { 
-            width: 280px; min-height: 60px; border-radius: 35px; font-weight: 900; 
-            margin-bottom: 12px; border: 4px solid #000; background: #fff; color: #000;
-            font-size: 1.4rem; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 5px 0 #000; transition: all 0.2s;
-            padding: 8px; cursor: pointer;
+            height: 55px; width: 100%; border-radius: 15px; font-weight: bold; 
+            display: flex; align-items: center; justify-content: center; 
+            transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
-        .btn-main:active { transform: translateY(3px); box-shadow: 0 2px 0 #000; }
+        .btn-yellow { background: #facc15; color: #854d0e; border: 2px solid #eab308; }
+        .btn-blue { background: #3b82f6; color: white; }
+        .btn-outline { border: 2px solid #e2e8f0; color: #64748b; }
+
+        .quiz-option { 
+            background: white; border: 2px solid #e2e8f0; padding: 15px; 
+            border-radius: 12px; font-size: 1.2rem; width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        textarea { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px; width: 100%; height: 150px; font-family: monospace; }
         
-        .btn-correct { background-color: #4ade80 !important; }
-        .btn-wrong { background-color: #f87171 !important; }
-
-        .modal { 
-            position: fixed; inset: 0; background: rgba(26, 123, 78, 0.98); 
-            z-index: 2000; display: none; flex-direction: column; align-items: center; 
-            justify-content: center; padding: 20px; 
-        }
-
-        .top-icons {
-            position: absolute; top: 20px; width: 100%; padding: 0 25px;
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 100;
-        }
-        .icon-btn { font-size: 2.5rem; cursor: pointer; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-
-        .rules-content {
-            background: #fff; color: #000; padding: 25px; border-radius: 20px;
-            max-width: 350px; border: 4px solid #facc15; direction: rtl;
-        }
-
-        .footer-credit {
-            position: absolute; bottom: 15px; width: 100%; text-align: center;
-            font-size: 0.85rem; font-weight: bold; color: rgba(255,255,255,0.8);
-            pointer-events: none;
-        }
+        .sets-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; width: 100%; }
+        .set-chip { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
     </style>
-<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.absolute{position:absolute}.right-6{right:1.5rem}.top-6{top:1.5rem}.mb-10{margin-bottom:2.5rem}.mb-2{margin-bottom:0.5rem}.mb-4{margin-bottom:1rem}.mt-6{margin-top:1.5rem}.flex{display:flex}.hidden{display:none}.h-72{height:18rem}.h-full{height:100%}.w-72{width:18rem}.w-80{width:20rem}.w-full{width:100%}.cursor-pointer{cursor:pointer}.list-disc{list-style-type:disc}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-between{justify-content:space-between}.gap-4{gap:1rem}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.rounded-2xl{border-radius:1rem}.border-4{border-width:4px}.border-black{--tw-border-opacity:1;border-color:rgb(0 0 0 / var(--tw-border-opacity, 1))}.border-blue-600{--tw-border-opacity:1;border-color:rgb(37 99 235 / var(--tw-border-opacity, 1))}.border-red-600{--tw-border-opacity:1;border-color:rgb(220 38 38 / var(--tw-border-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-yellow-400{--tw-bg-opacity:1;background-color:rgb(250 204 21 / var(--tw-bg-opacity, 1))}.p-4{padding:1rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.pb-10{padding-bottom:2.5rem}.pr-5{padding-right:1.25rem}.text-center{text-align:center}.text-right{text-align:right}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-6xl{font-size:3.75rem;line-height:1}.text-lg{font-size:1.125rem;line-height:1.75rem}.font-black{font-weight:900}.font-bold{font-weight:700}.italic{font-style:italic}.leading-relaxed{line-height:1.625}.text-black{--tw-text-opacity:1;color:rgb(0 0 0 / var(--tw-text-opacity, 1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-yellow-500{--tw-text-opacity:1;color:rgb(234 179 8 / var(--tw-text-opacity, 1))}.underline{-webkit-text-decoration-line:underline;text-decoration-line:underline}.outline-none{outline:2px solid transparent;outline-offset:2px}</style><style id="_goober"> .go1475592160{height:0;}.go1671063245{height:auto;}.go1888806478{display:flex;flex-wrap:wrap;flex-grow:1;}@media (min-width:600px){.go1888806478{flex-grow:initial;min-width:288px;}}.go167266335{background-color:#313131;font-size:0.875rem;line-height:1.43;letter-spacing:0.01071em;color:#fff;align-items:center;padding:6px 16px;border-radius:4px;box-shadow:0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12);}.go3162094071{padding-left:20px;}.go3844575157{background-color:#313131;}.go1725278324{background-color:#43a047;}.go3651055292{background-color:#d32f2f;}.go4215275574{background-color:#ff9800;}.go1930647212{background-color:#2196f3;}.go946087465{display:flex;align-items:center;padding:8px 0;}.go703367398{display:flex;align-items:center;margin-left:auto;padding-left:16px;margin-right:-8px;}.go3963613292{width:100%;position:relative;transform:translateX(0);top:0;right:0;bottom:0;left:0;min-width:288px;}.go1141946668{box-sizing:border-box;display:flex;max-height:100%;position:fixed;z-index:1400;height:auto;width:auto;transition:top 300ms ease 0ms,right 300ms ease 0ms,bottom 300ms ease 0ms,left 300ms ease 0ms,max-width 300ms ease 0ms;pointer-events:none;max-width:calc(100% - 40px);}.go1141946668 .notistack-CollapseWrapper{padding:6px 0px;transition:padding 300ms ease 0ms;}@media (max-width:599.95px){.go1141946668{width:100%;max-width:calc(100% - 32px);}}.go3868796639 .notistack-CollapseWrapper{padding:2px 0px;}.go3118922589{top:14px;flex-direction:column;}.go1453831412{bottom:14px;flex-direction:column-reverse;}.go4027089540{left:20px;}@media (min-width:600px){.go4027089540{align-items:flex-start;}}@media (max-width:599.95px){.go4027089540{left:16px;}}.go2989568495{right:20px;}@media (min-width:600px){.go2989568495{align-items:flex-end;}}@media (max-width:599.95px){.go2989568495{right:16px;}}.go4034260886{left:50%;transform:translateX(-50%);}@media (min-width:600px){.go4034260886{align-items:center;}}</style></head>
-<body data-gptw="">
+</head>
+<body>
 
-    <!-- מסך לובי -->
-    <div id="lobby" class="modal" style="display: none;">
-        <div class="logo-container">
-            <h1 class="super-text">SUPER</h1>
-            <div class="ttt-text">TIC TAC TOE</div>
-        </div>
-        
-        <!-- כפתורים אנכיים -->
-        <div class="flex flex-col items-center">
-            <button onclick="showModal(&#39;rulesModal&#39;)" class="btn-main">איך משחקים?</button>
-            <button onclick="showModal(&#39;vocabModal&#39;)" class="btn-main bg-yellow-400">הוספת מילים</button>
-            <button onclick="startGame(&#39;pvp&#39;)" class="btn-main text-blue-600 border-blue-600">שחקן נגד שחקן</button>
-            <button onclick="startGame(&#39;pvc&#39;)" class="btn-main text-red-600 border-red-600">שחקן נגד מחשב</button>
-        </div>
+    <div class="h-[60px] bg-white border-b flex items-center justify-between px-6 shadow-sm">
+        <h1 class="font-black text-blue-600 italic text-xl">SUPER T.T.T</h1>
+        <div id="turnIndicator" class="font-bold x-color">תור: X</div>
+    </div>
 
-        <div class="footer-credit">
-            פותח ע"י חזי כהן גלמן 2026 © SUPER TIC TAC TOE
+    <div id="mainBoard" class="main-grid"></div>
+
+    <!-- Lobby Modal -->
+    <div id="lobbyModal" class="modal">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black text-blue-600 italic">SUPER TIC TAC TOE</h1>
+            <p class="text-gray-500">גרסת המורה - לוח 9x9 מלא</p>
+        </div>
+        <div class="w-full max-w-xs space-y-4">
+            <button onclick="openVocabEditor()" class="btn-main btn-outline">ניהול אוצר מילים</button>
+            <button onclick="startGame('ai')" class="btn-main btn-yellow">משחק נגד המחשב</button>
+            <button onclick="startGame('friend')" class="btn-main btn-blue">שני שחקנים (כיתה)</button>
         </div>
     </div>
 
-    <!-- מסך משחק -->
-    <div id="gameUI" class="flex flex-col items-center justify-between h-full py-6">
-        <div class="top-icons">
-            <div onclick="showModal(&#39;rulesModal&#39;)" class="icon-btn">ⓘ</div>
-            <div onclick="location.reload()" class="icon-btn">➔</div>
-        </div>
-        
-        <div id="statusContainer">
-            <div id="statusText" class="x-color">תור X</div>
-        </div>
-
-        <div class="board-container">
-            <div class="board-shadow"></div>
-            <div id="mainGrid" class="super-grid"><div id="mini-0" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell x-color">✕</div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-1" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell x-color">✕</div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-2" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-3" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-4" class="mini-grid"><div class="cell o-color">◯</div><div class="cell o-color">◯</div><div class="cell o-color">◯</div><div class="cell "></div><div class="cell x-color">✕</div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="mini-win-overlay o-color">◯</div></div><div id="mini-5" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-6" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-7" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-8" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div></div>
-        </div>
-
-        <div class="footer-area pb-10 flex flex-col items-center">
-            <div id="qButton" onclick="openQuiz()" class="q-btn x-color ">?</div>
-        </div>
-
-        <div class="footer-credit">
-            פותח ע"י חזי כהן גלמן 2026 © SUPER TIC TAC TOE
+    <!-- Vocab Editor Modal -->
+    <div id="vocabModal" class="modal">
+        <div class="w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl border">
+            <h2 class="text-xl font-bold mb-4">עריכת תוכן</h2>
+            <div id="setsContainer" class="sets-scroll"></div>
+            <textarea id="vocabInput" placeholder="Apple - תפוח"></textarea>
+            <div class="flex justify-between items-center mt-2">
+                <button onclick="saveCurrentSet()" class="text-blue-600 text-sm font-bold">שמור כפרק חדש</button>
+                <div class="flex gap-2">
+                    <button onclick="exportData()" class="text-[10px] text-gray-400">Export</button>
+                    <button onclick="importData()" class="text-[10px] text-gray-400">Import</button>
+                </div>
+            </div>
+            <div class="mt-8 flex gap-3">
+                <button onclick="saveVocab()" class="btn-main btn-blue flex-1">אישור</button>
+                <button onclick="closeModal('vocabModal')" class="btn-main btn-outline flex-1">ביטול</button>
+            </div>
         </div>
     </div>
 
-    <!-- מודאל חוקים -->
-    <div id="rulesModal" class="modal" onclick="hideModal(&#39;rulesModal&#39;)">
-        <div class="rules-content" onclick="event.stopPropagation()">
-            <h2 class="text-3xl font-black mb-4 text-center text-yellow-500 underline">איך משחקים?</h2>
-            <ul class="list-disc pr-5 space-y-3 font-bold text-lg leading-relaxed">
-                <li>המטרה: לנצח 3 לוחות קטנים בשורה או אלכסון.</li>
-                <li>המהלך שלך קובע באיזה לוח היריב ישחק (לפי המיקום הפנימי).</li>
-                <li>כל לוח קטן שניצחת יצבע בסימן שלך.</li>
-                <li>לפני כל מהלך עליך ללחוץ על ה-? ולענות על שאלה.</li>
-                <li>תשובה נכונה הופכת את ה-? ל-! ומאפשרת מהלך.</li>
-                <li>טעות? התור עובר ליריב מיד!</li>
-            </ul>
-            <button onclick="hideModal(&#39;rulesModal&#39;)" class="btn-main w-full mt-6 bg-yellow-400 border-black">הבנתי!</button>
+    <!-- Quiz Modal -->
+    <div id="quizModal" class="modal">
+        <div class="text-center mb-10 px-4">
+            <span class="text-gray-400 uppercase tracking-widest text-sm">תרגם את המילה:</span>
+            <h2 id="questionText" class="text-5xl font-black text-slate-800 mt-2 break-words leading-tight"></h2>
         </div>
+        <div id="optionsContainer" class="w-full max-w-xs space-y-3"></div>
     </div>
 
-    <!-- מודאל שאלה -->
-    <div id="quizModal" class="modal" style="display: none;">
-        <div id="qWord" class="text-white text-6xl font-black mb-10 italic text-center" style="direction: ltr;">apple</div>
-        <div id="qOptions" class="flex flex-col gap-4 w-72"><button class="btn-main" disabled="">צהוב</button><button class="btn-main btn-correct" disabled="">תפוח</button><button class="btn-main" disabled="">אדום</button></div>
-    </div>
-
-    <!-- מודאל הוספת מילים -->
-    <div id="vocabModal" class="modal" style="display: none;">
-        <div onclick="hideModal(&#39;vocabModal&#39;)" class="back-icon text-white absolute top-6 right-6 text-3xl cursor-pointer">➔</div>
-        <h2 class="text-white text-3xl font-black mb-4">הוספת מילים</h2>
-        <p class="text-white mb-2 font-bold">הזן מילה - תרגום (זוג בשורה)</p>
-        <textarea id="vInput" class="w-80 h-72 bg-white border-4 border-black text-black p-4 rounded-2xl mb-4 text-right outline-none font-bold text-lg"></textarea>
-        <button onclick="hideModal(&#39;vocabModal&#39;)" class="btn-main bg-yellow-400 border-black">שמור וחזור</button>
+    <!-- Result Modal -->
+    <div id="resultModal" class="modal">
+        <div id="resultIcon" class="text-8xl mb-6">🏆</div>
+        <h2 id="resultTitle" class="text-4xl font-black text-slate-800 mb-8"></h2>
+        <button onclick="location.reload()" class="btn-main btn-blue w-48">משחק חדש</button>
     </div>
 
     <script>
-        let vocab = [], turn = "X", activeBoard = -1, canMove = false, gameMode = 'pvp';
-        let superData = Array(9).fill(null).map(() => Array(9).fill(""));
-        let miniWinners = Array(9).fill("");
-        let quizActive = false;
+        let vocabulary = [], gameMode = "ai", currentPlayer = "X";
+        let mainBoardData = Array(9).fill(null).map(() => Array(9).fill(""));
+        let gridWinners = Array(9).fill("");
+        let activeGrid = -1;
+        let pendingMove = null;
+        let sets = JSON.parse(localStorage.getItem('teacher_sets')) || { "צבעים": "Red - אדום\nBlue - כחול\nGreen - ירוק" };
 
-        window.onload = () => {
-            const saved = localStorage.getItem('sttt_bolt_v6');
-            document.getElementById('vInput').value = saved || "red - אדום\nblue - כחול\ngreen - ירוק\nyellow - צהוב\napple - תפוח\ndog - כלב\ncat - חתול\nsun - שמש";
-        };
-
-        const showModal = id => document.getElementById(id).style.display = 'flex';
-        const hideModal = id => document.getElementById(id).style.display = 'none';
-
-        function startGame(mode) {
-            const raw = document.getElementById('vInput').value;
-            vocab = raw.split('\n').map(l => {
-                const p = l.split(/[–\-\—:]/);
-                return p.length >= 2 ? { en: p[0].trim(), he: p[1].trim() } : null;
-            }).filter(x => x);
-            
-            if(vocab.length < 3) { alert("יש להזין לפחות 3 מילים"); return; }
-            
-            gameMode = mode;
-            hideModal('lobby');
-            document.getElementById('gameUI').classList.replace('hidden', 'flex');
-            initBoard();
-            updateUI();
-            localStorage.setItem('sttt_bolt_v6', raw);
-        }
-
-        function initBoard() {
-            const container = document.getElementById('mainGrid');
-            container.innerHTML = '';
-            for(let b=0; b<9; b++) {
-                const mini = document.createElement('div');
-                mini.id = `mini-${b}`;
-                mini.className = 'mini-grid';
-                for(let c=0; c<9; c++) {
+        function init() {
+            const board = document.getElementById('mainBoard');
+            board.innerHTML = '';
+            for (let g = 0; g < 9; g++) {
+                const subGrid = document.createElement('div');
+                subGrid.className = 'sub-grid';
+                subGrid.id = `grid-${g}`;
+                for (let c = 0; c < 9; c++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
-                    cell.onclick = () => handleCellClick(b, c);
-                    mini.appendChild(cell);
+                    cell.onclick = () => handleMoveRequest(g, c);
+                    subGrid.appendChild(cell);
                 }
-                container.appendChild(mini);
+                board.appendChild(subGrid);
             }
+            renderSets();
+            document.getElementById('lobbyModal').classList.add('active');
         }
 
-        function handleCellClick(bIdx, cIdx) {
-            if(!canMove || miniWinners[bIdx] !== "") return;
-            if(activeBoard !== -1 && activeBoard !== bIdx) return;
-            if(superData[bIdx][cIdx] !== "") return;
+        function handleMoveRequest(gridIdx, cellIdx) {
+            if (gridWinners[gridIdx] !== "" || mainBoardData[gridIdx][cellIdx] !== "") return;
+            if (activeGrid !== -1 && activeGrid !== gridIdx) return;
             
-            superData[bIdx][cIdx] = turn;
-            canMove = false;
+            pendingMove = { gridIdx, cellIdx };
+            showQuiz();
+        }
+
+        function executeMove() {
+            const { gridIdx, cellIdx } = pendingMove;
+            mainBoardData[gridIdx][cellIdx] = currentPlayer;
             
-            if(checkCombo(superData[bIdx], turn)) {
-                miniWinners[bIdx] = turn;
-            }
-            
-            if(miniWinners[cIdx] === "" && superData[cIdx].some(v => v === "")) {
-                activeBoard = cIdx;
-            } else {
-                activeBoard = -1;
+            const cell = document.querySelector(`#grid-${gridIdx}`).children[cellIdx];
+            cell.textContent = currentPlayer === "X" ? "✕" : "◯";
+            cell.className = `cell ${currentPlayer === "X" ? "x-color" : "o-color"}`;
+
+            const subWinner = checkWinner(mainBoardData[gridIdx]);
+            if (subWinner) {
+                gridWinners[gridIdx] = subWinner;
+                const gridDiv = document.getElementById(`grid-${gridIdx}`);
+                gridDiv.classList.add(subWinner === "X" ? 'won-x' : 'won-o');
+                
+                const finalWinner = checkWinner(gridWinners);
+                if (finalWinner) return endGame(finalWinner);
             }
 
-            render();
+            // Routing
+            activeGrid = (gridWinners[cellIdx] === "" && mainBoardData[cellIdx].some(c => c === "")) ? cellIdx : -1;
 
-            if(checkCombo(miniWinners, turn)) {
-                confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
-                document.getElementById('statusText').textContent = `ניצחון ל-${turn}!`;
-                document.getElementById('qButton').style.display = 'none';
-                return;
+            // Tie Check
+            if (gridWinners.every(w => w !== "") || (activeGrid === -1 && gridWinners.every((w, i) => w !== "" || mainBoardData[i].every(c => c !== "")))) {
+                return endGame("Draw");
             }
 
-            turn = turn === "X" ? "O" : "X";
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
             updateUI();
-            if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 800);
+
+            if (gameMode === "ai" && currentPlayer === "O") setTimeout(aiMove, 600);
         }
 
-        function openQuiz() {
-            if(canMove || quizActive) return;
-            quizActive = true;
-            const item = vocab[Math.floor(Math.random() * vocab.length)];
-            const opts = [item.he];
-            while(opts.length < 3) {
-                const r = vocab[Math.floor(Math.random()*vocab.length)].he;
-                if(!opts.includes(r)) opts.push(r);
+        function aiMove() {
+            let gIdx = activeGrid === -1 ? -1 : activeGrid;
+            if (gIdx === -1) {
+                const availableGrids = gridWinners.map((w, i) => (w === "" && mainBoardData[i].some(c => c === "")) ? i : null).filter(v => v !== null);
+                gIdx = availableGrids[Math.floor(Math.random() * availableGrids.length)];
             }
-            opts.sort(() => Math.random() - 0.5);
             
-            document.getElementById('qWord').textContent = item.en;
-            const cont = document.getElementById('qOptions'); cont.innerHTML = '';
+            const empties = mainBoardData[gIdx].map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            const cIdx = empties[Math.floor(Math.random() * empties.length)];
             
-            opts.forEach(o => {
-                const b = document.createElement('button');
-                b.className = 'btn-main';
-                b.textContent = o;
-                b.onclick = () => {
-                    const buttons = cont.querySelectorAll('button');
-                    buttons.forEach(btn => btn.disabled = true);
-                    if(o === item.he) {
-                        b.classList.add('btn-correct');
-                        setTimeout(() => {
-                            hideModal('quizModal');
-                            canMove = true;
-                            quizActive = false;
-                            updateQuizIcon();
-                            render();
-                            if(gameMode === 'pvc' && turn === 'O') executeAiMove();
-                        }, 1000);
-                    } else {
-                        b.classList.add('btn-wrong');
-                        buttons.forEach(btn => { if(btn.textContent === item.he) btn.classList.add('btn-correct'); });
-                        setTimeout(() => {
-                            hideModal('quizModal');
-                            quizActive = false;
-                            turn = turn === "X" ? "O" : "X";
-                            updateUI();
-                            if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 600);
-                        }, 1800);
-                    }
-                };
-                cont.appendChild(b);
-            });
-            showModal('quizModal');
+            pendingMove = { gridIdx: gIdx, cellIdx: cIdx };
+            executeMove();
         }
 
-        function updateQuizIcon() {
-            const btn = document.getElementById('qButton');
-            btn.textContent = canMove ? '!' : '?';
-            btn.className = `q-btn ${turn === 'X' ? 'x-color' : 'o-color'} ${canMove ? 'scale-110' : ''}`;
-        }
-
-        function executeAiMove() {
-            let boards = activeBoard === -1 ? 
-                miniWinners.map((w, i) => (w==="" && superData[i].some(v=>v==="")) ? i : null).filter(v=>v!==null) : 
-                [activeBoard];
-            let b = boards[Math.floor(Math.random() * boards.length)];
-            let cells = superData[b].map((v, i) => v==="" ? i : null).filter(v=>v!==null);
-            let c = cells[Math.floor(Math.random() * cells.length)];
-            setTimeout(() => handleCellClick(b, c), 500);
-        }
-
-        function checkCombo(arr, p) {
-            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            return wins.some(s => s.every(i => arr[i] === p));
-        }
-
-        function render() {
-            for(let b=0; b<9; b++) {
-                const mini = document.getElementById(`mini-${b}`);
-                mini.classList.remove('active-mini');
-                if(canMove && (activeBoard === -1 || activeBoard === b) && miniWinners[b] === "") {
-                    mini.classList.add('active-mini');
-                }
-                const cells = mini.querySelectorAll('.cell');
-                superData[b].forEach((val, i) => {
-                    cells[i].textContent = val === 'X' ? '✕' : (val === 'O' ? '◯' : '');
-                    cells[i].className = 'cell ' + (val === 'X' ? 'x-color' : (val === 'O' ? 'o-color' : ''));
-                });
-                if(miniWinners[b] !== "" && !mini.querySelector('.mini-win-overlay')) {
-                    const over = document.createElement('div');
-                    over.className = 'mini-win-overlay ' + (miniWinners[b] === 'X' ? 'x-color' : 'o-color');
-                    over.textContent = miniWinners[b] === 'X' ? '✕' : '◯';
-                    mini.appendChild(over);
-                }
-            }
+        function checkWinner(b) {
+            const patterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for (let p of patterns) if (b[p[0]] && b[p[0]] === b[p[1]] && b[p[0]] === b[p[2]]) return b[p[0]];
+            return null;
         }
 
         function updateUI() {
-            const st = document.getElementById('statusText');
-            st.textContent = `תור ${turn}`;
-            st.className = turn === 'X' ? 'x-color' : 'o-color';
-            updateQuizIcon();
-            render();
+            const indicator = document.getElementById('turnIndicator');
+            indicator.textContent = `תור: ${currentPlayer}`;
+            indicator.className = `font-bold ${currentPlayer === "X" ? "x-color" : "o-color"}`;
+
+            for(let i=0; i<9; i++) {
+                const grid = document.getElementById(`grid-${i}`);
+                grid.classList.remove('highlight-grid');
+                if (activeGrid === i || (activeGrid === -1 && gridWinners[i] === "" && mainBoardData[i].some(c => c === ""))) {
+                    grid.classList.add('highlight-grid');
+                }
+            }
         }
+
+        function showQuiz() {
+            const item = vocabulary[Math.floor(Math.random()*vocabulary.length)];
+            const opts = [item.he];
+            while(opts.length < Math.min(4, vocabulary.length)) {
+                const r = vocabulary[Math.floor(Math.random()*vocabulary.length)].he;
+                if(!opts.includes(r)) opts.push(r);
+            }
+            opts.sort(() => Math.random()-0.5);
+            
+            const qText = document.getElementById('questionText');
+            qText.textContent = item.en;
+            // Handle long words
+            qText.style.fontSize = item.en.length > 12 ? '2.5rem' : '4rem';
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            opts.forEach(o => {
+                const b = document.createElement('button');
+                b.className = "quiz-option hover:border-blue-400 hover:text-blue-600 transition-all text-center";
+                // Handle long translations
+                if (o.length > 15) b.style.fontSize = '1rem';
+                b.textContent = o;
+                b.onclick = () => {
+                    if (o === item.he) {
+                        document.getElementById('quizModal').classList.remove('active');
+                        executeMove();
+                    } else {
+                        alert("טעות! התור עובר ליריב.");
+                        document.getElementById('quizModal').classList.remove('active');
+                        currentPlayer = currentPlayer === "X" ? "O" : "X";
+                        updateUI();
+                        if(gameMode === "ai" && currentPlayer === "O") setTimeout(aiMove, 600);
+                    }
+                };
+                container.appendChild(b);
+            });
+            document.getElementById('quizModal').classList.add('active');
+            const u = new SpeechSynthesisUtterance(item.en); u.lang = 'en-US'; window.speechSynthesis.speak(u);
+        }
+
+        function endGame(winner) {
+            const title = document.getElementById('resultTitle');
+            const icon = document.getElementById('resultIcon');
+            if (winner === "Draw") {
+                title.textContent = "זה תיקו!";
+                icon.textContent = "🤝";
+            } else {
+                title.textContent = `שחקן ${winner} ניצח!`;
+                icon.textContent = "🏆";
+                confetti();
+            }
+            document.getElementById('resultModal').classList.add('active');
+        }
+
+        // --- Logic for Vocab & Sets ---
+        function parseVocab(text) {
+            vocabulary = text.split('\n').map(line => {
+                const parts = line.split(/[-:,/|]|\s{2,}/); 
+                return parts.length >= 2 ? { en: parts[0].trim(), he: parts[1].trim() } : null;
+            }).filter(i => i !== null);
+        }
+
+        window.saveCurrentSet = () => {
+            const name = prompt("שם לפרק החדש:");
+            if (name) {
+                sets[name] = document.getElementById('vocabInput').value;
+                localStorage.setItem('teacher_sets', JSON.stringify(sets));
+                renderSets();
+            }
+        };
+
+        window.loadSet = (name) => { document.getElementById('vocabInput').value = sets[name]; };
+        window.deleteSet = (name) => { if(confirm(`למחוק את ${name}?`)) { delete sets[name]; localStorage.setItem('teacher_sets', JSON.stringify(sets)); renderSets(); } };
+
+        function renderSets() {
+            const container = document.getElementById('setsContainer');
+            container.innerHTML = Object.keys(sets).map(name => `
+                <div class="set-chip">
+                    <button onclick="loadSet('${name}')">${name}</button>
+                    <button onclick="deleteSet('${name}')" class="font-bold text-red-400">×</button>
+                </div>
+            `).join('');
+        }
+
+        window.startGame = (mode) => {
+            parseVocab(document.getElementById('vocabInput').value);
+            if (vocabulary.length < 3) return alert("נא להזין לפחות 3 מילים.");
+            gameMode = mode;
+            document.getElementById('lobbyModal').classList.remove('active');
+            updateUI();
+        };
+
+        window.saveVocab = () => {
+            parseVocab(document.getElementById('vocabInput').value);
+            if (vocabulary.length >= 3) document.getElementById('vocabModal').classList.remove('active');
+        };
+
+        window.exportData = () => { navigator.clipboard.writeText(JSON.stringify(sets)); alert("הנתונים הועתקו ללוח."); };
+        window.importData = () => { const d = prompt("הדבק קוד גיבוי:"); if(d) { sets = {...sets, ...JSON.parse(d)}; renderSets(); } };
+        window.openVocabEditor = () => document.getElementById('vocabModal').classList.add('active');
+        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
+
+        init();
     </script>
-
-
-</body></html>
+</body>
+</html>
