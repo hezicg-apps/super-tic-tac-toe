@@ -1,419 +1,431 @@
+
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Super Tic Tac Toe - Words Edition</title>
+<!-- saved from url=(0048)https://hezicg-apps.github.io/super-tic-tac-toe/ -->
+<html lang="he" dir="rtl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Super Tic Tac Toe Bolt</title>
+    <link href="./INDEX_files/css2" rel="stylesheet">
+    <script src="./INDEX_files/saved_resource"></script>
+    <script src="./INDEX_files/confetti.browser.min.js.הורדה"></script>
+    <style>
+        body, html { 
+            background: #1a7b4e; 
+            color: #fff; font-family: 'Varela Round', sans-serif; 
+            margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; 
+        }
+        
+        .logo-container { 
+            margin-bottom: 30px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center;
+        }
+        .super-text { 
+            font-size: 5rem; /* הגדלה משמעותית */
+            font-weight: 900; 
+            color: #facc15; 
+            margin: 0; 
+            line-height: 0.9;
+            letter-spacing: 0.05em;
+            text-shadow: 4px 4px 0px #000;
+        }
+        .ttt-text { 
+            color: #fff; 
+            font-size: 2.2rem; 
+            font-weight: 900; 
+            letter-spacing: 0.02em;
+            margin-top: 5px;
+            line-height: 1;
+        }
 
-<!-- Font -->
-<link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+        .board-container {
+            position: relative;
+            margin: 5px auto;
+        }
+        
+        .board-shadow {
+            position: absolute;
+            inset: 8px -8px -8px 8px;
+            background: rgba(0,0,0,0.25);
+            border-radius: 12px;
+            z-index: 0;
+        }
 
-<style>
-:root{
-  --green:#1f7a4d;
-  --yellow:#f4c430;
-  --blue:#2d7ff9;
-  --red:#e74c3c;
-  --white:#ffffff;
-  --black:#111;
-}
+        .super-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 8px;
+            background: #000;
+            border-radius: 12px;
+            width: 92vw;
+            max-width: 380px;
+            aspect-ratio: 1 / 1;
+            position: relative;
+            z-index: 10;
+        }
 
-*{box-sizing:border-box;font-family:'Varela Round',sans-serif}
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5px;
+            background: #bbb;
+            position: relative;
+            border-radius: 4px;
+            overflow: hidden;
+        }
 
-body{
-  margin:0;
-  background:var(--green);
-  color:#000;
-  display:flex;
-  justify-content:center;
-}
+        .cell {
+            background: #fff;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
 
-.screen{
-  width:100%;
-  max-width:420px;
-  padding:16px;
-}
+        .active-mini {
+            outline: 5px solid #facc15;
+            z-index: 20;
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.6);
+        }
 
-/* Buttons */
-.btn{
-  width:100%;
-  padding:14px;
-  margin:8px 0;
-  border-radius:20px;
-  border:3px solid #000;
-  font-size:18px;
-  cursor:pointer;
-}
-.btn-yellow{background:var(--yellow)}
-.btn-white{background:#eee}
+        .x-color { color: #1976d2; }
+        .o-color { color: #d32f2f; }
 
-.title{
-  text-align:center;
-  font-size:40px;
-  color:var(--yellow);
-}
-.subtitle{
-  text-align:center;
-  font-size:24px;
-  color:#fff;
-}
+        .mini-win-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7.5rem;
+            font-weight: 900;
+            z-index: 30;
+            background: rgba(255, 255, 255, 0.9);
+            pointer-events: none;
+        }
 
-/* Board */
-.board{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:6px;
-  margin-top:10px;
-}
-.small-board{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  background:#fff;
-  border:3px solid #000;
-}
-.cell{
-  width:100%;
-  aspect-ratio:1;
-  border:1px solid #999;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-  cursor:pointer;
-}
-.big-win{
-  font-size:40px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+        .q-btn {
+            width: 85px; height: 85px; border-radius: 50%;
+            background: #fff; border: 6px solid #000;
+            font-size: 4rem; font-weight: 900;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        #statusContainer {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 0;
+            border-radius: 50px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            width: 92vw;
+            max-width: 380px;
+            text-align: center;
+        }
 
-/* Top bar */
-.top-bar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-}
-.turn{
-  font-size:22px;
-  padding:8px 16px;
-  border-radius:20px;
-  background:#fff;
-}
-.circle-btn{
-  width:40px;height:40px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  background:#fff;border:2px solid #000;
-  cursor:pointer;
-}
+        #statusText { font-size: 2.2rem; font-weight: 900; }
 
-/* Modal */
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.6);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:10;
-}
-.modal-content{
-  background:#fff;
-  padding:20px;
-  border-radius:20px;
-  width:90%;
-  max-width:400px;
-  text-align:center;
-}
-.answers button{
-  width:100%;
-  margin:6px 0;
-  padding:10px;
-  border-radius:12px;
-  border:none;
-  font-size:18px;
-}
-.correct{background:#2ecc71!important;color:#fff}
-.wrong{background:#e74c3c!important;color:#fff}
+        .btn-main { 
+            width: 280px; min-height: 60px; border-radius: 35px; font-weight: 900; 
+            margin-bottom: 12px; border: 4px solid #000; background: #fff; color: #000;
+            font-size: 1.4rem; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 5px 0 #000; transition: all 0.2s;
+            padding: 8px; cursor: pointer;
+        }
+        .btn-main:active { transform: translateY(3px); box-shadow: 0 2px 0 #000; }
+        
+        .btn-correct { background-color: #4ade80 !important; }
+        .btn-wrong { background-color: #f87171 !important; }
 
-/* bottom question */
-.bottom-btn{
-  position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-}
+        .modal { 
+            position: fixed; inset: 0; background: rgba(26, 123, 78, 0.98); 
+            z-index: 2000; display: none; flex-direction: column; align-items: center; 
+            justify-content: center; padding: 20px; 
+        }
 
-/* confetti */
-.confetti{
-  position:fixed;
-  width:10px;height:10px;
-  top:-10px;
-  animation:fall 3s linear infinite;
-}
-@keyframes fall{
-  to{transform:translateY(100vh)}
-}
-</style>
-</head>
+        .top-icons {
+            position: absolute; top: 20px; width: 100%; padding: 0 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+        .icon-btn { font-size: 2.5rem; cursor: pointer; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 
-<body>
+        .rules-content {
+            background: #fff; color: #000; padding: 25px; border-radius: 20px;
+            max-width: 350px; border: 4px solid #facc15; direction: rtl;
+        }
 
-<div class="screen" id="menu">
-  <div class="title">SUPER</div>
-  <div class="subtitle">TIC TAC TOE</div>
+        .footer-credit {
+            position: absolute; bottom: 15px; width: 100%; text-align: center;
+            font-size: 0.85rem; font-weight: bold; color: rgba(255,255,255,0.8);
+            pointer-events: none;
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.absolute{position:absolute}.right-6{right:1.5rem}.top-6{top:1.5rem}.mb-10{margin-bottom:2.5rem}.mb-2{margin-bottom:0.5rem}.mb-4{margin-bottom:1rem}.mt-6{margin-top:1.5rem}.flex{display:flex}.hidden{display:none}.h-72{height:18rem}.h-full{height:100%}.w-72{width:18rem}.w-80{width:20rem}.w-full{width:100%}.cursor-pointer{cursor:pointer}.list-disc{list-style-type:disc}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-between{justify-content:space-between}.gap-4{gap:1rem}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.rounded-2xl{border-radius:1rem}.border-4{border-width:4px}.border-black{--tw-border-opacity:1;border-color:rgb(0 0 0 / var(--tw-border-opacity, 1))}.border-blue-600{--tw-border-opacity:1;border-color:rgb(37 99 235 / var(--tw-border-opacity, 1))}.border-red-600{--tw-border-opacity:1;border-color:rgb(220 38 38 / var(--tw-border-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-yellow-400{--tw-bg-opacity:1;background-color:rgb(250 204 21 / var(--tw-bg-opacity, 1))}.p-4{padding:1rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.pb-10{padding-bottom:2.5rem}.pr-5{padding-right:1.25rem}.text-center{text-align:center}.text-right{text-align:right}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-6xl{font-size:3.75rem;line-height:1}.text-lg{font-size:1.125rem;line-height:1.75rem}.font-black{font-weight:900}.font-bold{font-weight:700}.italic{font-style:italic}.leading-relaxed{line-height:1.625}.text-black{--tw-text-opacity:1;color:rgb(0 0 0 / var(--tw-text-opacity, 1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-yellow-500{--tw-text-opacity:1;color:rgb(234 179 8 / var(--tw-text-opacity, 1))}.underline{-webkit-text-decoration-line:underline;text-decoration-line:underline}.outline-none{outline:2px solid transparent;outline-offset:2px}</style><style id="_goober"> .go1475592160{height:0;}.go1671063245{height:auto;}.go1888806478{display:flex;flex-wrap:wrap;flex-grow:1;}@media (min-width:600px){.go1888806478{flex-grow:initial;min-width:288px;}}.go167266335{background-color:#313131;font-size:0.875rem;line-height:1.43;letter-spacing:0.01071em;color:#fff;align-items:center;padding:6px 16px;border-radius:4px;box-shadow:0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12);}.go3162094071{padding-left:20px;}.go3844575157{background-color:#313131;}.go1725278324{background-color:#43a047;}.go3651055292{background-color:#d32f2f;}.go4215275574{background-color:#ff9800;}.go1930647212{background-color:#2196f3;}.go946087465{display:flex;align-items:center;padding:8px 0;}.go703367398{display:flex;align-items:center;margin-left:auto;padding-left:16px;margin-right:-8px;}.go3963613292{width:100%;position:relative;transform:translateX(0);top:0;right:0;bottom:0;left:0;min-width:288px;}.go1141946668{box-sizing:border-box;display:flex;max-height:100%;position:fixed;z-index:1400;height:auto;width:auto;transition:top 300ms ease 0ms,right 300ms ease 0ms,bottom 300ms ease 0ms,left 300ms ease 0ms,max-width 300ms ease 0ms;pointer-events:none;max-width:calc(100% - 40px);}.go1141946668 .notistack-CollapseWrapper{padding:6px 0px;transition:padding 300ms ease 0ms;}@media (max-width:599.95px){.go1141946668{width:100%;max-width:calc(100% - 32px);}}.go3868796639 .notistack-CollapseWrapper{padding:2px 0px;}.go3118922589{top:14px;flex-direction:column;}.go1453831412{bottom:14px;flex-direction:column-reverse;}.go4027089540{left:20px;}@media (min-width:600px){.go4027089540{align-items:flex-start;}}@media (max-width:599.95px){.go4027089540{left:16px;}}.go2989568495{right:20px;}@media (min-width:600px){.go2989568495{align-items:flex-end;}}@media (max-width:599.95px){.go2989568495{right:16px;}}.go4034260886{left:50%;transform:translateX(-50%);}@media (min-width:600px){.go4034260886{align-items:center;}}</style></head>
+<body data-gptw="">
 
-  <textarea id="words" placeholder="dog - כלב&#10;cat - חתול" style="width:100%;height:100px;margin-top:10px"></textarea>
+    <!-- מסך לובי -->
+    <div id="lobby" class="modal" style="display: none;">
+        <div class="logo-container">
+            <h1 class="super-text">SUPER</h1>
+            <div class="ttt-text">TIC TAC TOE</div>
+        </div>
+        
+        <!-- כפתורים אנכיים -->
+        <div class="flex flex-col items-center">
+            <button onclick="showModal(&#39;rulesModal&#39;)" class="btn-main">איך משחקים?</button>
+            <button onclick="showModal(&#39;vocabModal&#39;)" class="btn-main bg-yellow-400">הוספת מילים</button>
+            <button onclick="startGame(&#39;pvp&#39;)" class="btn-main text-blue-600 border-blue-600">שחקן נגד שחקן</button>
+            <button onclick="startGame(&#39;pvc&#39;)" class="btn-main text-red-600 border-red-600">שחקן נגד מחשב</button>
+        </div>
 
-  <button class="btn btn-yellow" onclick="startGame('2p')">שני שחקנים</button>
-  <button class="btn btn-white" onclick="startGame('ai-easy')">נגד מחשב - קל</button>
-  <button class="btn btn-white" onclick="startGame('ai-hard')">נגד מחשב - מאתגר</button>
-  <button class="btn btn-white" onclick="openHow()">הוראות</button>
-</div>
+        <div class="footer-credit">
+            פותח ע"י חזי כהן גלמן 2026 © SUPER TIC TAC TOE
+        </div>
+    </div>
 
-<div class="screen" id="game" style="display:none">
-  <div class="top-bar">
-    <div class="circle-btn" onclick="openHow()">i</div>
-    <div class="turn" id="turn"></div>
-    <div class="circle-btn" onclick="backMenu()">←</div>
-  </div>
+    <!-- מסך משחק -->
+    <div id="gameUI" class="flex flex-col items-center justify-between h-full py-6">
+        <div class="top-icons">
+            <div onclick="showModal(&#39;rulesModal&#39;)" class="icon-btn">ⓘ</div>
+            <div onclick="location.reload()" class="icon-btn">➔</div>
+        </div>
+        
+        <div id="statusContainer">
+            <div id="statusText" class="x-color">תור X</div>
+        </div>
 
-  <div class="board" id="board"></div>
+        <div class="board-container">
+            <div class="board-shadow"></div>
+            <div id="mainGrid" class="super-grid"><div id="mini-0" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell x-color">✕</div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-1" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell x-color">✕</div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-2" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-3" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-4" class="mini-grid"><div class="cell o-color">◯</div><div class="cell o-color">◯</div><div class="cell o-color">◯</div><div class="cell "></div><div class="cell x-color">✕</div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="mini-win-overlay o-color">◯</div></div><div id="mini-5" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-6" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-7" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div><div id="mini-8" class="mini-grid"><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div><div class="cell "></div></div></div>
+        </div>
 
-  <div class="circle-btn bottom-btn" id="qBtn" onclick="openQuestion()">?</div>
-</div>
+        <div class="footer-area pb-10 flex flex-col items-center">
+            <div id="qButton" onclick="openQuiz()" class="q-btn x-color ">?</div>
+        </div>
 
-<!-- Question Modal -->
-<div class="modal" id="qModal">
-  <div class="modal-content">
-    <div id="questionText"></div>
-    <div class="answers" id="answers"></div>
-  </div>
-</div>
+        <div class="footer-credit">
+            פותח ע"י חזי כהן גלמן 2026 © SUPER TIC TAC TOE
+        </div>
+    </div>
 
-<!-- Win Modal -->
-<div class="modal" id="winModal">
-  <div class="modal-content">
-    <h2 id="winText"></h2>
-    <button class="btn btn-yellow" onclick="restart()">שחקו שוב</button>
-  </div>
-</div>
+    <!-- מודאל חוקים -->
+    <div id="rulesModal" class="modal" onclick="hideModal(&#39;rulesModal&#39;)">
+        <div class="rules-content" onclick="event.stopPropagation()">
+            <h2 class="text-3xl font-black mb-4 text-center text-yellow-500 underline">איך משחקים?</h2>
+            <ul class="list-disc pr-5 space-y-3 font-bold text-lg leading-relaxed">
+                <li>המטרה: לנצח 3 לוחות קטנים בשורה או אלכסון.</li>
+                <li>המהלך שלך קובע באיזה לוח היריב ישחק (לפי המיקום הפנימי).</li>
+                <li>כל לוח קטן שניצחת יצבע בסימן שלך.</li>
+                <li>לפני כל מהלך עליך ללחוץ על ה-? ולענות על שאלה.</li>
+                <li>תשובה נכונה הופכת את ה-? ל-! ומאפשרת מהלך.</li>
+                <li>טעות? התור עובר ליריב מיד!</li>
+            </ul>
+            <button onclick="hideModal(&#39;rulesModal&#39;)" class="btn-main w-full mt-6 bg-yellow-400 border-black">הבנתי!</button>
+        </div>
+    </div>
 
-<!-- How Modal -->
-<div class="modal" id="howModal">
-  <div class="modal-content">
-    <iframe width="100%" height="200" src="https://www.youtube.com/embed/xLcUtltJk2c"></iframe>
-    <button class="btn btn-yellow" onclick="closeHow()">הבנתי</button>
-  </div>
-</div>
+    <!-- מודאל שאלה -->
+    <div id="quizModal" class="modal" style="display: none;">
+        <div id="qWord" class="text-white text-6xl font-black mb-10 italic text-center" style="direction: ltr;">apple</div>
+        <div id="qOptions" class="flex flex-col gap-4 w-72"><button class="btn-main" disabled="">צהוב</button><button class="btn-main btn-correct" disabled="">תפוח</button><button class="btn-main" disabled="">אדום</button></div>
+    </div>
 
-<script>
-// --- STATE ---
-let wordsBank=[];
-let currentPlayer='X';
-let gameMode='2p';
-let allowedBoard=null;
-let bigBoard = Array(9).fill(null);
-let smallBoards = Array(9).fill(null).map(()=>Array(9).fill(null));
-let pendingMove=null;
+    <!-- מודאל הוספת מילים -->
+    <div id="vocabModal" class="modal" style="display: none;">
+        <div onclick="hideModal(&#39;vocabModal&#39;)" class="back-icon text-white absolute top-6 right-6 text-3xl cursor-pointer">➔</div>
+        <h2 class="text-white text-3xl font-black mb-4">הוספת מילים</h2>
+        <p class="text-white mb-2 font-bold">הזן מילה - תרגום (זוג בשורה)</p>
+        <textarea id="vInput" class="w-80 h-72 bg-white border-4 border-black text-black p-4 rounded-2xl mb-4 text-right outline-none font-bold text-lg"></textarea>
+        <button onclick="hideModal(&#39;vocabModal&#39;)" class="btn-main bg-yellow-400 border-black">שמור וחזור</button>
+    </div>
 
-// --- WORD PARSE ---
-function parseWords(){
-  let text=document.getElementById('words').value;
-  wordsBank = text.split('\n').map(l=>{
-    let [en,he]=l.split('-').map(x=>x.trim());
-    return {en,he};
-  }).filter(x=>x.en && x.he);
-}
+    <script>
+        let vocab = [], turn = "X", activeBoard = -1, canMove = false, gameMode = 'pvp';
+        let superData = Array(9).fill(null).map(() => Array(9).fill(""));
+        let miniWinners = Array(9).fill("");
+        let quizActive = false;
 
-// --- START ---
-function startGame(mode){
-  parseWords();
-  gameMode=mode;
-  document.getElementById('menu').style.display='none';
-  document.getElementById('game').style.display='block';
-  buildBoard();
-  updateTurn();
-}
+        window.onload = () => {
+            const saved = localStorage.getItem('sttt_bolt_v6');
+            document.getElementById('vInput').value = saved || "red - אדום\nblue - כחול\ngreen - ירוק\nyellow - צהוב\napple - תפוח\ndog - כלב\ncat - חתול\nsun - שמש";
+        };
 
-// --- BOARD ---
-function buildBoard(){
-  const boardDiv=document.getElementById('board');
-  boardDiv.innerHTML='';
-  for(let i=0;i<9;i++){
-    let sb=document.createElement('div');
-    sb.className='small-board';
-    for(let j=0;j<9;j++){
-      let cell=document.createElement('div');
-      cell.className='cell';
-      cell.onclick=()=>cellClick(i,j);
-      sb.appendChild(cell);
-    }
-    boardDiv.appendChild(sb);
-  }
-}
+        const showModal = id => document.getElementById(id).style.display = 'flex';
+        const hideModal = id => document.getElementById(id).style.display = 'none';
 
-function cellClick(b,c){
-  if(smallBoards[b][c] || bigBoard[b]) return;
-  if(allowedBoard!==null && allowedBoard!==b) return;
+        function startGame(mode) {
+            const raw = document.getElementById('vInput').value;
+            vocab = raw.split('\n').map(l => {
+                const p = l.split(/[–\-\—:]/);
+                return p.length >= 2 ? { en: p[0].trim(), he: p[1].trim() } : null;
+            }).filter(x => x);
+            
+            if(vocab.length < 3) { alert("יש להזין לפחות 3 מילים"); return; }
+            
+            gameMode = mode;
+            hideModal('lobby');
+            document.getElementById('gameUI').classList.replace('hidden', 'flex');
+            initBoard();
+            updateUI();
+            localStorage.setItem('sttt_bolt_v6', raw);
+        }
 
-  pendingMove={b,c};
-  openQuestion();
-}
+        function initBoard() {
+            const container = document.getElementById('mainGrid');
+            container.innerHTML = '';
+            for(let b=0; b<9; b++) {
+                const mini = document.createElement('div');
+                mini.id = `mini-${b}`;
+                mini.className = 'mini-grid';
+                for(let c=0; c<9; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.onclick = () => handleCellClick(b, c);
+                    mini.appendChild(cell);
+                }
+                container.appendChild(mini);
+            }
+        }
 
-// --- QUESTION ---
-function openQuestion(){
-  let q = wordsBank[Math.floor(Math.random()*wordsBank.length)];
-  let options=[q];
-  while(options.length<3){
-    let r=wordsBank[Math.floor(Math.random()*wordsBank.length)];
-    if(!options.includes(r)) options.push(r);
-  }
-  options.sort(()=>Math.random()-0.5);
+        function handleCellClick(bIdx, cIdx) {
+            if(!canMove || miniWinners[bIdx] !== "") return;
+            if(activeBoard !== -1 && activeBoard !== bIdx) return;
+            if(superData[bIdx][cIdx] !== "") return;
+            
+            superData[bIdx][cIdx] = turn;
+            canMove = false;
+            
+            if(checkCombo(superData[bIdx], turn)) {
+                miniWinners[bIdx] = turn;
+            }
+            
+            if(miniWinners[cIdx] === "" && superData[cIdx].some(v => v === "")) {
+                activeBoard = cIdx;
+            } else {
+                activeBoard = -1;
+            }
 
-  document.getElementById('qModal').style.display='flex';
-  document.getElementById('questionText').innerHTML =
-    `<button onclick="speak('${q.en}')">🔊</button> ${q.en}`;
+            render();
 
-  let ansDiv=document.getElementById('answers');
-  ansDiv.innerHTML='';
+            if(checkCombo(miniWinners, turn)) {
+                confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
+                document.getElementById('statusText').textContent = `ניצחון ל-${turn}!`;
+                document.getElementById('qButton').style.display = 'none';
+                return;
+            }
 
-  options.forEach(o=>{
-    let btn=document.createElement('button');
-    btn.innerText=o.he;
-    btn.onclick=()=>answer(btn,o.he===q.he,q.he);
-    ansDiv.appendChild(btn);
-  });
-}
+            turn = turn === "X" ? "O" : "X";
+            updateUI();
+            if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 800);
+        }
 
-function answer(btn,correct,correctText){
-  if(correct){
-    btn.classList.add('correct');
-    setTimeout(()=>{
-      document.getElementById('qModal').style.display='none';
-      makeMove();
-    },600);
-  }else{
-    btn.classList.add('wrong');
-    [...btn.parentNode.children].forEach(b=>{
-      if(b.innerText===correctText) b.classList.add('correct');
-    });
-    switchTurn();
-  }
-}
+        function openQuiz() {
+            if(canMove || quizActive) return;
+            quizActive = true;
+            const item = vocab[Math.floor(Math.random() * vocab.length)];
+            const opts = [item.he];
+            while(opts.length < 3) {
+                const r = vocab[Math.floor(Math.random()*vocab.length)].he;
+                if(!opts.includes(r)) opts.push(r);
+            }
+            opts.sort(() => Math.random() - 0.5);
+            
+            document.getElementById('qWord').textContent = item.en;
+            const cont = document.getElementById('qOptions'); cont.innerHTML = '';
+            
+            opts.forEach(o => {
+                const b = document.createElement('button');
+                b.className = 'btn-main';
+                b.textContent = o;
+                b.onclick = () => {
+                    const buttons = cont.querySelectorAll('button');
+                    buttons.forEach(btn => btn.disabled = true);
+                    if(o === item.he) {
+                        b.classList.add('btn-correct');
+                        setTimeout(() => {
+                            hideModal('quizModal');
+                            canMove = true;
+                            quizActive = false;
+                            updateQuizIcon();
+                            render();
+                            if(gameMode === 'pvc' && turn === 'O') executeAiMove();
+                        }, 1000);
+                    } else {
+                        b.classList.add('btn-wrong');
+                        buttons.forEach(btn => { if(btn.textContent === item.he) btn.classList.add('btn-correct'); });
+                        setTimeout(() => {
+                            hideModal('quizModal');
+                            quizActive = false;
+                            turn = turn === "X" ? "O" : "X";
+                            updateUI();
+                            if(gameMode === 'pvc' && turn === 'O') setTimeout(openQuiz, 600);
+                        }, 1800);
+                    }
+                };
+                cont.appendChild(b);
+            });
+            showModal('quizModal');
+        }
 
-// --- MOVE ---
-function makeMove(){
-  let {b,c}=pendingMove;
-  smallBoards[b][c]=currentPlayer;
+        function updateQuizIcon() {
+            const btn = document.getElementById('qButton');
+            btn.textContent = canMove ? '!' : '?';
+            btn.className = `q-btn ${turn === 'X' ? 'x-color' : 'o-color'} ${canMove ? 'scale-110' : ''}`;
+        }
 
-  updateBoardUI();
+        function executeAiMove() {
+            let boards = activeBoard === -1 ? 
+                miniWinners.map((w, i) => (w==="" && superData[i].some(v=>v==="")) ? i : null).filter(v=>v!==null) : 
+                [activeBoard];
+            let b = boards[Math.floor(Math.random() * boards.length)];
+            let cells = superData[b].map((v, i) => v==="" ? i : null).filter(v=>v!==null);
+            let c = cells[Math.floor(Math.random() * cells.length)];
+            setTimeout(() => handleCellClick(b, c), 500);
+        }
 
-  if(checkWin(smallBoards[b],currentPlayer)){
-    bigBoard[b]=currentPlayer;
-  }
+        function checkCombo(arr, p) {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return wins.some(s => s.every(i => arr[i] === p));
+        }
 
-  allowedBoard = smallBoards[c].includes(null) ? c : null;
+        function render() {
+            for(let b=0; b<9; b++) {
+                const mini = document.getElementById(`mini-${b}`);
+                mini.classList.remove('active-mini');
+                if(canMove && (activeBoard === -1 || activeBoard === b) && miniWinners[b] === "") {
+                    mini.classList.add('active-mini');
+                }
+                const cells = mini.querySelectorAll('.cell');
+                superData[b].forEach((val, i) => {
+                    cells[i].textContent = val === 'X' ? '✕' : (val === 'O' ? '◯' : '');
+                    cells[i].className = 'cell ' + (val === 'X' ? 'x-color' : (val === 'O' ? 'o-color' : ''));
+                });
+                if(miniWinners[b] !== "" && !mini.querySelector('.mini-win-overlay')) {
+                    const over = document.createElement('div');
+                    over.className = 'mini-win-overlay ' + (miniWinners[b] === 'X' ? 'x-color' : 'o-color');
+                    over.textContent = miniWinners[b] === 'X' ? '✕' : '◯';
+                    mini.appendChild(over);
+                }
+            }
+        }
 
-  if(checkWin(bigBoard,currentPlayer)){
-    endGame(currentPlayer);
-    return;
-  }
+        function updateUI() {
+            const st = document.getElementById('statusText');
+            st.textContent = `תור ${turn}`;
+            st.className = turn === 'X' ? 'x-color' : 'o-color';
+            updateQuizIcon();
+            render();
+        }
+    </script>
 
-  switchTurn();
-}
 
-// --- TURN ---
-function switchTurn(){
-  currentPlayer = currentPlayer==='X'?'O':'X';
-  updateTurn();
-
-  if(gameMode.includes('ai') && currentPlayer==='O'){
-    setTimeout(aiMove,500);
-  }
-}
-
-function updateTurn(){
-  let el=document.getElementById('turn');
-  el.innerText='תור '+currentPlayer;
-  el.style.color=currentPlayer==='X'?'var(--blue)':'var(--red)';
-}
-
-// --- UI ---
-function updateBoardUI(){
-  let boards=document.querySelectorAll('.small-board');
-  boards.forEach((sb,i)=>{
-    let cells=sb.children;
-    for(let j=0;j<9;j++){
-      cells[j].innerText=smallBoards[i][j]||'';
-    }
-    if(bigBoard[i]){
-      sb.innerHTML=`<div class="big-win">${bigBoard[i]}</div>`;
-    }
-  });
-}
-
-// --- WIN ---
-function checkWin(arr,p){
-  const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-  return wins.some(w=>w.every(i=>arr[i]===p));
-}
-
-function endGame(p){
-  document.getElementById('winModal').style.display='flex';
-  document.getElementById('winText').innerText = p?`ניצחון ל ${p}!`:'תיקו';
-  confetti();
-}
-
-// --- AI ---
-function aiMove(){
-  // simple random / smarter block
-  let moves=[];
-  smallBoards.forEach((b,bi)=>{
-    b.forEach((c,ci)=>{
-      if(!c && (!allowedBoard || allowedBoard===bi)){
-        moves.push({b:bi,c:ci});
-      }
-    });
-  });
-  let move=moves[Math.floor(Math.random()*moves.length)];
-  pendingMove=move;
-  makeMove();
-}
-
-// --- SPEECH ---
-function speak(t){
-  let u=new SpeechSynthesisUtterance(t);
-  u.lang='en-US';
-  speechSynthesis.speak(u);
-}
-
-// --- UI extras ---
-function backMenu(){
-  location.reload();
-}
-function restart(){
-  location.reload();
-}
-
-function openHow(){
-  document.getElementById('howModal').style.display='flex';
-}
-function closeHow(){
-  document.getElementById('howModal').style.display='none';
-}
-
-// --- CONFETTI ---
-function confetti(){
-  for(let i=0;i<30;i++){
-    let c=document.createElement('div');
-    c.className='confetti';
-    c.style.left=Math.random()*100+'%';
-    c.style.background=['red','blue','yellow'][Math.floor(Math.random()*3)];
-    document.body.appendChild(c);
-  }
-}
-</script>
-
-</body>
-</html>
+</body></html>
