@@ -10,7 +10,6 @@
     <style>
         body { font-family: 'Varela Round', sans-serif; background-color: #2d845c; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; align-items: center; }
         
-        /* כפתורי האפליקציה */
         .app-btn {
             background-color: white; color: #111; border: 4px solid #111; border-radius: 9999px;
             padding: 0.8rem 2rem; font-weight: 800; font-size: 1.2rem; width: 100%; max-width: 300px;
@@ -22,7 +21,6 @@
         .btn-red { background-color: #ef4444; color: white; }
         .btn-inverse-yellow { background-color: #111; color: #fbbf24; border-color: #fbbf24; }
 
-        /* כותרת המשחק */
         .game-header {
             background-color: white; border: 4px solid #111; border-radius: 9999px;
             display: flex; align-items: center; justify-content: space-between;
@@ -63,17 +61,19 @@
         .player-x { color: #2563eb; }
         .player-o { color: #dc2626; }
 
-        /* מודאלים */
         dialog { border: 6px solid #111; border-radius: 2.5rem; padding: 0; overflow: hidden; max-width: 90vw; width: 380px; }
         dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
         .dialog-content { padding: 1.5rem; }
 
-        /* כפתור הוידאו האדום */
         .video-btn {
             background-color: #ff0000; color: white; border-radius: 15px; padding: 10px;
             display: flex; align-items: center; justify-content: center; gap: 10px;
             font-weight: bold; margin: 15px 0; cursor: pointer; border: none; width: 100%;
         }
+
+        /* מחלקות עבור משוב צבעים */
+        .correct-choice { background-color: #22c55e !important; color: white !important; border-color: #166534 !important; box-shadow: 0 4px 0 0 #166534 !important; }
+        .wrong-choice { background-color: #ef4444 !important; color: white !important; border-color: #991b1b !important; box-shadow: 0 4px 0 0 #991b1b !important; }
     </style>
 </head>
 <body>
@@ -196,15 +196,29 @@
             opts.sort(()=>Math.random()-0.5);
             const container = document.getElementById('quiz-options');
             container.innerHTML = '';
+            
             opts.forEach(o => {
                 const btn = document.createElement('button');
                 btn.className = "app-btn !py-2 !text-lg";
                 btn.innerText = o;
                 btn.onclick = () => {
+                    // ביטול אפשרות ללחיצה כפולה בזמן הפידבק
+                    const allBtns = container.querySelectorAll('button');
+                    allBtns.forEach(b => b.style.pointerEvents = 'none');
+
                     if(o === q.translation) {
-                        closeModal('quiz-modal'); state.phase = 'MOVE'; updateUI();
+                        btn.classList.add('correct-choice');
+                        setTimeout(() => {
+                            closeModal('quiz-modal');
+                            state.phase = 'MOVE';
+                            updateUI();
+                        }, 600);
                     } else {
-                        closeModal('quiz-modal'); changePlayer();
+                        btn.classList.add('wrong-choice');
+                        setTimeout(() => {
+                            closeModal('quiz-modal');
+                            changePlayer();
+                        }, 600);
                     }
                 };
                 container.appendChild(btn);
@@ -214,12 +228,10 @@
 
         function handleCellClick(bi, ci) {
             if(state.phase !== 'MOVE') return;
-            // בדיקה אם המהלך חוקי
             if(state.mainBoard[bi] !== null || (state.nextBoard !== -1 && state.nextBoard !== bi) || state.grids[bi][ci] !== null) return;
             
             state.grids[bi][ci] = state.player;
             
-            // בדיקת ניצחון בלוח קטן
             if(checkWin(state.grids[bi])) {
                 state.mainBoard[bi] = state.player;
                 const div = document.getElementById(`board-${bi}`);
@@ -229,10 +241,8 @@
                 div.appendChild(ov);
             }
 
-            // קביעת הלוח הבא
             state.nextBoard = state.mainBoard[ci] === null ? ci : -1;
 
-            // בדיקת סוף משחק
             if(checkWin(state.mainBoard)) { 
                 endGame(`ניצחון ל-${state.player}!`); 
             } else if (isBoardFull()) {
@@ -243,16 +253,7 @@
         }
 
         function isBoardFull() {
-            // אם הלוח הבא חסום ואין לוחות פנויים אחרים, או שכל התאים מלאים
-            const isFull = state.grids.every((g, i) => state.mainBoard[i] !== null || g.every(c => c !== null));
-            
-            // בדיקה ספציפית למקרה שבו הלוח הבא מלא/תפוס ואין מהלך חוקי
-            if (state.nextBoard !== -1 && state.mainBoard[state.nextBoard] !== null) {
-                // במקרה כזה השחקן יכול ללכת לכל לוח פנוי, אז המשחק ממשיך
-                return false; 
-            }
-            
-            return isFull;
+            return state.grids.every((g, i) => state.mainBoard[i] !== null || g.every(c => c !== null));
         }
 
         function changePlayer() {
