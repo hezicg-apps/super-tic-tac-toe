@@ -3,270 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Tic Tac Toe - Fixed</title>
+    <title>Super Tic Tac Toe - 9x9</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDqgGqCF5VzJ7I3x0O2DdQk7bY-ARajyE0",
-            authDomain: "super-tic-tac-toe-57080.firebaseapp.com",
-            projectId: "super-tic-tac-toe-57080",
-            storageBucket: "super-tic-tac-toe-57080.firebasestorage.app",
-            messagingSenderId: "32126067090",
-            appId: "1:32126067090:web:517e9f90515eec6e0d614b",
-            measurementId: "G-0476T9DDNG"
-        };
-
-        let db, auth, vocabulary = [], gameMode = "ai", gameId = "", myRole = "X", unsubscribe = null, audioCtx = null;
-        let localState = { board: Array(9).fill(""), currentPlayer: "X", history: { X: [], O: [] }, status: "playing" };
-        let sets = JSON.parse(localStorage.getItem('teacher_sets')) || {};
-
-        async function setupFirebase() {
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app); db = getFirestore(app);
-                await signInAnonymously(auth);
-                document.getElementById('gameStatus').innerHTML = "מחובר לשרת ✅";
-                document.getElementById('lobbyInputs').style.opacity = "1";
-                document.getElementById('lobbyInputs').classList.remove('pointer-events-none');
-                window.addEventListener('click', () => { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }, { once: true });
-            } catch (e) { document.getElementById('gameStatus').innerHTML = "מצב אופליין"; }
-        }
-
-        window.addEventListener('load', () => { setupFirebase(); renderSets(); document.getElementById('lobbyModal').classList.add('active'); });
-
-        function parseVocab(text) {
-            vocabulary = text.split('\n').map(line => {
-                const parts = line.split(/[-:,/|]|\s{2,}/); 
-                return parts.length >= 2 ? { en: parts[0].trim(), he: parts[1].trim() } : null;
-            }).filter(i => i !== null);
-        }
-
-        window.saveCurrentSet = () => {
-            const name = prompt("שם לפרק החדש:");
-            if (!name) return;
-            sets[name] = document.getElementById('vocabInput').value;
-            localStorage.setItem('teacher_sets', JSON.stringify(sets));
-            renderSets();
-        };
-
-        window.loadSet = (name) => { document.getElementById('vocabInput').value = sets[name]; parseVocab(sets[name]); };
-        
-        window.deleteSet = (name) => { if(confirm(`למחוק את ${name}?`)) { delete sets[name]; localStorage.setItem('teacher_sets', JSON.stringify(sets)); renderSets(); } };
-
-        function renderSets() {
-            const container = document.getElementById('setsContainer');
-            container.innerHTML = Object.keys(sets).map(name => `
-                <div class="flex items-center bg-zinc-800 rounded-full px-3 py-1 gap-2">
-                    <button onclick="loadSet('${name}')" class="text-xs text-white whitespace-nowrap">${name}</button>
-                    <button onclick="deleteSet('${name}')" class="text-red-500 font-bold">×</button>
-                </div>
-            `).join('');
-        }
-
-        window.exportData = () => {
-            const data = JSON.stringify(sets);
-            navigator.clipboard.writeText(data);
-            alert("כל הפרקים הועתקו! שמור את הטקסט הזה ב-Keep או שלח לעצמך בווטסאפ לגיבוי.");
-        };
-
-        window.importData = () => {
-            const data = prompt("הדבק כאן את קוד הגיבוי ששמרת:");
-            if (!data) return;
-            try {
-                const newSets = JSON.parse(data);
-                sets = { ...sets, ...newSets };
-                localStorage.setItem('teacher_sets', JSON.stringify(sets));
-                renderSets();
-                alert("הנתונים שוחזרו בהצלחה!");
-            } catch(e) { alert("קוד לא תקין"); }
-        };
-
-        window.saveVocab = () => {
-            parseVocab(document.getElementById('vocabInput').value);
-            if (vocabulary.length >= 3) document.getElementById('vocabModal').classList.remove('active');
-            else alert("נא להזין לפחות 3 מילים");
-        };
-
-        window.startLocalGame = (mode) => {
-            if (vocabulary.length < 3) { alert("הזן מילים תחילה"); return; }
-            gameMode = mode; myRole = "X";
-            localState = { board: Array(9).fill(""), currentPlayer: "X", history: { X: [], O: [] }, status: "playing" };
-            document.getElementById('lobbyModal').classList.remove('active');
-            renderGame(localState);
-        };
-
-        window.createOnline = async () => {
-            if (vocabulary.length < 3) return;
-            gameId = Math.random().toString(36).substring(2, 7).toUpperCase();
-            await setDoc(doc(db, 'games', gameId), { board: Array(9).fill(""), currentPlayer: "X", history: { X: [], O: [] }, status: "waiting", players: { X: auth.currentUser.uid, O: null }, vocabulary: vocabulary });
-            onSnapshot(doc(db, 'games', gameId), (snap) => renderGame(snap.data()));
-            document.getElementById('lobbyInputs').style.display = 'none';
-            document.getElementById('codeDisplayArea').style.display = 'block';
-            document.getElementById('displayCode').textContent = gameId;
-        };
-
-        function renderGame(data) {
-            if (!data) return;
-            if (data.status !== 'waiting') document.getElementById('lobbyModal').classList.remove('active');
-            const isMyTurn = (gameMode === 'friend') ? true : (data.currentPlayer === myRole);
-            document.getElementById('turnBar').className = `turn-bar turn-${data.currentPlayer.toLowerCase()}`;
-            document.getElementById('playerTurnCounter').textContent = data.history[data.currentPlayer]?.length || 0;
-            
-            document.querySelectorAll('.cell').forEach((cell, i) => {
-                const val = data.board[i];
-                cell.textContent = val === "X" ? "✕" : (val === "O" ? "◯" : "");
-                const isExpiring = (data.history.X.length === 3 && data.history.X[0] === i) || (data.history.O.length === 3 && data.history.O[0] === i);
-                cell.className = `cell ${val === 'X' ? 'x-neon' : 'o-neon'} ${isExpiring ? 'opacity-30' : ''} ${val==='' && isMyTurn && data.status==='ready_to_move' ? 'highlight' : ''}`;
-            });
-
-            if (data.status === "playing" && isMyTurn) showQuiz(data.currentPlayer);
-            if (data.status === "finished") { 
-                document.getElementById('resultTitle').textContent = data.winner === "Draw" ? "תיקו!" : (data.winner === "X" ? "X ניצח!" : "O ניצח!"); 
-                document.getElementById('resultModal').classList.add('active'); 
-                if(data.winner !== "Draw") confetti(); 
-            }
-            if (gameMode === "ai" && data.currentPlayer === "O" && data.status === "playing") setTimeout(() => aiMove(data), 800);
-        }
-
-        async function aiMove(data) {
-            const empty = data.board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-            if (empty.length > 0) executeMove("O", empty[Math.floor(Math.random()*empty.length)]);
-        }
-
-        async function executeMove(role, idx) {
-            let cur = gameMode === "online" ? (await getDoc(doc(db, 'games', gameId))).data() : localState;
-            let board = [...cur.board], hist = {...cur.history};
-            
-            // If it's a real move (idx != -1)
-            if (idx !== -1) {
-                hist[role].push(idx); 
-                board[idx] = role;
-                if (hist[role].length > 3) board[hist[role].shift()] = "";
-            }
-
-            const win = checkWinner(board);
-            let status = win ? "finished" : "playing";
-            let winner = win;
-
-            // Check for Draw (Board full and no winner)
-            if (!win && board.every(cell => cell !== "")) {
-                status = "finished";
-                winner = "Draw";
-            }
-
-            const upd = { board, history: hist, status: status, winner: winner, currentPlayer: role === "X" ? "O" : "X" };
-            if (gameMode === "online") await updateDoc(doc(db, 'games', gameId), upd);
-            else { localState = {...localState, ...upd}; renderGame(localState); }
-        }
-
-        function checkWinner(b) {
-            const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            for (let p of w) if (b[p[0]] && b[p[0]] === b[p[1]] && b[p[0]] === b[p[2]]) return b[p[0]];
-            return null;
-        }
-
-        window.handleCellClick = (i) => {
-            const isLocal = (gameMode === 'friend' || (gameMode === 'ai' && localState.currentPlayer === 'X'));
-            if ((gameMode === 'online' || isLocal) && (gameMode === 'online' ? true : localState.status === 'ready_to_move')) executeMove(gameMode === 'online' ? myRole : localState.currentPlayer, i);
-        };
-
-        function showQuiz(p) {
-            const item = vocabulary[Math.floor(Math.random()*vocabulary.length)];
-            const opts = [item.he];
-            while(opts.length < Math.min(4, vocabulary.length)) {
-                const r = vocabulary[Math.floor(Math.random()*vocabulary.length)].he;
-                if(!opts.includes(r)) opts.push(r);
-            }
-            opts.sort(() => Math.random()-0.5);
-            
-            // Adjust font size for long English words
-            const questionEl = document.getElementById('questionText');
-            questionEl.textContent = item.en;
-            questionEl.style.fontSize = item.en.length > 10 ? '2.5rem' : '4rem';
-
-            const container = document.getElementById('optionsContainer');
-            container.innerHTML = '';
-            opts.forEach(o => {
-                const b = document.createElement('button');
-                // Adjusting button padding and font for long Hebrew translations
-                b.className = "btn-option w-full mb-2 text-center break-words overflow-hidden leading-tight"; 
-                b.style.fontSize = o.length > 12 ? '1rem' : '1.2rem';
-                b.textContent = o;
-                b.onclick = async () => {
-                    if (o === item.he) {
-                        if (gameMode === "online") await updateDoc(doc(db, 'games', gameId), { status: 'ready_to_move' });
-                        else { localState.status = 'ready_to_move'; renderGame(localState); }
-                        document.getElementById('quizModal').classList.remove('active');
-                    } else { alert("טעות! התור עובר"); executeMove(p, -1); document.getElementById('quizModal').classList.remove('active'); }
-                };
-                container.appendChild(b);
-            });
-            document.getElementById('quizModal').classList.add('active');
-            const u = new SpeechSynthesisUtterance(item.en); u.lang = 'en-US'; window.speechSynthesis.speak(u);
-        }
-
-        window.openVocabEditor = () => document.getElementById('vocabModal').classList.add('active');
-        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
-    </script>
     <style>
-        body { background: #000; color: #fff; font-family: 'Varela Round', sans-serif; overflow: hidden; touch-action: manipulation; }
-        .turn-bar { height: 60px; display: flex; align-items: center; justify-content: center; font-weight: bold; background: #111; border-bottom: 1px solid #222; }
-        .turn-x { color: #00f2ff; } .turn-o { color: #bc13fe; }
-        .board { display: grid; grid-template-columns: repeat(3, 1fr); width: 90vw; max-width: 350px; margin: 20px auto; gap: 10px; }
-        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 4rem; font-weight: bold; background: #0a0a0a; border-radius: 15px; border: 1px solid #222; }
-        .cell.highlight { border-color: #fff; box-shadow: 0 0 15px #fff; }
-        .x-neon { text-shadow: 0 0 10px #00f2ff; color: #00f2ff; } .o-neon { text-shadow: 0 0 10px #bc13fe; color: #bc13fe; }
+        body { background: #000; color: #fff; font-family: 'Varela Round', sans-serif; overflow-x: hidden; touch-action: manipulation; }
+        .main-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 12px; width: 95vw; max-width: 500px; margin: 10px auto;
+            background: #333; padding: 10px; border-radius: 12px;
+        }
+        .sub-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 4px; background: #222; padding: 4px; border-radius: 8px;
+            position: relative; aspect-ratio: 1;
+        }
+        .cell {
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: bold; background: #0a0a0a; border-radius: 4px;
+            cursor: pointer; border: 1px solid #1a1a1a;
+        }
+        .cell.active-target { border: 2px solid #facc15; box-shadow: inset 0 0 5px #facc15; }
+        .sub-grid.won-x::after, .sub-grid.won-o::after {
+            content: attr(data-winner);
+            position: absolute; inset: 0; background: rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 4rem; border-radius: 8px; z-index: 10;
+        }
+        .sub-grid.won-x::after { content: "✕"; color: #00f2ff; text-shadow: 0 0 15px #00f2ff; }
+        .sub-grid.won-o::after { content: "◯"; color: #bc13fe; text-shadow: 0 0 15px #bc13fe; }
+        
+        .x-neon { color: #00f2ff; } .o-neon { color: #bc13fe; }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal.active { display: flex; }
         .btn-game { height: 55px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; border: 2px solid #facc15; color: #facc15; }
         .btn-yellow-solid { background: #facc15; color: #000; }
         .sets-scroll { display: flex; gap: 8px; overflow-x: auto; width: 100%; padding: 10px 0; scrollbar-width: none; }
-        textarea { background: #050505; color: #0f0; padding: 12px; border: 1px solid #333; width: 100%; height: 200px; border-radius: 10px; font-family: monospace; direction: ltr; }
+        textarea { background: #050505; color: #0f0; padding: 12px; border: 1px solid #333; width: 100%; height: 180px; border-radius: 10px; font-family: monospace; direction: ltr; }
         .btn-option { background: #111; border: 2px solid #333; padding: 12px; border-radius: 12px; min-height: 55px; }
+        .highlight-grid { outline: 4px solid #facc15; z-index: 5; }
     </style>
 </head>
 <body>
-    <div id="turnBar" class="turn-bar">תור השחקן (<span id="playerTurnCounter">0</span>/3)</div>
-    <p id="gameStatus" class="text-center text-[10px] text-gray-500 mt-2">CONNECTING...</p>
+    <div id="turnBar" class="h-[60px] flex items-center justify-center font-bold bg-[#111] border-b border-[#222]">
+        <span id="playerDisplay" class="x-neon text-xl">תור השחקן: X</span>
+    </div>
     
-    <div class="board">
-        <div class="cell" onclick="handleCellClick(0)"></div><div class="cell" onclick="handleCellClick(1)"></div><div class="cell" onclick="handleCellClick(2)"></div>
-        <div class="cell" onclick="handleCellClick(3)"></div><div class="cell" onclick="handleCellClick(4)"></div><div class="cell" onclick="handleCellClick(5)"></div>
-        <div class="cell" onclick="handleCellClick(6)"></div><div class="cell" onclick="handleCellClick(7)"></div><div class="cell" onclick="handleCellClick(8)"></div>
+    <div id="mainBoard" class="main-grid">
+        <!-- 9 Sub-grids will be generated here -->
     </div>
 
     <div id="lobbyModal" class="modal">
         <h1 class="text-3xl font-black mb-8 italic">SUPER TIC TAC TOE</h1>
-        <div id="lobbyInputs" class="w-full max-w-xs space-y-4 pointer-events-none" style="opacity:0.3;">
+        <div id="lobbyInputs" class="w-full max-w-xs space-y-4">
             <button onclick="openVocabEditor()" class="btn-game">נהל מילים ופרקים</button>
-            <button onclick="startLocalGame('ai')" class="btn-game btn-yellow-solid">נגד המחשב</button>
-            <button onclick="startLocalGame('friend')" class="btn-game">שני שחקנים בכיתה</button>
-            <div class="pt-4 space-y-2">
-                <button onclick="createOnline()" class="btn-game border-green-500 text-green-500">פתח משחק מרחוק</button>
-            </div>
-        </div>
-        <div id="codeDisplayArea" style="display:none" class="text-center">
-            <p class="text-gray-500">הקוד למשחק:</p>
-            <div id="displayCode" class="text-6xl font-bold my-4 text-yellow-400"></div>
-            <button onclick="location.reload()" class="text-xs underline text-gray-400">ביטול וחזרה</button>
+            <button onclick="startGame('ai')" class="btn-game btn-yellow-solid">נגד המחשב</button>
+            <button onclick="startGame('friend')" class="btn-game">שני שחקנים בכיתה</button>
         </div>
     </div>
 
     <div id="vocabModal" class="modal">
         <div class="w-full max-w-md bg-zinc-900 p-6 rounded-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-white font-bold">פרקים ומילים</h2>
-                <div class="flex gap-2">
-                    <button onclick="exportData()" class="text-[10px] bg-zinc-700 px-2 py-1 rounded">Export</button>
-                    <button onclick="importData()" class="text-[10px] bg-zinc-700 px-2 py-1 rounded">Import</button>
-                </div>
-            </div>
+            <h2 class="text-white font-bold mb-4">פרקים ומילים</h2>
             <div id="setsContainer" class="sets-scroll"></div>
             <textarea id="vocabInput" placeholder="Apple - תפוח"></textarea>
             <button onclick="saveCurrentSet()" class="text-yellow-500 text-xs mt-2 underline">שמור כפרק חדש</button>
@@ -278,7 +77,7 @@
     </div>
 
     <div id="quizModal" class="modal">
-        <h2 id="questionText" class="text-6xl font-black mb-12 text-center w-full px-4 break-words"></h2>
+        <h2 id="questionText" class="text-5xl font-black mb-12 text-center w-full px-4 break-words"></h2>
         <div id="optionsContainer" class="w-full max-w-xs px-2"></div>
     </div>
     
@@ -286,6 +85,218 @@
         <h2 id="resultTitle" class="text-5xl font-bold mb-10 text-center"></h2>
         <button onclick="location.reload()" class="btn-game bg-white text-black w-48 font-bold">שחק שוב</button>
     </div>
+
+    <script>
+        let vocabulary = [], gameMode = "ai", currentPlayer = "X";
+        let mainBoard = Array(9).fill(null).map(() => Array(9).fill("")); // 9 grids of 9 cells
+        let gridWinners = Array(9).fill(""); // Winners of each sub-grid
+        let activeGrid = -1; // -1 means player can move in any grid
+        let pendingMove = null;
+        let sets = JSON.parse(localStorage.getItem('teacher_sets')) || {};
+
+        function init() {
+            const board = document.getElementById('mainBoard');
+            board.innerHTML = '';
+            for (let g = 0; g < 9; g++) {
+                const subGrid = document.createElement('div');
+                subGrid.className = 'sub-grid';
+                subGrid.id = `grid-${g}`;
+                for (let c = 0; c < 9; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.onclick = () => handleMoveRequest(g, c);
+                    subGrid.appendChild(cell);
+                }
+                board.appendChild(subGrid);
+            }
+            renderSets();
+            document.getElementById('lobbyModal').classList.add('active');
+        }
+
+        function handleMoveRequest(gridIdx, cellIdx) {
+            if (gridWinners[gridIdx] !== "" || mainBoard[gridIdx][cellIdx] !== "") return;
+            if (activeGrid !== -1 && activeGrid !== gridIdx) return;
+            
+            pendingMove = { gridIdx, cellIdx };
+            showQuiz();
+        }
+
+        function executeMove() {
+            const { gridIdx, cellIdx } = pendingMove;
+            mainBoard[gridIdx][cellIdx] = currentPlayer;
+            
+            // Update UI
+            const cell = document.querySelector(`#grid-${gridIdx}`).children[cellIdx];
+            cell.textContent = currentPlayer === "X" ? "✕" : "◯";
+            cell.className = `cell ${currentPlayer === "X" ? "x-neon" : "o-neon"}`;
+
+            // Check if sub-grid is won
+            const subWinner = checkWinner(mainBoard[gridIdx]);
+            if (subWinner) {
+                gridWinners[gridIdx] = subWinner;
+                const gridDiv = document.getElementById(`grid-${gridIdx}`);
+                gridDiv.classList.add(subWinner === "X" ? 'won-x' : 'won-o');
+                
+                // Check if main game is won
+                const finalWinner = checkWinner(gridWinners);
+                if (finalWinner) {
+                    endGame(finalWinner);
+                    return;
+                }
+            }
+
+            // Route to next grid
+            if (gridWinners[cellIdx] === "") {
+                activeGrid = cellIdx;
+            } else {
+                activeGrid = -1; // Any open grid
+            }
+
+            // Check for Draw (Board full)
+            if (gridWinners.every(w => w !== "") || (activeGrid === -1 && gridWinners.every((w, i) => w !== "" || mainBoard[i].every(c => c !== "")))) {
+                 endGame("Draw");
+                 return;
+            }
+
+            // Switch Player
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            updateUI();
+
+            if (gameMode === "ai" && currentPlayer === "O") {
+                setTimeout(aiMove, 600);
+            }
+        }
+
+        function aiMove() {
+            let gIdx = activeGrid === -1 ? Math.floor(Math.random()*9) : activeGrid;
+            while(gridWinners[gIdx] !== "" || mainBoard[gIdx].every(c => c !== "")) {
+                gIdx = Math.floor(Math.random()*9);
+            }
+            
+            const empties = mainBoard[gIdx].map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            const cIdx = empties[Math.floor(Math.random()*empties.length)];
+            
+            pendingMove = { gridIdx: gIdx, cellIdx: cIdx };
+            // In AI mode O doesn't quiz, or quizzes automatically
+            executeMove();
+        }
+
+        function checkWinner(b) {
+            const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for (let p of w) if (b[p[0]] && b[p[0]] === b[p[1]] && b[p[0]] === b[p[2]]) return b[p[0]];
+            return null;
+        }
+
+        function updateUI() {
+            const display = document.getElementById('playerDisplay');
+            display.textContent = `תור השחקן: ${currentPlayer}`;
+            display.className = currentPlayer === "X" ? "x-neon text-xl" : "o-neon text-xl";
+
+            for(let i=0; i<9; i++) {
+                const grid = document.getElementById(`grid-${i}`);
+                grid.classList.remove('highlight-grid');
+                if (activeGrid === i || (activeGrid === -1 && gridWinners[i] === "")) {
+                    grid.classList.add('highlight-grid');
+                }
+            }
+        }
+
+        function showQuiz() {
+            const item = vocabulary[Math.floor(Math.random()*vocabulary.length)];
+            const opts = [item.he];
+            while(opts.length < Math.min(4, vocabulary.length)) {
+                const r = vocabulary[Math.floor(Math.random()*vocabulary.length)].he;
+                if(!opts.includes(r)) opts.push(r);
+            }
+            opts.sort(() => Math.random()-0.5);
+            
+            const qText = document.getElementById('questionText');
+            qText.textContent = item.en;
+            qText.style.fontSize = item.en.length > 10 ? '2.5rem' : '4rem';
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            opts.forEach(o => {
+                const b = document.createElement('button');
+                b.className = "btn-option w-full mb-2 text-center break-words leading-tight";
+                b.style.fontSize = o.length > 12 ? '1.1rem' : '1.3rem';
+                b.textContent = o;
+                b.onclick = () => {
+                    if (o === item.he) {
+                        document.getElementById('quizModal').classList.remove('active');
+                        executeMove();
+                    } else {
+                        alert("טעות! התור עובר");
+                        document.getElementById('quizModal').classList.remove('active');
+                        currentPlayer = currentPlayer === "X" ? "O" : "X";
+                        updateUI();
+                        if(gameMode === "ai" && currentPlayer === "O") setTimeout(aiMove, 600);
+                    }
+                };
+                container.appendChild(b);
+            });
+            document.getElementById('quizModal').classList.add('active');
+            const u = new SpeechSynthesisUtterance(item.en); u.lang = 'en-US'; window.speechSynthesis.speak(u);
+        }
+
+        function endGame(winner) {
+            const title = document.getElementById('resultTitle');
+            if (winner === "Draw") title.textContent = "תיקו!";
+            else {
+                title.textContent = `שחקן ${winner} ניצח את הלוח!`;
+                confetti();
+            }
+            document.getElementById('resultModal').classList.add('active');
+        }
+
+        // --- Utils & Vocab Management ---
+        function parseVocab(text) {
+            vocabulary = text.split('\n').map(line => {
+                const parts = line.split(/[-:,/|]|\s{2,}/); 
+                return parts.length >= 2 ? { en: parts[0].trim(), he: parts[1].trim() } : null;
+            }).filter(i => i !== null);
+        }
+
+        window.saveCurrentSet = () => {
+            const name = prompt("שם לפרק:");
+            if (name) {
+                sets[name] = document.getElementById('vocabInput').value;
+                localStorage.setItem('teacher_sets', JSON.stringify(sets));
+                renderSets();
+            }
+        };
+
+        window.loadSet = (name) => { document.getElementById('vocabInput').value = sets[name]; };
+        window.deleteSet = (name) => { if(confirm(`למחוק את ${name}?`)) { delete sets[name]; localStorage.setItem('teacher_sets', JSON.stringify(sets)); renderSets(); } };
+
+        function renderSets() {
+            const container = document.getElementById('setsContainer');
+            container.innerHTML = Object.keys(sets).map(name => `
+                <div class="flex items-center bg-zinc-800 rounded-full px-3 py-1 gap-2 whitespace-nowrap">
+                    <button onclick="loadSet('${name}')" class="text-xs text-white">${name}</button>
+                    <button onclick="deleteSet('${name}')" class="text-red-500 font-bold">×</button>
+                </div>
+            `).join('');
+        }
+
+        window.startGame = (mode) => {
+            parseVocab(document.getElementById('vocabInput').value);
+            if (vocabulary.length < 3) return alert("הכנס לפחות 3 מילים");
+            gameMode = mode;
+            document.getElementById('lobbyModal').classList.remove('active');
+            updateUI();
+        };
+
+        window.saveVocab = () => {
+            parseVocab(document.getElementById('vocabInput').value);
+            if (vocabulary.length >= 3) document.getElementById('vocabModal').classList.remove('active');
+        };
+
+        window.openVocabEditor = () => document.getElementById('vocabModal').classList.add('active');
+        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
+
+        init();
+    </script>
 </body>
 </html>
 
