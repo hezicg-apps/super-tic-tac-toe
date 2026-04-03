@@ -27,19 +27,22 @@
             color: #111; font-weight: 800; z-index: 20;
         }
 
-        /* מרכוז הלוח ודחיפה למעלה */
         #board-container {
-            flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; padding: 5px 0;
+            flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; 
+            padding-bottom: 80px; /* רווח למנוע מהכפתור להסתיר את תחתית הלוח */
         }
+        
         #board-wrapper {
-            width: 94vmin; height: 94vmin; max-width: 460px; max-height: 460px;
+            width: 88vmin; height: 88vmin; max-width: 440px; max-height: 440px;
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
             gap: 4px; padding: 4px; background: #000;
         }
+        
         .sub-grid {
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
             gap: 2px; background-color: #000; position: relative;
         }
+        
         .cell {
             background-color: white; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
             font-weight: 900; font-size: 1.4rem; cursor: default;
@@ -47,19 +50,17 @@
         .cell.can-move { cursor: pointer; background-color: #fff9c4; }
         .active-board { outline: 6px solid #fbbf24; outline-offset: -3px; z-index: 5; }
 
-        .won-overlay {
-            position: absolute; inset: 0; background: rgba(255,255,255,0.9);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 5rem; z-index: 10; font-weight: 900;
-        }
-
-        /* כפתור שאלה מורם מהתחתית */
+        /* כפתור שאלה במיקום קבוע שצף מעל הכל */
         .status-circle {
-            width: 65px; height: 65px; border-radius: 50%; border: 5px solid #111;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px; height: 70px; border-radius: 50%; border: 5px solid #111;
             display: flex; align-items: center; justify-content: center;
-            font-size: 2.2rem; font-weight: 900; cursor: pointer; background: white;
-            margin-bottom: 20px; /* מרווח בטיחות מהקצה */
-            flex-shrink: 0;
+            font-size: 2.5rem; font-weight: 900; cursor: pointer; background: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 100;
         }
 
         dialog { border: 6px solid #111; border-radius: 2.5rem; padding: 0; overflow: hidden; max-width: 90vw; width: 380px; }
@@ -76,7 +77,7 @@
 </head>
 <body>
 
-    <div id="lobby" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6" style="background-color: #2d845c;">
+    <div id="lobby" class="fixed inset-0 z-[110] flex flex-col items-center justify-center p-6" style="background-color: #2d845c;">
         <div class="mb-8 text-center">
             <h1 class="text-6xl font-black text-[#fbbf24] drop-shadow-md">SUPER</h1>
             <h2 class="text-3xl font-bold text-white tracking-widest">TIC TAC TOE</h2>
@@ -91,7 +92,7 @@
 
     <div id="game-screen" class="hidden w-full h-full flex flex-col items-center">
         <div class="game-header">
-            <button onclick="location.reload()" title="בית">
+            <button onclick="location.reload()">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </button>
             <div id="turn-text" class="text-xl">תור: X</div>
@@ -141,7 +142,7 @@
 
     <dialog id="vocab-modal">
         <div class="dialog-content">
-            <h2 class="text-xl font-bold mb-2">הוספת מילים (מילה-תרגום)</h2>
+            <h2 class="text-xl font-bold mb-2">הוספת מילים</h2>
             <textarea id="vocab-input" class="w-full h-40 border-4 border-black rounded-2xl p-3 mb-4 font-bold" dir="ltr"></textarea>
             <button onclick="saveVocab()" class="app-btn btn-yellow !py-2">שמור וחזור</button>
         </div>
