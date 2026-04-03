@@ -3,96 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Tic Tac Toe - 9x9</title>
+    <title>Super Tic Tac Toe - Teacher Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { background: #000; color: #fff; font-family: 'Varela Round', sans-serif; overflow-x: hidden; touch-action: manipulation; }
+        body { background: #f8fafc; color: #1e293b; font-family: 'Varela Round', sans-serif; overflow-x: hidden; touch-action: manipulation; }
+        
         .main-grid {
             display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 12px; width: 95vw; max-width: 500px; margin: 10px auto;
-            background: #333; padding: 10px; border-radius: 12px;
+            gap: 8px; width: 95vw; max-width: 480px; margin: 10px auto;
+            background: #cbd5e1; padding: 8px; border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
+
         .sub-grid {
             display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 4px; background: #222; padding: 4px; border-radius: 8px;
-            position: relative; aspect-ratio: 1;
+            gap: 3px; background: #e2e8f0; padding: 4px; border-radius: 8px;
+            position: relative; aspect-ratio: 1; transition: all 0.3s ease;
         }
+
         .cell {
             aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; font-weight: bold; background: #0a0a0a; border-radius: 4px;
-            cursor: pointer; border: 1px solid #1a1a1a;
+            font-size: 1.4rem; font-weight: bold; background: white; border-radius: 4px;
+            cursor: pointer; transition: background 0.2s; border: 1px solid #f1f5f9;
         }
-        .cell.active-target { border: 2px solid #facc15; box-shadow: inset 0 0 5px #facc15; }
+
+        .cell:hover { background: #f1f5f9; }
+
+        .highlight-grid { 
+            background: #fef08a; /* צהוב בהיר ללוח הפעיל */
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
+            transform: scale(1.02);
+            z-index: 10;
+        }
+
         .sub-grid.won-x::after, .sub-grid.won-o::after {
-            content: attr(data-winner);
-            position: absolute; inset: 0; background: rgba(0,0,0,0.8);
+            position: absolute; inset: 0; 
             display: flex; align-items: center; justify-content: center;
-            font-size: 4rem; border-radius: 8px; z-index: 10;
+            font-size: 4.5rem; border-radius: 8px; z-index: 20;
+            background: rgba(255, 255, 255, 0.85);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .sub-grid.won-x::after { content: "✕"; color: #00f2ff; text-shadow: 0 0 15px #00f2ff; }
-        .sub-grid.won-o::after { content: "◯"; color: #bc13fe; text-shadow: 0 0 15px #bc13fe; }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+
+        .sub-grid.won-x::after { content: "✕"; color: #2563eb; }
+        .sub-grid.won-o::after { content: "◯"; color: #dc2626; }
         
-        .x-neon { color: #00f2ff; } .o-neon { color: #bc13fe; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .x-color { color: #2563eb; } 
+        .o-color { color: #dc2626; }
+
+        .modal { position: fixed; inset: 0; background: rgba(255,255,255,0.98); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal.active { display: flex; }
-        .btn-game { height: 55px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; border: 2px solid #facc15; color: #facc15; }
-        .btn-yellow-solid { background: #facc15; color: #000; }
-        .sets-scroll { display: flex; gap: 8px; overflow-x: auto; width: 100%; padding: 10px 0; scrollbar-width: none; }
-        textarea { background: #050505; color: #0f0; padding: 12px; border: 1px solid #333; width: 100%; height: 180px; border-radius: 10px; font-family: monospace; direction: ltr; }
-        .btn-option { background: #111; border: 2px solid #333; padding: 12px; border-radius: 12px; min-height: 55px; }
-        .highlight-grid { outline: 4px solid #facc15; z-index: 5; }
+
+        .btn-main { 
+            height: 55px; width: 100%; border-radius: 15px; font-weight: bold; 
+            display: flex; align-items: center; justify-content: center; 
+            transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .btn-yellow { background: #facc15; color: #854d0e; border: 2px solid #eab308; }
+        .btn-blue { background: #3b82f6; color: white; }
+        .btn-outline { border: 2px solid #e2e8f0; color: #64748b; }
+
+        .quiz-option { 
+            background: white; border: 2px solid #e2e8f0; padding: 15px; 
+            border-radius: 12px; font-size: 1.2rem; width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        textarea { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px; width: 100%; height: 150px; font-family: monospace; }
+        
+        .sets-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; width: 100%; }
+        .set-chip { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
     </style>
 </head>
 <body>
-    <div id="turnBar" class="h-[60px] flex items-center justify-center font-bold bg-[#111] border-b border-[#222]">
-        <span id="playerDisplay" class="x-neon text-xl">תור השחקן: X</span>
-    </div>
-    
-    <div id="mainBoard" class="main-grid">
-        <!-- 9 Sub-grids will be generated here -->
+
+    <div class="h-[60px] bg-white border-b flex items-center justify-between px-6 shadow-sm">
+        <h1 class="font-black text-blue-600 italic text-xl">SUPER T.T.T</h1>
+        <div id="turnIndicator" class="font-bold x-color">תור: X</div>
     </div>
 
+    <div id="mainBoard" class="main-grid"></div>
+
+    <!-- Lobby Modal -->
     <div id="lobbyModal" class="modal">
-        <h1 class="text-3xl font-black mb-8 italic">SUPER TIC TAC TOE</h1>
-        <div id="lobbyInputs" class="w-full max-w-xs space-y-4">
-            <button onclick="openVocabEditor()" class="btn-game">נהל מילים ופרקים</button>
-            <button onclick="startGame('ai')" class="btn-game btn-yellow-solid">נגד המחשב</button>
-            <button onclick="startGame('friend')" class="btn-game">שני שחקנים בכיתה</button>
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black text-blue-600 italic">SUPER TIC TAC TOE</h1>
+            <p class="text-gray-500">גרסת המורה - לוח 9x9 מלא</p>
+        </div>
+        <div class="w-full max-w-xs space-y-4">
+            <button onclick="openVocabEditor()" class="btn-main btn-outline">ניהול אוצר מילים</button>
+            <button onclick="startGame('ai')" class="btn-main btn-yellow">משחק נגד המחשב</button>
+            <button onclick="startGame('friend')" class="btn-main btn-blue">שני שחקנים (כיתה)</button>
         </div>
     </div>
 
+    <!-- Vocab Editor Modal -->
     <div id="vocabModal" class="modal">
-        <div class="w-full max-w-md bg-zinc-900 p-6 rounded-2xl">
-            <h2 class="text-white font-bold mb-4">פרקים ומילים</h2>
+        <div class="w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl border">
+            <h2 class="text-xl font-bold mb-4">עריכת תוכן</h2>
             <div id="setsContainer" class="sets-scroll"></div>
             <textarea id="vocabInput" placeholder="Apple - תפוח"></textarea>
-            <button onclick="saveCurrentSet()" class="text-yellow-500 text-xs mt-2 underline">שמור כפרק חדש</button>
-            <div class="mt-6 flex gap-2">
-                <button onclick="saveVocab()" class="btn-game btn-yellow-solid">השתמש ברשימה</button>
-                <button onclick="closeModal('vocabModal')" class="btn-game border-zinc-700 text-zinc-500">סגור</button>
+            <div class="flex justify-between items-center mt-2">
+                <button onclick="saveCurrentSet()" class="text-blue-600 text-sm font-bold">שמור כפרק חדש</button>
+                <div class="flex gap-2">
+                    <button onclick="exportData()" class="text-[10px] text-gray-400">Export</button>
+                    <button onclick="importData()" class="text-[10px] text-gray-400">Import</button>
+                </div>
+            </div>
+            <div class="mt-8 flex gap-3">
+                <button onclick="saveVocab()" class="btn-main btn-blue flex-1">אישור</button>
+                <button onclick="closeModal('vocabModal')" class="btn-main btn-outline flex-1">ביטול</button>
             </div>
         </div>
     </div>
 
+    <!-- Quiz Modal -->
     <div id="quizModal" class="modal">
-        <h2 id="questionText" class="text-5xl font-black mb-12 text-center w-full px-4 break-words"></h2>
-        <div id="optionsContainer" class="w-full max-w-xs px-2"></div>
+        <div class="text-center mb-10 px-4">
+            <span class="text-gray-400 uppercase tracking-widest text-sm">תרגם את המילה:</span>
+            <h2 id="questionText" class="text-5xl font-black text-slate-800 mt-2 break-words leading-tight"></h2>
+        </div>
+        <div id="optionsContainer" class="w-full max-w-xs space-y-3"></div>
     </div>
-    
+
+    <!-- Result Modal -->
     <div id="resultModal" class="modal">
-        <h2 id="resultTitle" class="text-5xl font-bold mb-10 text-center"></h2>
-        <button onclick="location.reload()" class="btn-game bg-white text-black w-48 font-bold">שחק שוב</button>
+        <div id="resultIcon" class="text-8xl mb-6">🏆</div>
+        <h2 id="resultTitle" class="text-4xl font-black text-slate-800 mb-8"></h2>
+        <button onclick="location.reload()" class="btn-main btn-blue w-48">משחק חדש</button>
     </div>
 
     <script>
         let vocabulary = [], gameMode = "ai", currentPlayer = "X";
-        let mainBoard = Array(9).fill(null).map(() => Array(9).fill("")); // 9 grids of 9 cells
-        let gridWinners = Array(9).fill(""); // Winners of each sub-grid
-        let activeGrid = -1; // -1 means player can move in any grid
+        let mainBoardData = Array(9).fill(null).map(() => Array(9).fill(""));
+        let gridWinners = Array(9).fill("");
+        let activeGrid = -1;
         let pendingMove = null;
-        let sets = JSON.parse(localStorage.getItem('teacher_sets')) || {};
+        let sets = JSON.parse(localStorage.getItem('teacher_sets')) || { "צבעים": "Red - אדום\nBlue - כחול\nGreen - ירוק" };
 
         function init() {
             const board = document.getElementById('mainBoard');
@@ -114,7 +163,7 @@
         }
 
         function handleMoveRequest(gridIdx, cellIdx) {
-            if (gridWinners[gridIdx] !== "" || mainBoard[gridIdx][cellIdx] !== "") return;
+            if (gridWinners[gridIdx] !== "" || mainBoardData[gridIdx][cellIdx] !== "") return;
             if (activeGrid !== -1 && activeGrid !== gridIdx) return;
             
             pendingMove = { gridIdx, cellIdx };
@@ -123,79 +172,65 @@
 
         function executeMove() {
             const { gridIdx, cellIdx } = pendingMove;
-            mainBoard[gridIdx][cellIdx] = currentPlayer;
+            mainBoardData[gridIdx][cellIdx] = currentPlayer;
             
-            // Update UI
             const cell = document.querySelector(`#grid-${gridIdx}`).children[cellIdx];
             cell.textContent = currentPlayer === "X" ? "✕" : "◯";
-            cell.className = `cell ${currentPlayer === "X" ? "x-neon" : "o-neon"}`;
+            cell.className = `cell ${currentPlayer === "X" ? "x-color" : "o-color"}`;
 
-            // Check if sub-grid is won
-            const subWinner = checkWinner(mainBoard[gridIdx]);
+            const subWinner = checkWinner(mainBoardData[gridIdx]);
             if (subWinner) {
                 gridWinners[gridIdx] = subWinner;
                 const gridDiv = document.getElementById(`grid-${gridIdx}`);
                 gridDiv.classList.add(subWinner === "X" ? 'won-x' : 'won-o');
                 
-                // Check if main game is won
                 const finalWinner = checkWinner(gridWinners);
-                if (finalWinner) {
-                    endGame(finalWinner);
-                    return;
-                }
+                if (finalWinner) return endGame(finalWinner);
             }
 
-            // Route to next grid
-            if (gridWinners[cellIdx] === "") {
-                activeGrid = cellIdx;
-            } else {
-                activeGrid = -1; // Any open grid
+            // Routing
+            activeGrid = (gridWinners[cellIdx] === "" && mainBoardData[cellIdx].some(c => c === "")) ? cellIdx : -1;
+
+            // Tie Check
+            if (gridWinners.every(w => w !== "") || (activeGrid === -1 && gridWinners.every((w, i) => w !== "" || mainBoardData[i].every(c => c !== "")))) {
+                return endGame("Draw");
             }
 
-            // Check for Draw (Board full)
-            if (gridWinners.every(w => w !== "") || (activeGrid === -1 && gridWinners.every((w, i) => w !== "" || mainBoard[i].every(c => c !== "")))) {
-                 endGame("Draw");
-                 return;
-            }
-
-            // Switch Player
             currentPlayer = currentPlayer === "X" ? "O" : "X";
             updateUI();
 
-            if (gameMode === "ai" && currentPlayer === "O") {
-                setTimeout(aiMove, 600);
-            }
+            if (gameMode === "ai" && currentPlayer === "O") setTimeout(aiMove, 600);
         }
 
         function aiMove() {
-            let gIdx = activeGrid === -1 ? Math.floor(Math.random()*9) : activeGrid;
-            while(gridWinners[gIdx] !== "" || mainBoard[gIdx].every(c => c !== "")) {
-                gIdx = Math.floor(Math.random()*9);
+            let gIdx = activeGrid === -1 ? -1 : activeGrid;
+            if (gIdx === -1) {
+                const availableGrids = gridWinners.map((w, i) => (w === "" && mainBoardData[i].some(c => c === "")) ? i : null).filter(v => v !== null);
+                gIdx = availableGrids[Math.floor(Math.random() * availableGrids.length)];
             }
             
-            const empties = mainBoard[gIdx].map((v, i) => v === "" ? i : null).filter(v => v !== null);
-            const cIdx = empties[Math.floor(Math.random()*empties.length)];
+            const empties = mainBoardData[gIdx].map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            const cIdx = empties[Math.floor(Math.random() * empties.length)];
             
             pendingMove = { gridIdx: gIdx, cellIdx: cIdx };
-            // In AI mode O doesn't quiz, or quizzes automatically
             executeMove();
         }
 
         function checkWinner(b) {
-            const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            for (let p of w) if (b[p[0]] && b[p[0]] === b[p[1]] && b[p[0]] === b[p[2]]) return b[p[0]];
+            const patterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for (let p of patterns) if (b[p[0]] && b[p[0]] === b[p[1]] && b[p[0]] === b[p[2]]) return b[p[0]];
             return null;
         }
 
         function updateUI() {
-            const display = document.getElementById('playerDisplay');
-            display.textContent = `תור השחקן: ${currentPlayer}`;
-            display.className = currentPlayer === "X" ? "x-neon text-xl" : "o-neon text-xl";
+            const indicator = document.getElementById('turnIndicator');
+            indicator.textContent = `תור: ${currentPlayer}`;
+            indicator.className = `font-bold ${currentPlayer === "X" ? "x-color" : "o-color"}`;
 
             for(let i=0; i<9; i++) {
                 const grid = document.getElementById(`grid-${i}`);
                 grid.classList.remove('highlight-grid');
-                if (activeGrid === i || (activeGrid === -1 && gridWinners[i] === "")) {
+                if (activeGrid === i || (activeGrid === -1 && gridWinners[i] === "" && mainBoardData[i].some(c => c === ""))) {
                     grid.classList.add('highlight-grid');
                 }
             }
@@ -212,21 +247,23 @@
             
             const qText = document.getElementById('questionText');
             qText.textContent = item.en;
-            qText.style.fontSize = item.en.length > 10 ? '2.5rem' : '4rem';
+            // Handle long words
+            qText.style.fontSize = item.en.length > 12 ? '2.5rem' : '4rem';
 
             const container = document.getElementById('optionsContainer');
             container.innerHTML = '';
             opts.forEach(o => {
                 const b = document.createElement('button');
-                b.className = "btn-option w-full mb-2 text-center break-words leading-tight";
-                b.style.fontSize = o.length > 12 ? '1.1rem' : '1.3rem';
+                b.className = "quiz-option hover:border-blue-400 hover:text-blue-600 transition-all text-center";
+                // Handle long translations
+                if (o.length > 15) b.style.fontSize = '1rem';
                 b.textContent = o;
                 b.onclick = () => {
                     if (o === item.he) {
                         document.getElementById('quizModal').classList.remove('active');
                         executeMove();
                     } else {
-                        alert("טעות! התור עובר");
+                        alert("טעות! התור עובר ליריב.");
                         document.getElementById('quizModal').classList.remove('active');
                         currentPlayer = currentPlayer === "X" ? "O" : "X";
                         updateUI();
@@ -241,15 +278,19 @@
 
         function endGame(winner) {
             const title = document.getElementById('resultTitle');
-            if (winner === "Draw") title.textContent = "תיקו!";
-            else {
-                title.textContent = `שחקן ${winner} ניצח את הלוח!`;
+            const icon = document.getElementById('resultIcon');
+            if (winner === "Draw") {
+                title.textContent = "זה תיקו!";
+                icon.textContent = "🤝";
+            } else {
+                title.textContent = `שחקן ${winner} ניצח!`;
+                icon.textContent = "🏆";
                 confetti();
             }
             document.getElementById('resultModal').classList.add('active');
         }
 
-        // --- Utils & Vocab Management ---
+        // --- Logic for Vocab & Sets ---
         function parseVocab(text) {
             vocabulary = text.split('\n').map(line => {
                 const parts = line.split(/[-:,/|]|\s{2,}/); 
@@ -258,7 +299,7 @@
         }
 
         window.saveCurrentSet = () => {
-            const name = prompt("שם לפרק:");
+            const name = prompt("שם לפרק החדש:");
             if (name) {
                 sets[name] = document.getElementById('vocabInput').value;
                 localStorage.setItem('teacher_sets', JSON.stringify(sets));
@@ -272,16 +313,16 @@
         function renderSets() {
             const container = document.getElementById('setsContainer');
             container.innerHTML = Object.keys(sets).map(name => `
-                <div class="flex items-center bg-zinc-800 rounded-full px-3 py-1 gap-2 whitespace-nowrap">
-                    <button onclick="loadSet('${name}')" class="text-xs text-white">${name}</button>
-                    <button onclick="deleteSet('${name}')" class="text-red-500 font-bold">×</button>
+                <div class="set-chip">
+                    <button onclick="loadSet('${name}')">${name}</button>
+                    <button onclick="deleteSet('${name}')" class="font-bold text-red-400">×</button>
                 </div>
             `).join('');
         }
 
         window.startGame = (mode) => {
             parseVocab(document.getElementById('vocabInput').value);
-            if (vocabulary.length < 3) return alert("הכנס לפחות 3 מילים");
+            if (vocabulary.length < 3) return alert("נא להזין לפחות 3 מילים.");
             gameMode = mode;
             document.getElementById('lobbyModal').classList.remove('active');
             updateUI();
@@ -292,6 +333,8 @@
             if (vocabulary.length >= 3) document.getElementById('vocabModal').classList.remove('active');
         };
 
+        window.exportData = () => { navigator.clipboard.writeText(JSON.stringify(sets)); alert("הנתונים הועתקו ללוח."); };
+        window.importData = () => { const d = prompt("הדבק קוד גיבוי:"); if(d) { sets = {...sets, ...JSON.parse(d)}; renderSets(); } };
         window.openVocabEditor = () => document.getElementById('vocabModal').classList.add('active');
         window.closeModal = (id) => document.getElementById(id).classList.remove('active');
 
@@ -299,4 +342,6 @@
     </script>
 </body>
 </html>
+
+
 
