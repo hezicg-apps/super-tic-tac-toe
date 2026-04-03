@@ -8,8 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Varela Round', sans-serif; background-color: #2d845c; margin: 0; overflow: hidden; height: 100vh; }
+        body { font-family: 'Varela Round', sans-serif; background-color: #2d845c; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; align-items: center; }
         
+        /* כפתורי אפליקציה */
         .app-btn {
             background-color: white; color: #111; border: 4px solid #111; border-radius: 9999px;
             padding: 0.8rem 2rem; font-weight: 800; font-size: 1.2rem; width: 100%; max-width: 300px;
@@ -27,26 +28,30 @@
             color: #111; font-weight: 800;
         }
 
+        /* עיצוב הלוח - מרכוז וביטול עיגול פינות */
+        #board-container {
+            flex-grow: 1; display: flex; align-items: center; justify-content: center; width: 100%;
+        }
         #board-wrapper {
             width: 92vmin; height: 92vmin; max-width: 480px; max-height: 480px;
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-            gap: 8px; padding: 8px; background: rgba(0,0,0,0.1); border-radius: 1rem;
+            gap: 4px; padding: 4px; background: #000; /* רשת שחורה */
         }
         .sub-grid {
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-            gap: 3px; background-color: rgba(255,255,255,0.1); padding: 3px; border-radius: 8px; position: relative;
+            gap: 2px; background-color: #000; position: relative;
         }
         .cell {
             background-color: white; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 1.4rem; border-radius: 4px;
+            font-weight: 900; font-size: 1.4rem; cursor: default;
         }
-        .cell.can-move { cursor: pointer; background-color: #fff9c4; border: 2px dashed #fbbf24; }
-        .active-board { box-shadow: 0 0 0 4px #fbbf24; background-color: rgba(251, 191, 36, 0.2); }
+        .cell.can-move { cursor: pointer; background-color: #fff9c4; }
+        .active-board { outline: 6px solid #fbbf24; outline-offset: -3px; z-index: 5; }
 
         .won-overlay {
-            position: absolute; inset: 0; background: rgba(255,255,255,0.92);
+            position: absolute; inset: 0; background: rgba(255,255,255,0.9);
             display: flex; align-items: center; justify-content: center;
-            font-size: 5rem; z-index: 10; border-radius: 8px; font-weight: 900;
+            font-size: 5rem; z-index: 10; font-weight: 900;
         }
 
         dialog { border: 6px solid #111; border-radius: 2.5rem; padding: 0; overflow: hidden; max-width: 90vw; width: 400px; }
@@ -54,24 +59,26 @@
         .dialog-content { padding: 1.5rem; }
 
         .status-circle {
-            width: 75px; height: 75px; border-radius: 50%; border: 5px solid #111;
+            width: 70px; height: 70px; border-radius: 50%; border: 5px solid #111;
             display: flex; align-items: center; justify-content: center;
-            font-size: 2.8rem; font-weight: 900; cursor: pointer; background: white;
+            font-size: 2.5rem; font-weight: 900; cursor: pointer; background: white; margin-bottom: 1.5rem;
         }
 
         .player-x { color: #2563eb; }
         .player-o { color: #dc2626; }
         
-        /* סגנונות חיווי תשובה */
         .answer-correct { background-color: #22c55e !important; color: white !important; }
         .answer-wrong { background-color: #ef4444 !important; color: white !important; }
+
+        .speaker-btn { font-size: 2rem; cursor: pointer; background: none; border: none; padding: 0; }
+        .word-ltr { direction: ltr; display: inline-block; }
     </style>
 </head>
 <body>
 
-    <div id="lobby" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-app-green">
+    <div id="lobby" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-app-green" style="background-color: #2d845c;">
         <div class="mb-10 text-center">
-            <h1 class="text-7xl font-black text-app-yellow">SUPER</h1>
+            <h1 class="text-7xl font-black text-[#fbbf24] drop-shadow-md">SUPER</h1>
             <h2 class="text-4xl font-bold text-white tracking-widest">TIC TAC TOE</h2>
         </div>
         <div class="space-y-4 w-full">
@@ -82,28 +89,28 @@
         </div>
     </div>
 
-    <div id="game-screen" class="hidden fixed inset-0 flex flex-col items-center">
+    <div id="game-screen" class="hidden w-full h-full flex flex-col items-center">
         <div class="game-header">
             <button onclick="location.reload()" title="בית">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </button>
             <div id="turn-text" class="text-xl">תור: X</div>
-            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold">i</button>
+            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold italic">i</button>
         </div>
 
-        <div id="board-wrapper" class="mt-4"></div>
-
-        <div class="mt-8">
-            <div id="action-btn" onclick="handleActionClick()" class="status-circle">?</div>
+        <div id="board-container">
+            <div id="board-wrapper"></div>
         </div>
+
+        <div id="action-btn" onclick="handleActionClick()" class="status-circle">?</div>
     </div>
 
     <dialog id="quiz-modal">
         <div class="dialog-content text-center">
-            <p class="text-gray-500 font-bold mb-2">כיצד אומרים בעברית:</p>
-            <div class="flex items-center justify-center mb-6">
-                <button onclick="speakWord()" class="ml-3 p-2 bg-gray-100 rounded-full border-2 border-black">🔊</button>
-                <h3 id="quiz-word" class="text-5xl font-black">WORD</h3>
+            <p class="text-gray-500 font-bold mb-4 text-xl">כיצד אומרים בעברית:</p>
+            <div class="flex items-center justify-center gap-4 mb-8" dir="ltr">
+                <button onclick="speakWord()" class="speaker-btn">🔊</button>
+                <h3 id="quiz-word" class="text-5xl font-black word-ltr">WORD</h3>
             </div>
             <div id="quiz-options" class="space-y-3"></div>
         </div>
@@ -112,13 +119,12 @@
     <dialog id="help-modal">
         <div class="dialog-content text-center">
             <h2 class="text-2xl font-bold mb-4">איך משחקים?</h2>
-            <div class="text-right text-lg space-y-2 mb-6 leading-relaxed">
-                <p>1. לחצו על כפתור <b>השאלה</b> בתחתית המסך.</p>
-                <p>2. ענו נכון על השאלה כדי להפוך אותו ל<b>סימן קריאה</b>.</p>
-                <p>3. כעת תוכלו לסמן X או O בלוח המודגש בצהוב.</p>
-                <p>4. המיקום שתבחרו קובע באיזה לוח היריב ישחק!</p>
+            <div class="text-right text-lg space-y-3 mb-6 px-2">
+                <p>1️⃣ לחצו על כפתור <b>השאלה (?)</b> למטה.</p>
+                <p>2️⃣ ענו נכון כדי לקבל את <b>סימן הקריאה (!)</b>.</p>
+                <p>3️⃣ כעת תוכלו לסמן בלוח המודגש בצהוב.</p>
+                <p>4️⃣ המיקום שתבחרו בתוך הלוח הקטן, יקבע באיזה לוח היריב ישחק!</p>
             </div>
-            <a href="https://www.youtube.com/shorts/xLcUtltJk2c" target="_blank" class="app-btn !bg-red-600 !text-white !border-black mb-4 !text-base">צפייה בסרטון הדרכה 🎬</a>
             <button onclick="closeModal('help-modal')" class="app-btn btn-yellow !py-3">הבנתי!</button>
         </div>
     </dialog>
@@ -135,8 +141,8 @@
 
     <dialog id="vocab-modal">
         <div class="dialog-content">
-            <h2 class="text-xl font-bold mb-2">הוספת מילים</h2>
-            <textarea id="vocab-input" class="w-full h-48 border-4 border-black rounded-2xl p-3 mb-4 font-bold"></textarea>
+            <h2 class="text-xl font-bold mb-2">הוספת מילים (זוג בשורה: מילה-תרגום)</h2>
+            <textarea id="vocab-input" class="w-full h-48 border-4 border-black rounded-2xl p-3 mb-4 font-bold" dir="ltr"></textarea>
             <button onclick="saveVocab()" class="app-btn btn-yellow !py-2">שמור וחזור</button>
         </div>
     </dialog>
@@ -153,18 +159,30 @@
             currentWord: ''
         };
 
+        // אתחול הקראה (חשוב למובייל)
+        function initSpeech() {
+            const ut = new SpeechSynthesisUtterance('');
+            window.speechSynthesis.speak(ut);
+        }
+
+        function speakWord() {
+            if (!state.currentWord) return;
+            window.speechSynthesis.cancel(); // עצירת הקראות קודמות
+            const ut = new SpeechSynthesisUtterance(state.currentWord);
+            ut.lang = 'en-US';
+            ut.rate = 0.9;
+            window.speechSynthesis.speak(ut);
+        }
+
         function openModal(id) { 
             const modal = document.getElementById(id);
-            if(id === 'quiz-modal') modal.style.borderColor = state.player === 'X' ? '#2563eb' : '#dc2626';
+            if(id === 'quiz-modal') {
+                modal.style.borderColor = state.player === 'X' ? '#2563eb' : '#dc2626';
+                initSpeech(); // הכנת המנוע לדיבור
+            }
             modal.showModal(); 
         }
         function closeModal(id) { document.getElementById(id).close(); }
-
-        function speakWord() {
-            const ut = new SpeechSynthesisUtterance(state.currentWord);
-            ut.lang = 'en-US';
-            window.speechSynthesis.speak(ut);
-        }
 
         function startGame(mode) {
             state.mode = mode;
@@ -199,10 +217,10 @@
             const q = vocab[Math.floor(Math.random()*vocab.length)];
             state.currentWord = q.word;
             document.getElementById('quiz-word').innerText = q.word;
-            document.getElementById('quiz-word').className = `text-5xl font-black ${state.player === 'X' ? 'text-app-blue' : 'text-app-red'}`;
+            document.getElementById('quiz-word').className = `text-5xl font-black word-ltr ${state.player === 'X' ? 'text-app-blue' : 'text-app-red'}`;
 
             const opts = [q.translation];
-            while(opts.length < 4) {
+            while(opts.length < 4 && opts.length < vocab.length + 1) {
                 const r = vocab[Math.floor(Math.random()*vocab.length)].translation;
                 if(!opts.includes(r)) opts.push(r);
             }
@@ -212,7 +230,7 @@
             container.innerHTML = '';
             opts.forEach(o => {
                 const btn = document.createElement('button');
-                btn.className = "app-btn !py-2 !text-base";
+                btn.className = "app-btn !py-2 !text-xl";
                 btn.innerText = o;
                 btn.onclick = () => {
                     if(o === q.translation) {
@@ -221,14 +239,13 @@
                             closeModal('quiz-modal');
                             state.phase = 'MOVE';
                             updateUI();
-                        }, 600);
+                        }, 500);
                     } else {
                         btn.classList.add('answer-wrong');
                         setTimeout(() => {
                             closeModal('quiz-modal');
-                            alert(`טעות! התרגום הוא: ${q.translation}`);
                             changePlayer();
-                        }, 600);
+                        }, 500);
                     }
                 };
                 container.appendChild(btn);
@@ -254,7 +271,7 @@
             
             if(checkWin(state.mainBoard)) {
                 endGame(`ניצחון לשחקן ${state.player}!`);
-            } else if (!state.mainBoard.includes(null)) {
+            } else if (!state.mainBoard.includes(null) && !state.grids.flat().includes(null)) {
                 endGame("תיקו!");
             } else {
                 changePlayer();
@@ -265,16 +282,18 @@
             state.player = state.player === 'X' ? 'O' : 'X';
             state.phase = 'ASK';
             updateUI();
-            if(state.mode === 'pvc' && state.player === 'O') setTimeout(aiMove, 1000);
+            if(state.mode === 'pvc' && state.player === 'O') setTimeout(aiMove, 800);
         }
 
         function aiMove() {
-            let bi = state.nextBoard === -1 || state.mainBoard[state.nextBoard] !== null ? 
+            let bi = (state.nextBoard === -1 || state.mainBoard[state.nextBoard] !== null) ? 
                 state.mainBoard.map((v, i) => v === null ? i : null).filter(v => v !== null)[0] : state.nextBoard;
             const validCells = state.grids[bi].map((v, i) => v === null ? i : null).filter(v => v !== null);
-            const ci = validCells[Math.floor(Math.random() * validCells.length)];
-            state.phase = 'MOVE'; 
-            handleCellClick(bi, ci);
+            if(validCells.length > 0) {
+                const ci = validCells[Math.floor(Math.random() * validCells.length)];
+                state.phase = 'MOVE'; 
+                handleCellClick(bi, ci);
+            }
         }
 
         function checkWin(b) {
@@ -303,8 +322,9 @@
         }
 
         function endGame(msg) {
-            document.getElementById('end-game-title').innerText = msg;
-            document.getElementById('end-game-title').className = `text-4xl font-black mb-8 ${state.player === 'X' ? 'text-app-blue' : 'text-app-red'}`;
+            const title = document.getElementById('end-game-title');
+            title.innerText = msg;
+            title.className = `text-4xl font-black mb-8 ${state.player === 'X' ? 'text-app-blue' : 'text-app-red'}`;
             openModal('end-game-modal');
         }
 
@@ -321,14 +341,17 @@
 
         function saveVocab() {
             const lines = document.getElementById('vocab-input').value.split('\n');
-            vocab = lines.filter(l => l.includes('-')).map(l => {
+            const newVocab = lines.filter(l => l.includes('-')).map(l => {
                 const [w, t] = l.split('-').map(s => s.trim());
                 return { word: w, translation: t };
             });
+            if(newVocab.length > 0) vocab = newVocab;
             closeModal('vocab-modal');
         }
 
-        window.onload = () => { document.getElementById('vocab-input').value = vocab.map(v => `${v.word} - ${v.translation}`).join('\n'); };
+        window.onload = () => { 
+            document.getElementById('vocab-input').value = vocab.map(v => `${v.word} - ${v.translation}`).join('\n'); 
+        };
     </script>
 </body>
 </html>
