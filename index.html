@@ -27,69 +27,53 @@
             color: #111; font-weight: 800; z-index: 20;
         }
 
-        /* האות i נשארת ישרה */
-        .info-icon {
-            font-style: normal;
-            font-weight: bold;
-        }
+        .info-icon { font-style: normal; font-weight: bold; }
 
-        /* מיכל לכפתור השאלה בין הכותרת לגריד */
+        /* מיכל שדוחף את הכפתור לאמצע הדרך */
         .action-container {
-            width: 100%;
+            flex: 0.6; /* נותן מרחב גמיש בין הכותרת ללוח */
             display: flex;
+            align-items: center;
             justify-content: center;
-            padding: 0.5rem 0;
+            width: 100%;
         }
 
-        /* כפתור שאלה עגול */
+        /* כפתור שאלה גדול יותר וללא צל */
         .status-circle {
-            width: 60px; height: 60px; border-radius: 50%; border: 5px solid #111;
+            width: 80px; height: 80px; border-radius: 50%; border: 5px solid #111;
             display: flex; align-items: center; justify-content: center;
-            font-size: 2.2rem; font-weight: 900; cursor: pointer; background: white;
-            box-shadow: 0 6px 0 0 #111; transition: all 0.1s;
+            font-size: 3rem; font-weight: 900; cursor: pointer; background: white;
+            box-shadow: none; /* הורדת הצל */
+            transition: transform 0.1s;
             flex-shrink: 0;
         }
-        .status-circle:active { transform: translateY(3px); box-shadow: 0 3px 0 0 #111; }
+        .status-circle:active { transform: scale(0.95); }
 
         #board-container {
-            flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; 
-            padding-bottom: 10px;
+            flex: 1.4; display: flex; align-items: flex-start; justify-content: center; width: 100%; 
         }
         
         #board-wrapper {
-            width: 90vmin; height: 90vmin; max-width: 450px; max-height: 450px;
+            width: 90vmin; height: 90vmin; max-width: 440px; max-height: 440px;
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
             gap: 4px; padding: 4px; background: #000; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
         
-        .sub-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-            gap: 2px; background-color: #000; position: relative;
-        }
-        
-        .cell {
-            background-color: white; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 1.4rem; cursor: default;
-        }
+        .sub-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 2px; background-color: #000; position: relative; }
+        .cell { background-color: white; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.4rem; }
         .cell.can-move { cursor: pointer; background-color: #fff9c4; }
         .active-board { outline: 6px solid #fbbf24; outline-offset: -3px; z-index: 5; }
 
-        .won-overlay {
-            position: absolute; inset: 0; background: rgba(255,255,255,0.92);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 5rem; z-index: 10; font-weight: 900;
-        }
+        .won-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.92); display: flex; align-items: center; justify-content: center; font-size: 5rem; z-index: 10; font-weight: 900; }
+        
+        .player-x { color: #2563eb; }
+        .player-o { color: #dc2626; }
 
         dialog { border: 6px solid #111; border-radius: 2.5rem; padding: 0; overflow: hidden; max-width: 90vw; width: 380px; }
         dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
         .dialog-content { padding: 1.2rem; }
-
-        .player-x { color: #2563eb; }
-        .player-o { color: #dc2626; }
         .answer-correct { background-color: #22c55e !important; color: white !important; }
         .answer-wrong { background-color: #ef4444 !important; color: white !important; }
-        .speaker-btn { font-size: 2rem; cursor: pointer; background: none; border: none; padding: 0; }
-        .word-ltr { direction: ltr; display: inline-block; }
     </style>
 </head>
 <body>
@@ -129,8 +113,8 @@
         <div class="dialog-content text-center">
             <p class="text-gray-500 font-bold mb-3">כיצד אומרים בעברית:</p>
             <div class="flex items-center justify-center gap-4 mb-6" dir="ltr">
-                <button onclick="speakWord()" class="speaker-btn">🔊</button>
-                <h3 id="quiz-word" class="text-4xl font-black word-ltr">WORD</h3>
+                <button onclick="speakWord()" class="text-3xl">🔊</button>
+                <h3 id="quiz-word" class="text-4xl font-black">WORD</h3>
             </div>
             <div id="quiz-options" class="space-y-3"></div>
         </div>
@@ -140,10 +124,9 @@
         <div class="dialog-content text-center">
             <h2 class="text-2xl font-bold mb-4">איך משחקים?</h2>
             <div class="text-right text-base space-y-2 mb-6">
-                <p>1️⃣ לחצו על כפתור <b>השאלה (?)</b> בראש המסך.</p>
+                <p>1️⃣ לחצו על כפתור <b>השאלה (?)</b> הגדול.</p>
                 <p>2️⃣ ענו נכון כדי לקבל את <b>סימן הקריאה (!)</b>.</p>
                 <p>3️⃣ כעת תוכלו לסמן בלוח המודגש בצהוב.</p>
-                <p>4️⃣ המיקום שתבחרו בתוך הלוח הקטן, יקבע באיזה לוח היריב ישחק!</p>
             </div>
             <button onclick="closeModal('help-modal')" class="app-btn btn-yellow !py-3">הבנתי!</button>
         </div>
@@ -152,28 +135,24 @@
     <dialog id="end-game-modal">
         <div class="dialog-content text-center">
             <h2 id="end-game-title" class="text-4xl font-black mb-8">ניצחון!</h2>
-            <div class="flex flex-col gap-4">
-                <button onclick="resetGame()" class="app-btn btn-yellow">משחק חוזר</button>
-                <button onclick="location.reload()" class="app-btn">חזרה לבית</button>
-            </div>
+            <button onclick="location.reload()" class="app-btn btn-yellow">משחק חדש</button>
         </div>
     </dialog>
 
     <dialog id="vocab-modal">
         <div class="dialog-content">
-            <h2 class="text-xl font-bold mb-2">הוספת מילים</h2>
+            <h2 class="text-xl font-bold mb-2">הוספת מילים (Word - תרגום)</h2>
             <textarea id="vocab-input" class="w-full h-40 border-4 border-black rounded-2xl p-3 mb-4 font-bold" dir="ltr"></textarea>
-            <button onclick="saveVocab()" class="app-btn btn-yellow !py-2">שמור וחזור</button>
+            <button onclick="saveVocab()" class="app-btn btn-yellow !py-2">שמור</button>
         </div>
     </dialog>
 
     <script>
-        // לוגיקת המשחק (ללא שינוי)
         let vocab = [{word:'Red',translation:'אדום'},{word:'Blue',translation:'כחול'},{word:'Sun',translation:'שמש'},{word:'Apple',translation:'תפוח'},{word:'Dog',translation:'כלב'},{word:'Cat',translation:'חתול'}];
         let state = { player: 'X', grids: Array(9).fill(null).map(() => Array(9).fill(null)), mainBoard: Array(9).fill(null), nextBoard: -1, phase: 'ASK', mode: 'pvp', currentWord: '' };
 
         function speakWord() { if (!state.currentWord) return; window.speechSynthesis.cancel(); const ut = new SpeechSynthesisUtterance(state.currentWord); ut.lang = 'en-US'; window.speechSynthesis.speak(ut); }
-        function openModal(id) { const modal = document.getElementById(id); modal.showModal(); }
+        function openModal(id) { document.getElementById(id).showModal(); }
         function closeModal(id) { document.getElementById(id).close(); }
 
         function startGame(mode) {
@@ -246,7 +225,7 @@
                 div.appendChild(ov);
             }
             state.nextBoard = state.mainBoard[ci] === null ? ci : -1;
-            if(checkWin(state.mainBoard)) { endGame(`ניצחון לשחקן ${state.player}!`); }
+            if(checkWin(state.mainBoard)) { endGame(`ניצחון ל-${state.player}!`); }
             else if (!state.mainBoard.includes(null) && !state.grids.flat().includes(null)) { endGame("תיקו!"); }
             else { changePlayer(); }
         }
@@ -276,9 +255,10 @@
         function updateUI() {
             const btn = document.getElementById('action-btn');
             btn.innerText = state.phase === 'ASK' ? '?' : '!';
-            btn.style.borderColor = state.player === 'X' ? '#2563eb' : '#dc2626';
             btn.style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
+            btn.style.borderColor = state.player === 'X' ? '#2563eb' : '#dc2626';
             document.getElementById('turn-text').innerText = `תור: ${state.player}`;
+            document.getElementById('turn-text').className = `text-xl ${state.player === 'X' ? 'text-blue-600' : 'text-red-600'}`;
             for(let i=0; i<9; i++) {
                 const bg = document.getElementById(`board-${i}`);
                 bg.classList.remove('active-board');
@@ -292,7 +272,6 @@
         }
 
         function endGame(msg) { document.getElementById('end-game-title').innerText = msg; openModal('end-game-modal'); }
-        function resetGame() { state.grids = Array(9).fill(null).map(() => Array(9).fill(null)); state.mainBoard = Array(9).fill(null); state.nextBoard = -1; state.player = 'X'; state.phase = 'ASK'; closeModal('end-game-modal'); initBoard(); updateUI(); }
         function saveVocab() { const lines = document.getElementById('vocab-input').value.split('\n'); const newVocab = lines.filter(l => l.includes('-')).map(l => { const [w, t] = l.split('-').map(s => s.trim()); return { word: w, translation: t }; }); if(newVocab.length > 0) vocab = newVocab; closeModal('vocab-modal'); }
 
         window.onload = () => { document.getElementById('vocab-input').value = vocab.map(v => `${v.word} - ${v.translation}`).join('\n'); };
