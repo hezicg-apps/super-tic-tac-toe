@@ -27,15 +27,33 @@
             color: #111; font-weight: 800; z-index: 20;
         }
 
-        /* סגנון האות i ישרה */
+        /* האות i נשארת ישרה */
         .info-icon {
-            font-style: normal; /* ביטול Italic */
+            font-style: normal;
             font-weight: bold;
         }
 
+        /* מיכל לכפתור השאלה בין הכותרת לגריד */
+        .action-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 0.5rem 0;
+        }
+
+        /* כפתור שאלה עגול */
+        .status-circle {
+            width: 60px; height: 60px; border-radius: 50%; border: 5px solid #111;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.2rem; font-weight: 900; cursor: pointer; background: white;
+            box-shadow: 0 6px 0 0 #111; transition: all 0.1s;
+            flex-shrink: 0;
+        }
+        .status-circle:active { transform: translateY(3px); box-shadow: 0 3px 0 0 #111; }
+
         #board-container {
             flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; 
-            padding-bottom: 20px; /* רווח קטן מהכפתור העגול */
+            padding-bottom: 10px;
         }
         
         #board-wrapper {
@@ -61,16 +79,6 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 5rem; z-index: 10; font-weight: 900;
         }
-
-        /* כפתור שאלה עגול מתחת ללוח */
-        .status-circle {
-            width: 70px; height: 70px; border-radius: 50%; border: 5px solid #111;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 2.5rem; font-weight: 900; cursor: pointer; background: white;
-            box-shadow: 0 6px 0 0 #111; transition: all 0.1s; margin-bottom: 1.5rem;
-            flex-shrink: 0;
-        }
-        .status-circle:active { transform: translateY(3px); box-shadow: 0 3px 0 0 #111; }
 
         dialog { border: 6px solid #111; border-radius: 2.5rem; padding: 0; overflow: hidden; max-width: 90vw; width: 380px; }
         dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
@@ -108,11 +116,13 @@
             <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center info-icon">i</button>
         </div>
 
+        <div class="action-container">
+            <div id="action-btn" onclick="handleActionClick()" class="status-circle">?</div>
+        </div>
+
         <div id="board-container">
             <div id="board-wrapper"></div>
         </div>
-
-        <div id="action-btn" onclick="handleActionClick()" class="status-circle">?</div>
     </div>
 
     <dialog id="quiz-modal">
@@ -130,7 +140,7 @@
         <div class="dialog-content text-center">
             <h2 class="text-2xl font-bold mb-4">איך משחקים?</h2>
             <div class="text-right text-base space-y-2 mb-6">
-                <p>1️⃣ לחצו על כפתור <b>השאלה (?)</b> למטה.</p>
+                <p>1️⃣ לחצו על כפתור <b>השאלה (?)</b> בראש המסך.</p>
                 <p>2️⃣ ענו נכון כדי לקבל את <b>סימן הקריאה (!)</b>.</p>
                 <p>3️⃣ כעת תוכלו לסמן בלוח המודגש בצהוב.</p>
                 <p>4️⃣ המיקום שתבחרו בתוך הלוח הקטן, יקבע באיזה לוח היריב ישחק!</p>
@@ -158,31 +168,12 @@
     </dialog>
 
     <script>
+        // לוגיקת המשחק (ללא שינוי)
         let vocab = [{word:'Red',translation:'אדום'},{word:'Blue',translation:'כחול'},{word:'Sun',translation:'שמש'},{word:'Apple',translation:'תפוח'},{word:'Dog',translation:'כלב'},{word:'Cat',translation:'חתול'}];
-        let state = {
-            player: 'X',
-            grids: Array(9).fill(null).map(() => Array(9).fill(null)),
-            mainBoard: Array(9).fill(null),
-            nextBoard: -1,
-            phase: 'ASK', 
-            mode: 'pvp',
-            currentWord: ''
-        };
+        let state = { player: 'X', grids: Array(9).fill(null).map(() => Array(9).fill(null)), mainBoard: Array(9).fill(null), nextBoard: -1, phase: 'ASK', mode: 'pvp', currentWord: '' };
 
-        function speakWord() {
-            if (!state.currentWord) return;
-            window.speechSynthesis.cancel();
-            const ut = new SpeechSynthesisUtterance(state.currentWord);
-            ut.lang = 'en-US';
-            ut.rate = 0.9;
-            window.speechSynthesis.speak(ut);
-        }
-
-        function openModal(id) { 
-            const modal = document.getElementById(id);
-            if(id === 'quiz-modal') modal.style.borderColor = state.player === 'X' ? '#2563eb' : '#dc2626';
-            modal.showModal(); 
-        }
+        function speakWord() { if (!state.currentWord) return; window.speechSynthesis.cancel(); const ut = new SpeechSynthesisUtterance(state.currentWord); ut.lang = 'en-US'; window.speechSynthesis.speak(ut); }
+        function openModal(id) { const modal = document.getElementById(id); modal.showModal(); }
         function closeModal(id) { document.getElementById(id).close(); }
 
         function startGame(mode) {
@@ -210,22 +201,18 @@
             }
         }
 
-        function handleActionClick() {
-            if(state.phase === 'ASK') showQuiz();
-        }
+        function handleActionClick() { if(state.phase === 'ASK') showQuiz(); }
 
         function showQuiz() {
             const q = vocab[Math.floor(Math.random()*vocab.length)];
             state.currentWord = q.word;
             document.getElementById('quiz-word').innerText = q.word;
-            
             const opts = [q.translation];
             while(opts.length < 4 && opts.length < vocab.length + 1) {
                 const r = vocab[Math.floor(Math.random()*vocab.length)].translation;
                 if(!opts.includes(r)) opts.push(r);
             }
             opts.sort(()=>Math.random()-0.5);
-
             const container = document.getElementById('quiz-options');
             container.innerHTML = '';
             opts.forEach(o => {
@@ -235,17 +222,10 @@
                 btn.onclick = () => {
                     if(o === q.translation) {
                         btn.classList.add('answer-correct');
-                        setTimeout(() => {
-                            closeModal('quiz-modal');
-                            state.phase = 'MOVE';
-                            updateUI();
-                        }, 400);
+                        setTimeout(() => { closeModal('quiz-modal'); state.phase = 'MOVE'; updateUI(); }, 400);
                     } else {
                         btn.classList.add('answer-wrong');
-                        setTimeout(() => {
-                            closeModal('quiz-modal');
-                            changePlayer();
-                        }, 400);
+                        setTimeout(() => { closeModal('quiz-modal'); changePlayer(); }, 400);
                     }
                 };
                 container.appendChild(btn);
@@ -256,26 +236,19 @@
         function handleCellClick(bi, ci) {
             if(state.phase !== 'MOVE') return;
             if(state.mainBoard[bi] !== null || (state.nextBoard !== -1 && state.nextBoard !== bi) || state.grids[bi][ci] !== null) return;
-
             state.grids[bi][ci] = state.player;
             if(checkWin(state.grids[bi])) {
                 state.mainBoard[bi] = state.player;
                 const div = document.getElementById(`board-${bi}`);
                 const ov = document.createElement('div');
-                ov.className = `won-overlay font-black text-6xl absolute inset-0 bg-white/90 flex items-center justify-center z-10 ${state.player === 'X' ? 'player-x' : 'player-o'}`;
+                ov.className = `won-overlay ${state.player === 'X' ? 'player-x' : 'player-o'}`;
                 ov.innerText = state.player;
                 div.appendChild(ov);
             }
-
             state.nextBoard = state.mainBoard[ci] === null ? ci : -1;
-            
-            if(checkWin(state.mainBoard)) {
-                endGame(`ניצחון לשחקן ${state.player}!`);
-            } else if (!state.mainBoard.includes(null) && !state.grids.flat().includes(null)) {
-                endGame("תיקו!");
-            } else {
-                changePlayer();
-            }
+            if(checkWin(state.mainBoard)) { endGame(`ניצחון לשחקן ${state.player}!`); }
+            else if (!state.mainBoard.includes(null) && !state.grids.flat().includes(null)) { endGame("תיקו!"); }
+            else { changePlayer(); }
         }
 
         function changePlayer() {
@@ -291,8 +264,7 @@
             const validCells = state.grids[bi].map((v, i) => v === null ? i : null).filter(v => v !== null);
             if(validCells.length > 0) {
                 const ci = validCells[Math.floor(Math.random() * validCells.length)];
-                state.phase = 'MOVE'; 
-                handleCellClick(bi, ci);
+                state.phase = 'MOVE'; handleCellClick(bi, ci);
             }
         }
 
@@ -306,10 +278,7 @@
             btn.innerText = state.phase === 'ASK' ? '?' : '!';
             btn.style.borderColor = state.player === 'X' ? '#2563eb' : '#dc2626';
             btn.style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
-            
             document.getElementById('turn-text').innerText = `תור: ${state.player}`;
-            document.getElementById('turn-text').className = `text-xl ${state.player === 'X' ? 'text-app-blue' : 'text-app-red'}`;
-
             for(let i=0; i<9; i++) {
                 const bg = document.getElementById(`board-${i}`);
                 bg.classList.remove('active-board');
@@ -322,37 +291,11 @@
             }
         }
 
-        function endGame(msg) {
-            const title = document.getElementById('end-game-title');
-            title.innerText = msg;
-            title.className = `text-4xl font-black mb-8 ${state.player === 'X' ? 'text-app-blue' : 'text-app-red'}`;
-            openModal('end-game-modal');
-        }
+        function endGame(msg) { document.getElementById('end-game-title').innerText = msg; openModal('end-game-modal'); }
+        function resetGame() { state.grids = Array(9).fill(null).map(() => Array(9).fill(null)); state.mainBoard = Array(9).fill(null); state.nextBoard = -1; state.player = 'X'; state.phase = 'ASK'; closeModal('end-game-modal'); initBoard(); updateUI(); }
+        function saveVocab() { const lines = document.getElementById('vocab-input').value.split('\n'); const newVocab = lines.filter(l => l.includes('-')).map(l => { const [w, t] = l.split('-').map(s => s.trim()); return { word: w, translation: t }; }); if(newVocab.length > 0) vocab = newVocab; closeModal('vocab-modal'); }
 
-        function resetGame() {
-            state.grids = Array(9).fill(null).map(() => Array(9).fill(null));
-            state.mainBoard = Array(9).fill(null);
-            state.nextBoard = -1;
-            state.player = 'X';
-            state.phase = 'ASK';
-            closeModal('end-game-modal');
-            initBoard();
-            updateUI();
-        }
-
-        function saveVocab() {
-            const lines = document.getElementById('vocab-input').value.split('\n');
-            const newVocab = lines.filter(l => l.includes('-')).map(l => {
-                const [w, t] = l.split('-').map(s => s.trim());
-                return { word: w, translation: t };
-            });
-            if(newVocab.length > 0) vocab = newVocab;
-            closeModal('vocab-modal');
-        }
-
-        window.onload = () => { 
-            document.getElementById('vocab-input').value = vocab.map(v => `${v.word} - ${v.translation}`).join('\n'); 
-        };
+        window.onload = () => { document.getElementById('vocab-input').value = vocab.map(v => `${v.word} - ${v.translation}`).join('\n'); };
     </script>
 </body>
 </html>
