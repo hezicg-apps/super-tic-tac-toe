@@ -27,23 +27,15 @@
             color: #111; font-weight: 800; z-index: 20;
         }
 
-        /* סרגל כפתור השאלה החדש */
-        .action-bar {
-            width: 92%; max-width: 500px; margin: 0.2rem auto 0.5rem auto;
-            display: flex; justify-content: center; z-index: 20;
+        /* סגנון האות i ישרה */
+        .info-icon {
+            font-style: normal; /* ביטול Italic */
+            font-weight: bold;
         }
-
-        .status-pill {
-            background-color: white; border: 4px solid #111; border-radius: 9999px;
-            padding: 0.5rem 2.5rem; font-size: 2rem; font-weight: 900;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 0 0 #111; transition: all 0.1s; min-width: 100px;
-        }
-        .status-pill:active { transform: translateY(2px); box-shadow: 0 2px 0 0 #111; }
 
         #board-container {
-            flex: 1; display: flex; align-items: flex-start; justify-content: center; width: 100%; 
-            padding-top: 10px;
+            flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; 
+            padding-bottom: 20px; /* רווח קטן מהכפתור העגול */
         }
         
         #board-wrapper {
@@ -63,6 +55,22 @@
         }
         .cell.can-move { cursor: pointer; background-color: #fff9c4; }
         .active-board { outline: 6px solid #fbbf24; outline-offset: -3px; z-index: 5; }
+
+        .won-overlay {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.92);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 5rem; z-index: 10; font-weight: 900;
+        }
+
+        /* כפתור שאלה עגול מתחת ללוח */
+        .status-circle {
+            width: 70px; height: 70px; border-radius: 50%; border: 5px solid #111;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 900; cursor: pointer; background: white;
+            box-shadow: 0 6px 0 0 #111; transition: all 0.1s; margin-bottom: 1.5rem;
+            flex-shrink: 0;
+        }
+        .status-circle:active { transform: translateY(3px); box-shadow: 0 3px 0 0 #111; }
 
         dialog { border: 6px solid #111; border-radius: 2.5rem; padding: 0; overflow: hidden; max-width: 90vw; width: 380px; }
         dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
@@ -97,16 +105,14 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </button>
             <div id="turn-text" class="text-xl">תור: X</div>
-            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold italic">i</button>
-        </div>
-
-        <div class="action-bar">
-            <div id="action-btn" onclick="handleActionClick()" class="status-pill">?</div>
+            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center info-icon">i</button>
         </div>
 
         <div id="board-container">
             <div id="board-wrapper"></div>
         </div>
+
+        <div id="action-btn" onclick="handleActionClick()" class="status-circle">?</div>
     </div>
 
     <dialog id="quiz-modal">
@@ -124,7 +130,7 @@
         <div class="dialog-content text-center">
             <h2 class="text-2xl font-bold mb-4">איך משחקים?</h2>
             <div class="text-right text-base space-y-2 mb-6">
-                <p>1️⃣ לחצו על כפתור <b>השאלה (?)</b> למעלה.</p>
+                <p>1️⃣ לחצו על כפתור <b>השאלה (?)</b> למטה.</p>
                 <p>2️⃣ ענו נכון כדי לקבל את <b>סימן הקריאה (!)</b>.</p>
                 <p>3️⃣ כעת תוכלו לסמן בלוח המודגש בצהוב.</p>
                 <p>4️⃣ המיקום שתבחרו בתוך הלוח הקטן, יקבע באיזה לוח היריב ישחק!</p>
@@ -302,7 +308,7 @@
             btn.style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
             
             document.getElementById('turn-text').innerText = `תור: ${state.player}`;
-            document.getElementById('turn-text').className = `text-xl ${state.player === 'X' ? 'text-blue-600' : 'text-red-600'}`;
+            document.getElementById('turn-text').className = `text-xl ${state.player === 'X' ? 'text-app-blue' : 'text-app-red'}`;
 
             for(let i=0; i<9; i++) {
                 const bg = document.getElementById(`board-${i}`);
@@ -319,6 +325,7 @@
         function endGame(msg) {
             const title = document.getElementById('end-game-title');
             title.innerText = msg;
+            title.className = `text-4xl font-black mb-8 ${state.player === 'X' ? 'text-app-blue' : 'text-app-red'}`;
             openModal('end-game-modal');
         }
 
