@@ -28,6 +28,8 @@
             color: #111; font-weight: 800; z-index: 20;
         }
 
+        .info-icon { font-style: normal; font-weight: bold; }
+
         .action-container { flex: 0.5; display: flex; align-items: center; justify-content: center; width: 100%; }
 
         .status-circle {
@@ -37,7 +39,7 @@
             transition: transform 0.1s; flex-shrink: 0;
         }
 
-        #board-container { flex: 1.5; display: flex; align-items: flex-start; justify-content: center; width: 100%; }
+        #board-container { flex: 1.5; display: flex; align-items: flex-start; justify-content: center; width: 100%; padding-bottom: 2rem;}
         
         #board-wrapper {
             width: 94vmin; height: 94vmin; max-width: 460px; max-height: 460px;
@@ -61,10 +63,12 @@
         .player-x { color: #2563eb; }
         .player-o { color: #dc2626; }
 
+        /* מודאלים */
         dialog { border: 6px solid #111; border-radius: 2.5rem; padding: 0; overflow: hidden; max-width: 90vw; width: 380px; }
         dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
         .dialog-content { padding: 1.5rem; }
 
+        /* כפתור הוידאו האדום */
         .video-btn {
             background-color: #ff0000; color: white; border-radius: 15px; padding: 10px;
             display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -74,6 +78,19 @@
         /* מחלקות עבור משוב צבעים */
         .correct-choice { background-color: #22c55e !important; color: white !important; border-color: #166534 !important; box-shadow: 0 4px 0 0 #166534 !important; }
         .wrong-choice { background-color: #ef4444 !important; color: white !important; border-color: #991b1b !important; box-shadow: 0 4px 0 0 #991b1b !important; }
+
+        /* פוטר */
+        footer {
+            width: 100%;
+            background-color: #111;
+            color: #ccc;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            position: fixed;
+            bottom: 0;
+            z-index: 50;
+        }
     </style>
 </head>
 <body>
@@ -93,7 +110,9 @@
 
     <div id="game-screen" class="hidden w-full h-full flex flex-col items-center">
         <div class="game-header">
-            <button onclick="location.reload()">🏠</button>
+            <button onclick="location.reload()" title="חזרה לראשי">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </button>
             <div id="turn-text" class="text-xl">תור: X</div>
             <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold">i</button>
         </div>
@@ -106,6 +125,10 @@
             <div id="board-wrapper"></div>
         </div>
     </div>
+
+    <footer>
+        פותח ע''י חזי כהן גלמן 2026
+    </footer>
 
     <dialog id="help-modal">
         <div class="dialog-content text-center">
