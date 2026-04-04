@@ -27,24 +27,13 @@
             color: #111; font-weight: 800; z-index: 20;
         }
 
-        .info-icon { font-style: normal; font-weight: bold; }
-
-        .action-container {
-            flex: 0.5; display: flex; align-items: center; justify-content: center; width: 100%;
-        }
-
         .status-circle {
             width: 80px; height: 80px; border-radius: 50%; border: 5px solid #111;
             display: flex; align-items: center; justify-content: center;
             font-size: 3rem; font-weight: 900; cursor: pointer; background: white;
-            box-shadow: none; transition: transform 0.1s; flex-shrink: 0;
+            transition: transform 0.1s; flex-shrink: 0;
         }
-        .status-circle:active { transform: scale(0.95); }
 
-        #board-container {
-            flex: 1.5; display: flex; align-items: flex-start; justify-content: center; width: 100%; 
-        }
-        
         #board-wrapper {
             width: 94vmin; height: 94vmin; max-width: 460px; max-height: 460px;
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
@@ -54,13 +43,9 @@
         .sub-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); 
             gap: 2px; background-color: #111; position: relative; border-radius: 8px; overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
         }
         
-        .active-board { 
-            outline: 6px solid #fbbf24; outline-offset: 2px; z-index: 5;
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
-        }
+        .active-board { outline: 6px solid #fbbf24; outline-offset: 2px; z-index: 5; }
 
         .cell { background-color: white; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.4rem; }
         .cell.can-move { cursor: pointer; background-color: #fffde7; }
@@ -70,11 +55,13 @@
         .player-x { color: #2563eb; }
         .player-o { color: #dc2626; }
 
-        dialog { border: 6px solid #111; border-radius: 2.5rem; padding: 0; overflow: hidden; max-width: 90vw; width: 380px; }
+        dialog { border: 6px solid #111; border-radius: 2.5rem; padding: 0; overflow: hidden; max-width: 90vw; width: 400px; }
         dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
         .dialog-content { padding: 1.2rem; }
-        .answer-correct { background-color: #22c55e !important; color: white !important; }
-        .answer-wrong { background-color: #ef4444 !important; color: white !important; }
+        
+        .video-container {
+            width: 100%; border: 4px solid #111; border-radius: 1.5rem; overflow: hidden; margin-bottom: 1rem; background: #000;
+        }
     </style>
 </head>
 <body>
@@ -94,21 +81,38 @@
 
     <div id="game-screen" class="hidden w-full h-full flex flex-col items-center">
         <div class="game-header">
-            <button onclick="location.reload()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            </button>
+            <button onclick="location.reload()">🏠</button>
             <div id="turn-text" class="text-xl">תור: X</div>
-            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center info-icon">i</button>
+            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold">i</button>
         </div>
-
-        <div class="action-container">
+        <div class="flex-[0.5] flex items-center justify-center w-full">
             <div id="action-btn" onclick="handleActionClick()" class="status-circle">?</div>
         </div>
-
-        <div id="board-container">
+        <div id="board-container" class="flex-[1.5] flex items-start justify-center w-full">
             <div id="board-wrapper"></div>
         </div>
     </div>
+
+    <dialog id="help-modal">
+        <div class="dialog-content text-center">
+            <h2 class="text-2xl font-bold mb-3">איך משחקים?</h2>
+            
+            <div class="video-container">
+                <video id="help-video" controls class="w-full h-auto">
+                    <source src="https://hezicg-apps.github.io/super-tic-tac-toe/how-to-play.mp4" type="video/mp4">
+                    הדפדפן שלך לא תומך בווידאו.
+                </video>
+            </div>
+
+            <div class="text-right text-sm space-y-1 mb-4 px-2">
+                <p>1️⃣ לחצו על ה-<b>?</b> הצבעוני וענו על השאלה.</p>
+                <p>2️⃣ תשובה נכונה תהפוך אותו ל-<b>!</b> ותאפשר לכם לסמן.</p>
+                <p>3️⃣ המטרה: ליצור רצף של 3 לוחות קטנים מנצחים.</p>
+            </div>
+            
+            <button onclick="closeHelpModal()" class="app-btn btn-yellow !py-3">סגור והבנתי!</button>
+        </div>
+    </dialog>
 
     <dialog id="quiz-modal">
         <div class="dialog-content text-center">
@@ -118,18 +122,6 @@
                 <h3 id="quiz-word" class="text-4xl font-black">WORD</h3>
             </div>
             <div id="quiz-options" class="space-y-3"></div>
-        </div>
-    </dialog>
-
-    <dialog id="help-modal">
-        <div class="dialog-content text-center">
-            <h2 class="text-2xl font-bold mb-4">איך משחקים?</h2>
-            <div class="text-right text-base space-y-2 mb-6">
-                <p>1️⃣ לחצו על כפתור <b>השאלה (?)</b> הגדול.</p>
-                <p>2️⃣ ענו נכון כדי לקבל את <b>סימן הקריאה (!)</b>.</p>
-                <p>3️⃣ כעת תוכלו לסמן בלוח המודגש בצהוב.</p>
-            </div>
-            <button onclick="closeModal('help-modal')" class="app-btn btn-yellow !py-3">הבנתי!</button>
         </div>
     </dialog>
 
@@ -149,6 +141,14 @@
     </dialog>
 
     <script>
+        // פונקציה לסגירת מודאל העזרה ועצירת הווידאו
+        function closeHelpModal() {
+            const video = document.getElementById('help-video');
+            video.pause();
+            video.currentTime = 0; // מחזיר להתחלה
+            closeModal('help-modal');
+        }
+
         let vocab = [{word:'Red',translation:'אדום'},{word:'Blue',translation:'כחול'},{word:'Sun',translation:'שמש'},{word:'Apple',translation:'תפוח'},{word:'Dog',translation:'כלב'},{word:'Cat',translation:'חתול'}];
         let state = { player: 'X', grids: Array(9).fill(null).map(() => Array(9).fill(null)), mainBoard: Array(9).fill(null), nextBoard: -1, phase: 'ASK', mode: 'pvp', currentWord: '' };
 
@@ -186,12 +186,9 @@
         function showQuiz() {
             const q = vocab[Math.floor(Math.random()*vocab.length)];
             state.currentWord = q.word;
-            
-            // עדכון צבע המילה לפי השחקן
             const wordElem = document.getElementById('quiz-word');
             wordElem.innerText = q.word;
             wordElem.style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
-
             const opts = [q.translation];
             while(opts.length < 4 && opts.length < vocab.length + 1) {
                 const r = vocab[Math.floor(Math.random()*vocab.length)].translation;
