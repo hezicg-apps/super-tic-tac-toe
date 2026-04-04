@@ -18,7 +18,6 @@
         }
         .app-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 0 #111; }
         .btn-yellow { background-color: #fbbf24; }
-        .btn-red { background-color: #ef4444; color: white; }
         .btn-inverse-yellow { background-color: #111; color: #fbbf24; border-color: #fbbf24; }
 
         .game-header {
@@ -30,16 +29,21 @@
 
         .info-icon { font-style: normal; font-weight: bold; }
 
-        .action-container { flex: 0.5; display: flex; align-items: center; justify-content: center; width: 100%; }
+        .action-container {
+            flex: 0.5; display: flex; align-items: center; justify-content: center; width: 100%;
+        }
 
         .status-circle {
             width: 80px; height: 80px; border-radius: 50%; border: 5px solid #111;
             display: flex; align-items: center; justify-content: center;
             font-size: 3rem; font-weight: 900; cursor: pointer; background: white;
-            transition: transform 0.1s; flex-shrink: 0;
+            box-shadow: none; transition: transform 0.1s; flex-shrink: 0;
         }
+        .status-circle:active { transform: scale(0.95); }
 
-        #board-container { flex: 1.5; display: flex; align-items: flex-start; justify-content: center; width: 100%; padding-bottom: 2rem;}
+        #board-container {
+            flex: 1.5; display: flex; align-items: flex-start; justify-content: center; width: 100%; 
+        }
         
         #board-wrapper {
             width: 94vmin; height: 94vmin; max-width: 460px; max-height: 460px;
@@ -53,7 +57,10 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
         }
         
-        .active-board { outline: 6px solid #fbbf24; outline-offset: 2px; z-index: 5; box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+        .active-board { 
+            outline: 6px solid #fbbf24; outline-offset: 2px; z-index: 5;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+        }
 
         .cell { background-color: white; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.4rem; }
         .cell.can-move { cursor: pointer; background-color: #fffde7; }
@@ -63,34 +70,11 @@
         .player-x { color: #2563eb; }
         .player-o { color: #dc2626; }
 
-        /* מודאלים */
         dialog { border: 6px solid #111; border-radius: 2.5rem; padding: 0; overflow: hidden; max-width: 90vw; width: 380px; }
         dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
-        .dialog-content { padding: 1.5rem; }
-
-        /* כפתור הוידאו האדום */
-        .video-btn {
-            background-color: #ff0000; color: white; border-radius: 15px; padding: 10px;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            font-weight: bold; margin: 15px 0; cursor: pointer; border: none; width: 100%;
-        }
-
-        /* מחלקות עבור משוב צבעים */
-        .correct-choice { background-color: #22c55e !important; color: white !important; border-color: #166534 !important; box-shadow: 0 4px 0 0 #166534 !important; }
-        .wrong-choice { background-color: #ef4444 !important; color: white !important; border-color: #991b1b !important; box-shadow: 0 4px 0 0 #991b1b !important; }
-
-        /* פוטר */
-        footer {
-            width: 100%;
-            background-color: #111;
-            color: #ccc;
-            text-align: center;
-            padding: 0.5rem;
-            font-size: 0.8rem;
-            position: fixed;
-            bottom: 0;
-            z-index: 50;
-        }
+        .dialog-content { padding: 1.2rem; }
+        .answer-correct { background-color: #22c55e !important; color: white !important; }
+        .answer-wrong { background-color: #ef4444 !important; color: white !important; }
     </style>
 </head>
 <body>
@@ -110,11 +94,11 @@
 
     <div id="game-screen" class="hidden w-full h-full flex flex-col items-center">
         <div class="game-header">
-            <button onclick="location.reload()" title="חזרה לראשי">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <button onclick="location.reload()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </button>
             <div id="turn-text" class="text-xl">תור: X</div>
-            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold">i</button>
+            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center info-icon">i</button>
         </div>
 
         <div class="action-container">
@@ -126,23 +110,24 @@
         </div>
     </div>
 
-    <footer>
-        פותח ע''י חזי כהן גלמן 2026
-    </footer>
+    <dialog id="quiz-modal">
+        <div class="dialog-content text-center">
+            <p class="text-gray-500 font-bold mb-3">כיצד אומרים בעברית:</p>
+            <div class="flex items-center justify-center gap-4 mb-6" dir="ltr">
+                <button onclick="speakWord()" class="text-3xl">🔊</button>
+                <h3 id="quiz-word" class="text-4xl font-black">WORD</h3>
+            </div>
+            <div id="quiz-options" class="space-y-3"></div>
+        </div>
+    </dialog>
 
     <dialog id="help-modal">
         <div class="dialog-content text-center">
-            <h2 class="text-2xl font-bold mb-2">איך משחקים?</h2>
-            
-            <a href="https://youtube.com" target="_blank" class="video-btn">
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 4-8 4z"/></svg>
-                <span>צפייה בסרטון הסבר</span>
-            </a>
-
-            <div class="text-right text-sm space-y-2 mb-6 bg-gray-100 p-3 rounded-xl border-2 border-black">
-                <p>• ענו על שאלה כדי לקבל אפשרות לזוז.</p>
-                <p>• המיקום שתבחרו בלוח הקטן קובע באיזה לוח היריב ישחק.</p>
-                <p>• המטרה: לנצח ב-3 לוחות בשורה!</p>
+            <h2 class="text-2xl font-bold mb-4">איך משחקים?</h2>
+            <div class="text-right text-base space-y-2 mb-6">
+                <p>1️⃣ לחצו על כפתור <b>השאלה (?)</b> הגדול.</p>
+                <p>2️⃣ ענו נכון כדי לקבל את <b>סימן הקריאה (!)</b>.</p>
+                <p>3️⃣ כעת תוכלו לסמן בלוח המודגש בצהוב.</p>
             </div>
             <button onclick="closeModal('help-modal')" class="app-btn btn-yellow !py-3">הבנתי!</button>
         </div>
@@ -150,19 +135,8 @@
 
     <dialog id="end-game-modal">
         <div class="dialog-content text-center">
-            <h2 id="end-game-title" class="text-4xl font-black mb-8">תיקו!</h2>
-            <div class="space-y-4">
-                <button onclick="resetGame()" class="app-btn btn-yellow">משחק חוזר</button>
-                <button onclick="location.reload()" class="app-btn">חזרה לבית</button>
-            </div>
-        </div>
-    </dialog>
-
-    <dialog id="quiz-modal">
-        <div class="dialog-content text-center">
-            <p class="text-gray-500 font-bold mb-2">כיצד אומרים:</p>
-            <h3 id="quiz-word" class="text-4xl font-black mb-6">WORD</h3>
-            <div id="quiz-options" class="space-y-3"></div>
+            <h2 id="end-game-title" class="text-4xl font-black mb-8">ניצחון!</h2>
+            <button onclick="location.reload()" class="app-btn btn-yellow">משחק חדש</button>
         </div>
     </dialog>
 
@@ -176,8 +150,9 @@
 
     <script>
         let vocab = [{word:'Red',translation:'אדום'},{word:'Blue',translation:'כחול'},{word:'Sun',translation:'שמש'},{word:'Apple',translation:'תפוח'},{word:'Dog',translation:'כלב'},{word:'Cat',translation:'חתול'}];
-        let state = { player: 'X', grids: Array(9).fill(null).map(() => Array(9).fill(null)), mainBoard: Array(9).fill(null), nextBoard: -1, phase: 'ASK', mode: 'pvp' };
+        let state = { player: 'X', grids: Array(9).fill(null).map(() => Array(9).fill(null)), mainBoard: Array(9).fill(null), nextBoard: -1, phase: 'ASK', mode: 'pvp', currentWord: '' };
 
+        function speakWord() { if (!state.currentWord) return; window.speechSynthesis.cancel(); const ut = new SpeechSynthesisUtterance(state.currentWord); ut.lang = 'en-US'; window.speechSynthesis.speak(ut); }
         function openModal(id) { document.getElementById(id).showModal(); }
         function closeModal(id) { document.getElementById(id).close(); }
 
@@ -210,7 +185,13 @@
 
         function showQuiz() {
             const q = vocab[Math.floor(Math.random()*vocab.length)];
-            document.getElementById('quiz-word').innerText = q.word;
+            state.currentWord = q.word;
+            
+            // עדכון צבע המילה לפי השחקן
+            const wordElem = document.getElementById('quiz-word');
+            wordElem.innerText = q.word;
+            wordElem.style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
+
             const opts = [q.translation];
             while(opts.length < 4 && opts.length < vocab.length + 1) {
                 const r = vocab[Math.floor(Math.random()*vocab.length)].translation;
@@ -219,29 +200,17 @@
             opts.sort(()=>Math.random()-0.5);
             const container = document.getElementById('quiz-options');
             container.innerHTML = '';
-            
             opts.forEach(o => {
                 const btn = document.createElement('button');
                 btn.className = "app-btn !py-2 !text-lg";
                 btn.innerText = o;
                 btn.onclick = () => {
-                    // ביטול אפשרות ללחיצה כפולה בזמן הפידבק
-                    const allBtns = container.querySelectorAll('button');
-                    allBtns.forEach(b => b.style.pointerEvents = 'none');
-
                     if(o === q.translation) {
-                        btn.classList.add('correct-choice');
-                        setTimeout(() => {
-                            closeModal('quiz-modal');
-                            state.phase = 'MOVE';
-                            updateUI();
-                        }, 600);
+                        btn.classList.add('answer-correct');
+                        setTimeout(() => { closeModal('quiz-modal'); state.phase = 'MOVE'; updateUI(); }, 400);
                     } else {
-                        btn.classList.add('wrong-choice');
-                        setTimeout(() => {
-                            closeModal('quiz-modal');
-                            changePlayer();
-                        }, 600);
+                        btn.classList.add('answer-wrong');
+                        setTimeout(() => { closeModal('quiz-modal'); changePlayer(); }, 400);
                     }
                 };
                 container.appendChild(btn);
@@ -252,9 +221,7 @@
         function handleCellClick(bi, ci) {
             if(state.phase !== 'MOVE') return;
             if(state.mainBoard[bi] !== null || (state.nextBoard !== -1 && state.nextBoard !== bi) || state.grids[bi][ci] !== null) return;
-            
             state.grids[bi][ci] = state.player;
-            
             if(checkWin(state.grids[bi])) {
                 state.mainBoard[bi] = state.player;
                 const div = document.getElementById(`board-${bi}`);
@@ -263,20 +230,10 @@
                 ov.innerText = state.player;
                 div.appendChild(ov);
             }
-
             state.nextBoard = state.mainBoard[ci] === null ? ci : -1;
-
-            if(checkWin(state.mainBoard)) { 
-                endGame(`ניצחון ל-${state.player}!`); 
-            } else if (isBoardFull()) {
-                endGame("תיקו!");
-            } else {
-                changePlayer();
-            }
-        }
-
-        function isBoardFull() {
-            return state.grids.every((g, i) => state.mainBoard[i] !== null || g.every(c => c !== null));
+            if(checkWin(state.mainBoard)) { endGame(`ניצחון ל-${state.player}!`); }
+            else if (!state.mainBoard.includes(null) && !state.grids.flat().includes(null)) { endGame("תיקו!"); }
+            else { changePlayer(); }
         }
 
         function changePlayer() {
@@ -291,7 +248,8 @@
                 state.mainBoard.map((v, i) => v === null ? i : null).filter(v => v !== null)[0] : state.nextBoard;
             const validCells = state.grids[bi].map((v, i) => v === null ? i : null).filter(v => v !== null);
             if(validCells.length > 0) {
-                state.phase = 'MOVE'; handleCellClick(bi, validCells[0]);
+                const ci = validCells[Math.floor(Math.random() * validCells.length)];
+                state.phase = 'MOVE'; handleCellClick(bi, ci);
             }
         }
 
@@ -306,7 +264,7 @@
             btn.style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
             btn.style.borderColor = state.player === 'X' ? '#2563eb' : '#dc2626';
             document.getElementById('turn-text').innerText = `תור: ${state.player}`;
-            
+            document.getElementById('turn-text').className = `text-xl ${state.player === 'X' ? 'text-blue-600' : 'text-red-600'}`;
             for(let i=0; i<9; i++) {
                 const bg = document.getElementById(`board-${i}`);
                 bg.classList.remove('active-board');
@@ -319,28 +277,8 @@
             }
         }
 
-        function endGame(msg) { 
-            document.getElementById('end-game-title').innerText = msg; 
-            openModal('end-game-modal'); 
-        }
-
-        function resetGame() {
-            state = { player: 'X', grids: Array(9).fill(null).map(() => Array(9).fill(null)), mainBoard: Array(9).fill(null), nextBoard: -1, phase: 'ASK', mode: state.mode };
-            closeModal('end-game-modal');
-            initBoard();
-            updateUI();
-        }
-
-        function saveVocab() {
-            const lines = document.getElementById('vocab-input').value.split('\n');
-            const newVocab = lines.filter(l => l.includes('-')).map(l => {
-                const [w, t] = l.split('-').map(s => s.trim());
-                return { word: w, translation: t };
-            });
-            if(newVocab.length > 0) vocab = newVocab;
-            closeModal('vocab-modal');
-        }
-
+        function endGame(msg) { document.getElementById('end-game-title').innerText = msg; openModal('end-game-modal'); }
+        function saveVocab() { const lines = document.getElementById('vocab-input').value.split('\n'); const newVocab = lines.filter(l => l.includes('-')).map(l => { const [w, t] = l.split('-').map(s => s.trim()); return { word: w, translation: t }; }); if(newVocab.length > 0) vocab = newVocab; closeModal('vocab-modal'); }
         window.onload = () => { document.getElementById('vocab-input').value = vocab.map(v => `${v.word} - ${v.translation}`).join('\n'); };
     </script>
 </body>
