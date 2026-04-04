@@ -59,13 +59,22 @@
         dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
         .dialog-content { padding: 1.2rem; }
         
+        /* עיצוב לנגן יוטיוב אנכי */
         .video-container {
-            width: 100%; max-width: 240px; margin: 0 auto 1rem; border: 4px solid #111; 
+            width: 100%; max-width: 220px; margin: 0 auto 1rem; border: 4px solid #111; 
             border-radius: 1.5rem; overflow: hidden; background: #000; aspect-ratio: 9/16;
+            position: relative;
         }
+        .video-container iframe { position: absolute; top:0; left:0; width:100%; height:100%; }
         
         .answer-correct { background-color: #22c55e !important; color: white !important; }
         .answer-wrong { background-color: #ef4444 !important; color: white !important; }
+
+        /* עיצוב פוטר נקי */
+        footer {
+            position: fixed; bottom: 10px; width: 100%; text-align: center;
+            color: white; font-size: 0.8rem; opacity: 0.9; pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -102,10 +111,7 @@
             <h2 class="text-2xl font-bold mb-3">איך משחקים?</h2>
             
             <div class="video-container">
-                <video id="help-video" controls playsinline style="width: 100%; height: 100%; object-fit: contain;">
-                    <source src="how-to-play.mp4" type="video/mp4">
-                    הדפדפן שלך לא תומך בווידאו.
-                </video>
+                <iframe id="help-frame" src="https://www.youtube.com/embed/BVFgqbnZAXo?enablejsapi=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
 
             <div class="text-right text-sm space-y-1 mb-4 px-2">
@@ -144,11 +150,15 @@
         </div>
     </dialog>
 
+    <footer>© פותח ע''י חזי כהן גלמן 2026</footer>
+
     <script>
+        // פונקציה לעצירת סרטון היוטיוב בסגירה
         function closeHelpModal() {
-            const video = document.getElementById('help-video');
-            video.pause();
-            video.currentTime = 0;
+            const iframe = document.getElementById('help-frame');
+            const tempSrc = iframe.src;
+            iframe.src = ""; // עוצר את הנגינה
+            iframe.src = tempSrc; 
             closeModal('help-modal');
         }
 
