@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -8,7 +9,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Varela Round', sans-serif; background-color: #2d845c; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        body { 
+            font-family: 'Varela Round', sans-serif; 
+            background-color: #2d845c; 
+            margin: 0; 
+            padding: 0;
+            overflow: hidden; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+        }
         
         .app-btn {
             background-color: white; color: #111; border: 4px solid #111; border-radius: 9999px;
@@ -23,36 +34,36 @@
         .game-header {
             background-color: white; border: 4px solid #111; border-radius: 9999px;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0.4rem 1.2rem; width: 92%; max-width: 500px; margin: 0.5rem auto;
-            color: #111; font-weight: 800; z-index: 20;
+            padding: 0.3rem 1rem; width: 92%; max-width: 450px; margin: 10px auto;
+            color: #111; font-weight: 800; z-index: 20; flex-shrink: 0;
         }
 
         .status-circle {
-            width: 80px; height: 80px; border-radius: 50%; border: 6px solid #111;
+            width: 70px; height: 70px; border-radius: 50%; border: 5px solid #111;
             display: flex; align-items: center; justify-content: center;
-            font-size: 2.5rem; font-weight: 900; cursor: pointer; background: white;
-            transition: transform 0.1s; flex-shrink: 0;
-            box-shadow: none;
+            font-size: 2.2rem; font-weight: 900; cursor: pointer; background: white;
+            transition: transform 0.1s; flex-shrink: 0; box-shadow: 0 4px 0 0 #111;
         }
-        .status-circle:active { transform: scale(0.95); }
+        .status-circle:active { transform: scale(0.95); box-shadow: 0 2px 0 0 #111; }
 
+        /* לוח המשחק - צמצום גדלים לנייד */
         #board-wrapper {
-            width: 90vmin; height: 90vmin; max-width: 420px; max-height: 420px;
+            width: 95vmin; height: 95vmin; max-width: 400px; max-height: 400px;
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-            gap: 12px; padding: 5px;
+            gap: 8px; padding: 4px; margin-top: 5px;
         }
         
         .sub-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); 
-            gap: 2px; background-color: #111; position: relative; border-radius: 8px; overflow: hidden;
+            gap: 2px; background-color: #111; position: relative; border-radius: 6px; overflow: hidden;
         }
         
-        .active-board { outline: 6px solid #fbbf24; outline-offset: 2px; z-index: 5; }
+        .active-board { outline: 5px solid #fbbf24; outline-offset: 2px; z-index: 5; }
 
-        .cell { background-color: white; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.4rem; }
+        .cell { background-color: white; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; }
         .cell.can-move { cursor: pointer; background-color: #fffde7; }
 
-        .won-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.92); display: flex; align-items: center; justify-content: center; font-size: 5rem; z-index: 10; font-weight: 900; }
+        .won-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.92); display: flex; align-items: center; justify-content: center; font-size: 4rem; z-index: 10; font-weight: 900; }
         
         .player-x { color: #2563eb; }
         .player-o { color: #dc2626; }
@@ -61,26 +72,32 @@
         dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
         .dialog-content { padding: 1.2rem; }
         
-        .video-container {
-            width: 100%; max-width: 280px; margin: 0 auto 1.5rem; border: 4px solid #111; 
-            border-radius: 1.5rem; overflow: hidden; background: #000; aspect-ratio: 16/9;
-            position: relative;
+        .video-launcher {
+            width: 100%; max-width: 280px; margin: 0 auto 1rem; border: 4px solid #111; 
+            border-radius: 1.5rem; background: #1a1a1a; aspect-ratio: 16/9;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; text-decoration: none; box-shadow: 0 4px 0 0 #000;
         }
-        .video-container iframe { position: absolute; top:0; left:0; width:100%; height:100%; }
         
-        .answer-correct { background-color: #22c55e !important; color: white !important; border-color: #166534 !important; }
-        .answer-wrong { background-color: #ef4444 !important; color: white !important; border-color: #991b1b !important; }
-
         footer {
-            position: fixed; bottom: 5px; width: 100%; text-align: center;
-            color: white; font-size: 0.75rem; opacity: 0.8; pointer-events: none;
+            position: fixed; bottom: 4px; width: 100%; text-align: center;
+            color: white; font-size: 0.7rem; opacity: 0.6; pointer-events: none;
         }
 
-        .home-icon { width: 24px; height: 24px; fill: currentColor; }
+        /* מניעת רווחים מיותרים במסכים קטנים */
+        .game-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100%;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
 
+    <!-- מסך פתיחה -->
     <div id="lobby" class="fixed inset-0 z-[110] flex flex-col items-center justify-center p-6" style="background-color: #2d845c;">
         <div class="mb-8 text-center">
             <h1 class="text-6xl font-black text-[#fbbf24] drop-shadow-md">SUPER</h1>
@@ -94,57 +111,55 @@
         </div>
     </div>
 
-    <div id="game-screen" class="hidden w-full h-full flex flex-col items-center justify-between py-2">
+    <!-- מסך משחק -->
+    <div id="game-screen" class="hidden game-layout">
         <div class="game-header">
-            <button onclick="location.reload()" class="flex items-center">
-                <svg class="home-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            </button>
-            <div id="turn-text" class="text-xl">תור: X</div>
-            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold">i</button>
+            <button onclick="location.reload()" class="text-xl">🏠</button>
+            <div id="turn-text" class="text-lg">תור: X</div>
+            <button onclick="openModal('help-modal')" class="w-7 h-7 rounded-full border-2 border-black flex items-center justify-center font-bold">i</button>
         </div>
 
-        <div class="flex flex-col items-center justify-center flex-1">
+        <div class="flex flex-col items-center justify-center py-2">
             <div id="action-btn" onclick="handleActionClick()" class="status-circle">?</div>
-            <p id="action-hint" class="text-white font-bold mt-2 text-sm opacity-80">לחצו על השאלה</p>
+            <p id="action-hint" class="text-white text-[11px] mt-1 font-bold">לחצו על השאלה</p>
         </div>
 
-        <div id="board-container" class="flex-none flex items-center justify-center w-full mb-10">
+        <div id="board-container" class="flex items-center justify-center w-full mt-2">
             <div id="board-wrapper"></div>
         </div>
     </div>
 
+    <!-- מודאלים -->
     <dialog id="help-modal">
         <div class="dialog-content text-center">
-            <h2 class="text-2xl font-bold mb-4">איך משחקים?</h2>
-            
-            <div class="video-container">
-                <iframe id="help-frame" src="https://www.youtube.com/embed/BVFgqbnZAXo?enablejsapi=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <h2 class="text-2xl font-bold mb-3">איך משחקים?</h2>
+            <a href="https://www.youtube.com/watch?v=BVFgqbnZAXo" target="_blank" class="video-launcher">
+                <div class="text-4xl text-red-600 mb-1">▶</div>
+                <div class="font-bold text-sm">צפו במדריך ביוטיוב</div>
+            </a>
+            <div class="text-right text-xs space-y-1 mb-6 px-2">
+                <p>1️⃣ לחצו על ה-<b>?</b> וענו על השאלה.</p>
+                <p>2️⃣ תשובה נכונה תאפשר לכם לסמן בלוח המודגש.</p>
+                <p>3️⃣ המטרה: רצף של 3 לוחות מנצחים.</p>
             </div>
-
-            <div class="text-right text-sm space-y-2 mb-6 px-4">
-                <p>1️⃣ לחצו על ה-<b>?</b> וענו על השאלה באנגלית.</p>
-                <p>2️⃣ תשובה נכונה תאפשר לכם לסמן משבצת בלוח.</p>
-                <p>3️⃣ שימו לב: הלוח המודגש בצהוב הוא הלוח שבו עליכם לשחק!</p>
-                <p>4️⃣ המטרה: ליצור רצף של 3 לוחות מנצחים.</p>
-            </div>
-            <button onclick="closeHelpModal()" class="app-btn btn-yellow !py-3">הבנתי, בואו נשחק!</button>
+            <button onclick="closeModal('help-modal')" class="app-btn btn-yellow !py-3">סגור והבנתי!</button>
         </div>
     </dialog>
 
     <dialog id="quiz-modal">
         <div class="dialog-content text-center">
-            <p class="text-gray-500 font-bold mb-1">כיצד אומרים בעברית:</p>
-            <div class="flex items-center justify-center gap-4 mb-6" dir="ltr">
-                <button onclick="speakWord()" class="text-3xl">🔊</button>
-                <h3 id="quiz-word" class="text-4xl font-black">WORD</h3>
+            <p class="text-gray-500 font-bold mb-2">כיצד אומרים בעברית:</p>
+            <div class="flex items-center justify-center gap-4 mb-5" dir="ltr">
+                <button onclick="speakWord()" class="text-2xl">🔊</button>
+                <h3 id="quiz-word" class="text-3xl font-black">WORD</h3>
             </div>
-            <div id="quiz-options" class="space-y-3"></div>
+            <div id="quiz-options" class="grid grid-cols-1 gap-2"></div>
         </div>
     </dialog>
 
     <dialog id="end-game-modal">
         <div class="dialog-content text-center">
-            <h2 id="end-game-title" class="text-4xl font-black mb-8">ניצחון!</h2>
+            <h2 id="end-game-title" class="text-3xl font-black mb-8">ניצחון!</h2>
             <button onclick="location.reload()" class="app-btn btn-yellow">משחק חדש</button>
         </div>
     </dialog>
@@ -160,15 +175,6 @@
     <footer>© פותח ע''י חזי כהן גלמן 2026</footer>
 
     <script>
-        // פונקציה לסגירת המודאל ועצירת הוידאו
-        function closeHelpModal() {
-            const iframe = document.getElementById('help-frame');
-            const tempSrc = iframe.src;
-            iframe.src = ""; 
-            iframe.src = tempSrc; 
-            closeModal('help-modal');
-        }
-
         let vocab = [{word:'Red',translation:'אדום'},{word:'Blue',translation:'כחול'},{word:'Sun',translation:'שמש'},{word:'Apple',translation:'תפוח'},{word:'Dog',translation:'כלב'},{word:'Cat',translation:'חתול'}];
         let state = { player: 'X', grids: Array(9).fill(null).map(() => Array(9).fill(null)), mainBoard: Array(9).fill(null), nextBoard: -1, phase: 'ASK', mode: 'pvp', currentWord: '' };
 
@@ -206,37 +212,27 @@
         function showQuiz() {
             const q = vocab[Math.floor(Math.random()*vocab.length)];
             state.currentWord = q.word;
-            const wordElem = document.getElementById('quiz-word');
-            wordElem.innerText = q.word;
-            wordElem.style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
-            
+            document.getElementById('quiz-word').innerText = q.word;
+            document.getElementById('quiz-word').style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
             const opts = [q.translation];
             while(opts.length < 4 && opts.length < vocab.length) {
                 const r = vocab[Math.floor(Math.random()*vocab.length)].translation;
                 if(!opts.includes(r)) opts.push(r);
             }
             opts.sort(()=>Math.random()-0.5);
-            
             const container = document.getElementById('quiz-options');
             container.innerHTML = '';
-            
             opts.forEach(o => {
                 const btn = document.createElement('button');
-                btn.className = "app-btn !py-2 !text-lg transition-colors duration-200";
+                btn.className = "app-btn !py-2 !text-base !max-w-none";
                 btn.innerText = o;
                 btn.onclick = () => {
-                    const allBtns = container.querySelectorAll('button');
-                    allBtns.forEach(b => b.disabled = true);
-
                     if(o === q.translation) {
                         btn.classList.add('answer-correct');
-                        setTimeout(() => { closeModal('quiz-modal'); state.phase = 'MOVE'; updateUI(); }, 600);
+                        setTimeout(() => { closeModal('quiz-modal'); state.phase = 'MOVE'; updateUI(); }, 300);
                     } else {
                         btn.classList.add('answer-wrong');
-                        allBtns.forEach(b => {
-                            if(b.innerText === q.translation) b.classList.add('answer-correct');
-                        });
-                        setTimeout(() => { closeModal('quiz-modal'); changePlayer(); }, 1200);
+                        setTimeout(() => { closeModal('quiz-modal'); changePlayer(); }, 300);
                     }
                 };
                 container.appendChild(btn);
@@ -288,17 +284,17 @@
             const btn = document.getElementById('action-btn');
             const hint = document.getElementById('action-hint');
             btn.innerText = state.phase === 'ASK' ? '?' : '!';
-            hint.innerText = state.phase === 'ASK' ? 'לחצו על השאלה' : 'בחרו משבצת בלוח המודגש';
+            hint.innerText = state.phase === 'ASK' ? 'לחצו על השאלה' : 'סמנו בלוח המודגש';
             btn.style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
             btn.style.borderColor = state.player === 'X' ? '#2563eb' : '#dc2626';
             document.getElementById('turn-text').innerText = `תור: ${state.player}`;
-            document.getElementById('turn-text').className = `text-xl ${state.player === 'X' ? 'text-blue-600' : 'text-red-600'}`;
+            document.getElementById('turn-text').className = `text-lg font-bold ${state.player === 'X' ? 'text-blue-600' : 'text-red-600'}`;
             for(let i=0; i<9; i++) {
                 const bg = document.getElementById(`board-${i}`);
                 bg.classList.remove('active-board');
                 if(state.phase === 'MOVE' && state.mainBoard[i] === null && (state.nextBoard === -1 || state.nextBoard === i)) bg.classList.add('active-board');
+                const cells = bg.querySelectorAll('.cell');
                 for(let j=0; j<9; j++) {
-                    const cells = bg.querySelectorAll('.cell');
                     const c = cells[j];
                     c.innerText = state.grids[i][j] || '';
                     c.className = `cell ${state.grids[i][j] === 'X' ? 'player-x' : 'player-o'} ${(!state.grids[i][j] && bg.classList.contains('active-board')) ? 'can-move' : ''}`;
@@ -312,3 +308,5 @@
     </script>
 </body>
 </html>
+
+```
