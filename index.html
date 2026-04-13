@@ -28,14 +28,16 @@
         }
 
         .status-circle {
-            width: 70px; height: 70px; border-radius: 50%; border: 5px solid #111;
+            width: 80px; height: 80px; border-radius: 50%; border: 6px solid #111;
             display: flex; align-items: center; justify-content: center;
             font-size: 2.5rem; font-weight: 900; cursor: pointer; background: white;
             transition: transform 0.1s; flex-shrink: 0;
+            box-shadow: none;
         }
+        .status-circle:active { transform: scale(0.95); }
 
         #board-wrapper {
-            width: 92vmin; height: 92vmin; max-width: 440px; max-height: 440px;
+            width: 90vmin; height: 90vmin; max-width: 420px; max-height: 420px;
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
             gap: 12px; padding: 5px;
         }
@@ -60,19 +62,21 @@
         .dialog-content { padding: 1.2rem; }
         
         .video-container {
-            width: 100%; max-width: 220px; margin: 0 auto 1rem; border: 4px solid #111; 
-            border-radius: 1.5rem; overflow: hidden; background: #000; aspect-ratio: 9/16;
+            width: 100%; max-width: 280px; margin: 0 auto 1.5rem; border: 4px solid #111; 
+            border-radius: 1.5rem; overflow: hidden; background: #000; aspect-ratio: 16/9;
             position: relative;
         }
         .video-container iframe { position: absolute; top:0; left:0; width:100%; height:100%; }
         
-        .answer-correct { background-color: #22c55e !important; color: white !important; }
-        .answer-wrong { background-color: #ef4444 !important; color: white !important; }
+        .answer-correct { background-color: #22c55e !important; color: white !important; border-color: #166534 !important; }
+        .answer-wrong { background-color: #ef4444 !important; color: white !important; border-color: #991b1b !important; }
 
         footer {
             position: fixed; bottom: 5px; width: 100%; text-align: center;
             color: white; font-size: 0.75rem; opacity: 0.8; pointer-events: none;
         }
+
+        .home-icon { width: 24px; height: 24px; fill: currentColor; }
     </style>
 </head>
 <body>
@@ -90,41 +94,46 @@
         </div>
     </div>
 
-    <div id="game-screen" class="hidden w-full h-full flex flex-col items-center">
+    <div id="game-screen" class="hidden w-full h-full flex flex-col items-center justify-between py-2">
         <div class="game-header">
-            <button onclick="location.reload()">🏠</button>
+            <button onclick="location.reload()" class="flex items-center">
+                <svg class="home-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </button>
             <div id="turn-text" class="text-xl">תור: X</div>
             <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold">i</button>
         </div>
-        <div class="flex-none flex items-center justify-center w-full my-2">
+
+        <div class="flex flex-col items-center justify-center flex-1">
             <div id="action-btn" onclick="handleActionClick()" class="status-circle">?</div>
+            <p id="action-hint" class="text-white font-bold mt-2 text-sm opacity-80">לחצו על השאלה</p>
         </div>
-        <div id="board-container" class="flex-1 flex items-center justify-center w-full overflow-hidden mb-8">
+
+        <div id="board-container" class="flex-none flex items-center justify-center w-full mb-10">
             <div id="board-wrapper"></div>
         </div>
     </div>
 
     <dialog id="help-modal">
         <div class="dialog-content text-center">
-            <h2 class="text-2xl font-bold mb-3">איך משחקים?</h2>
+            <h2 class="text-2xl font-bold mb-4">איך משחקים?</h2>
             
             <div class="video-container">
                 <iframe id="help-frame" src="https://www.youtube.com/embed/BVFgqbnZAXo?enablejsapi=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
 
-            <div class="text-right text-sm space-y-1 mb-4 px-2">
-                <p>1️⃣ לחצו על ה-<b>?</b> וענו על השאלה.</p>
-                <p>2️⃣ תשובה נכונה תאפשר לכם לסמן בלוח.</p>
-                <p>3️⃣ המטרה: רצף של 3 לוחות מנצחים.</p>
+            <div class="text-right text-sm space-y-2 mb-6 px-4">
+                <p>1️⃣ לחצו על ה-<b>?</b> וענו על השאלה באנגלית.</p>
+                <p>2️⃣ תשובה נכונה תאפשר לכם לסמן משבצת בלוח.</p>
+                <p>3️⃣ שימו לב: הלוח המודגש בצהוב הוא הלוח שבו עליכם לשחק!</p>
+                <p>4️⃣ המטרה: ליצור רצף של 3 לוחות מנצחים.</p>
             </div>
-            
-            <button onclick="closeHelpModal()" class="app-btn btn-yellow !py-3">סגור והבנתי!</button>
+            <button onclick="closeHelpModal()" class="app-btn btn-yellow !py-3">הבנתי, בואו נשחק!</button>
         </div>
     </dialog>
 
     <dialog id="quiz-modal">
         <div class="dialog-content text-center">
-            <p class="text-gray-500 font-bold mb-3">כיצד אומרים בעברית:</p>
+            <p class="text-gray-500 font-bold mb-1">כיצד אומרים בעברית:</p>
             <div class="flex items-center justify-center gap-4 mb-6" dir="ltr">
                 <button onclick="speakWord()" class="text-3xl">🔊</button>
                 <h3 id="quiz-word" class="text-4xl font-black">WORD</h3>
@@ -151,6 +160,7 @@
     <footer>© פותח ע''י חזי כהן גלמן 2026</footer>
 
     <script>
+        // פונקציה לסגירת המודאל ועצירת הוידאו
         function closeHelpModal() {
             const iframe = document.getElementById('help-frame');
             const tempSrc = iframe.src;
@@ -199,25 +209,34 @@
             const wordElem = document.getElementById('quiz-word');
             wordElem.innerText = q.word;
             wordElem.style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
+            
             const opts = [q.translation];
-            while(opts.length < 4 && opts.length < vocab.length + 1) {
+            while(opts.length < 4 && opts.length < vocab.length) {
                 const r = vocab[Math.floor(Math.random()*vocab.length)].translation;
                 if(!opts.includes(r)) opts.push(r);
             }
             opts.sort(()=>Math.random()-0.5);
+            
             const container = document.getElementById('quiz-options');
             container.innerHTML = '';
+            
             opts.forEach(o => {
                 const btn = document.createElement('button');
-                btn.className = "app-btn !py-2 !text-lg";
+                btn.className = "app-btn !py-2 !text-lg transition-colors duration-200";
                 btn.innerText = o;
                 btn.onclick = () => {
+                    const allBtns = container.querySelectorAll('button');
+                    allBtns.forEach(b => b.disabled = true);
+
                     if(o === q.translation) {
                         btn.classList.add('answer-correct');
-                        setTimeout(() => { closeModal('quiz-modal'); state.phase = 'MOVE'; updateUI(); }, 400);
+                        setTimeout(() => { closeModal('quiz-modal'); state.phase = 'MOVE'; updateUI(); }, 600);
                     } else {
                         btn.classList.add('answer-wrong');
-                        setTimeout(() => { closeModal('quiz-modal'); changePlayer(); }, 400);
+                        allBtns.forEach(b => {
+                            if(b.innerText === q.translation) b.classList.add('answer-correct');
+                        });
+                        setTimeout(() => { closeModal('quiz-modal'); changePlayer(); }, 1200);
                     }
                 };
                 container.appendChild(btn);
@@ -267,7 +286,9 @@
 
         function updateUI() {
             const btn = document.getElementById('action-btn');
+            const hint = document.getElementById('action-hint');
             btn.innerText = state.phase === 'ASK' ? '?' : '!';
+            hint.innerText = state.phase === 'ASK' ? 'לחצו על השאלה' : 'בחרו משבצת בלוח המודגש';
             btn.style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
             btn.style.borderColor = state.player === 'X' ? '#2563eb' : '#dc2626';
             document.getElementById('turn-text').innerText = `תור: ${state.player}`;
@@ -277,7 +298,8 @@
                 bg.classList.remove('active-board');
                 if(state.phase === 'MOVE' && state.mainBoard[i] === null && (state.nextBoard === -1 || state.nextBoard === i)) bg.classList.add('active-board');
                 for(let j=0; j<9; j++) {
-                    const c = bg.querySelectorAll('.cell')[j];
+                    const cells = bg.querySelectorAll('.cell');
+                    const c = cells[j];
                     c.innerText = state.grids[i][j] || '';
                     c.className = `cell ${state.grids[i][j] === 'X' ? 'player-x' : 'player-o'} ${(!state.grids[i][j] && bg.classList.contains('active-board')) ? 'can-move' : ''}`;
                 }
