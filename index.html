@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -33,19 +34,18 @@
         .game-header {
             background-color: white; border: 4px solid #111; border-radius: 9999px;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0.3rem 1rem; width: 92%; max-width: 450px; margin: 10px auto;
+            padding: 0.3rem 1.2rem; width: 92%; max-width: 450px; margin: 10px auto;
             color: #111; font-weight: 800; z-index: 20; flex-shrink: 0;
         }
 
         .status-circle {
-            width: 70px; height: 70px; border-radius: 50%; border: 5px solid #111;
+            width: 75px; height: 75px; border-radius: 50%; border: 5px solid #111;
             display: flex; align-items: center; justify-content: center;
-            font-size: 2.2rem; font-weight: 900; cursor: pointer; background: white;
-            transition: transform 0.1s; flex-shrink: 0; box-shadow: 0 4px 0 0 #111;
+            font-size: 2.5rem; font-weight: 900; cursor: pointer; background: white;
+            transition: transform 0.1s; flex-shrink: 0;
         }
-        .status-circle:active { transform: scale(0.95); box-shadow: 0 2px 0 0 #111; }
+        .status-circle:active { transform: scale(0.95); }
 
-        /* לוח המשחק - צמצום גדלים לנייד */
         #board-wrapper {
             width: 95vmin; height: 95vmin; max-width: 400px; max-height: 400px;
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
@@ -67,6 +67,13 @@
         .player-x { color: #2563eb; }
         .player-o { color: #dc2626; }
 
+        .answer-btn { 
+            background-color: white; color: #111; border: 3px solid #111; border-radius: 1.5rem;
+            padding: 0.7rem; font-weight: 800; width: 100%; transition: all 0.2s; outline: none;
+        }
+        .answer-correct { background-color: #22c55e !important; color: white !important; border-color: #166534 !important; }
+        .answer-wrong { background-color: #ef4444 !important; color: white !important; border-color: #991b1b !important; }
+
         dialog { border: 6px solid #111; border-radius: 2.5rem; padding: 0; overflow: hidden; max-width: 90vw; width: 380px; }
         dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
         .dialog-content { padding: 1.2rem; }
@@ -83,7 +90,6 @@
             color: white; font-size: 0.7rem; opacity: 0.6; pointer-events: none;
         }
 
-        /* מניעת רווחים מיותרים במסכים קטנים */
         .game-layout {
             display: flex;
             flex-direction: column;
@@ -92,11 +98,12 @@
             height: 100%;
             width: 100%;
         }
+
+        .info-icon { font-style: normal !important; }
     </style>
 </head>
 <body>
 
-    <!-- מסך פתיחה -->
     <div id="lobby" class="fixed inset-0 z-[110] flex flex-col items-center justify-center p-6" style="background-color: #2d845c;">
         <div class="mb-8 text-center">
             <h1 class="text-6xl font-black text-[#fbbf24] drop-shadow-md">SUPER</h1>
@@ -110,17 +117,18 @@
         </div>
     </div>
 
-    <!-- מסך משחק -->
     <div id="game-screen" class="hidden game-layout">
         <div class="game-header">
-            <button onclick="location.reload()" class="text-xl">🏠</button>
+            <button onclick="location.reload()" class="text-2xl" title="חזרה הביתה">🏠</button>
             <div id="turn-text" class="text-lg">תור: X</div>
-            <button onclick="openModal('help-modal')" class="w-7 h-7 rounded-full border-2 border-black flex items-center justify-center font-bold">i</button>
+            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold">
+                <span class="info-icon">i</span>
+            </button>
         </div>
 
         <div class="flex flex-col items-center justify-center py-2">
             <div id="action-btn" onclick="handleActionClick()" class="status-circle">?</div>
-            <p id="action-hint" class="text-white text-[11px] mt-1 font-bold">לחצו על השאלה</p>
+            <p id="action-hint" class="text-white text-[13px] mt-3 font-bold tracking-wide">לחצו על השאלה</p>
         </div>
 
         <div id="board-container" class="flex items-center justify-center w-full mt-2">
@@ -128,7 +136,6 @@
         </div>
     </div>
 
-    <!-- מודאלים -->
     <dialog id="help-modal">
         <div class="dialog-content text-center">
             <h2 class="text-2xl font-bold mb-3">איך משחקים?</h2>
@@ -152,7 +159,7 @@
                 <button onclick="speakWord()" class="text-2xl">🔊</button>
                 <h3 id="quiz-word" class="text-3xl font-black">WORD</h3>
             </div>
-            <div id="quiz-options" class="grid grid-cols-1 gap-2"></div>
+            <div id="quiz-options" class="grid grid-cols-1 gap-3"></div>
         </div>
     </dialog>
 
@@ -213,25 +220,40 @@
             state.currentWord = q.word;
             document.getElementById('quiz-word').innerText = q.word;
             document.getElementById('quiz-word').style.color = state.player === 'X' ? '#2563eb' : '#dc2626';
+            
             const opts = [q.translation];
             while(opts.length < 4 && opts.length < vocab.length) {
                 const r = vocab[Math.floor(Math.random()*vocab.length)].translation;
                 if(!opts.includes(r)) opts.push(r);
             }
             opts.sort(()=>Math.random()-0.5);
+            
             const container = document.getElementById('quiz-options');
             container.innerHTML = '';
+            
             opts.forEach(o => {
                 const btn = document.createElement('button');
-                btn.className = "app-btn !py-2 !text-base !max-w-none";
+                btn.className = "answer-btn";
                 btn.innerText = o;
+                btn.dataset.translation = o; // לשמירת הערך להשוואה
+                
                 btn.onclick = () => {
+                    const allBtns = container.querySelectorAll('button');
+                    allBtns.forEach(b => b.onclick = null); // מניעת לחיצות נוספות
+                    
                     if(o === q.translation) {
+                        // תשובה נכונה
                         btn.classList.add('answer-correct');
-                        setTimeout(() => { closeModal('quiz-modal'); state.phase = 'MOVE'; updateUI(); }, 300);
+                        setTimeout(() => { closeModal('quiz-modal'); state.phase = 'MOVE'; updateUI(); }, 600);
                     } else {
+                        // תשובה שגויה - סימון השגויה באדום והנכונה בירוק
                         btn.classList.add('answer-wrong');
-                        setTimeout(() => { closeModal('quiz-modal'); changePlayer(); }, 300);
+                        allBtns.forEach(b => {
+                            if(b.dataset.translation === q.translation) {
+                                b.classList.add('answer-correct');
+                            }
+                        });
+                        setTimeout(() => { closeModal('quiz-modal'); changePlayer(); }, 1200);
                     }
                 };
                 container.appendChild(btn);
@@ -267,6 +289,10 @@
         function aiMove() {
             let bi = (state.nextBoard === -1 || state.mainBoard[state.nextBoard] !== null) ? 
                 state.mainBoard.map((v, i) => v === null ? i : null).filter(v => v !== null)[0] : state.nextBoard;
+            if (bi === null || bi === undefined) {
+                 const available = state.mainBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
+                 bi = available[Math.floor(Math.random()*available.length)];
+            }
             const validCells = state.grids[bi].map((v, i) => v === null ? i : null).filter(v => v !== null);
             if(validCells.length > 0) {
                 const ci = validCells[Math.floor(Math.random() * validCells.length)];
@@ -308,5 +334,4 @@
 </body>
 </html>
 
-
-
+```
