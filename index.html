@@ -147,6 +147,31 @@
         </div>
     </dialog>
 
+    <dialog id="vocab-modal">
+        <div class="dialog-content">
+            <h2 class="text-xl font-bold mb-2">הדבק רשימת מילים</h2>
+            <p class="text-xs mb-2">פורמט: מילה - תרגום (לפחות 4 מילים)</p>
+            <textarea id="vocab-input" class="w-full h-40 border-4 border-black rounded-2xl p-3 mb-4 font-bold" dir="ltr" placeholder="One - אחד&#10;Two - שתיים"></textarea>
+            <button onclick="saveVocab()" class="app-btn btn-yellow !py-2">שמור והמשך</button>
+        </div>
+    </dialog>
+
+    <dialog id="success-modal">
+        <div class="dialog-content text-center">
+            <div class="text-6xl mb-4">✅</div>
+            <h2 id="success-message" class="text-2xl font-bold mb-6">המילים נטענו בהצלחה!</h2>
+            <button onclick="closeModal('success-modal')" class="app-btn btn-yellow">מעולה!</button>
+        </div>
+    </dialog>
+
+    <dialog id="error-modal">
+        <div class="dialog-content text-center">
+            <div class="text-6xl mb-4">❌</div>
+            <h2 id="error-message" class="text-2xl font-bold mb-6">שגיאה בהזנת המילים</h2>
+            <button onclick="closeModal('error-modal')" class="app-btn">נסה שוב</button>
+        </div>
+    </dialog>
+
     <dialog id="quiz-modal">
         <div class="dialog-content text-center">
             <p class="text-gray-500 font-bold mb-2">כיצד אומרים בעברית:</p>
@@ -165,16 +190,6 @@
         </div>
     </dialog>
 
-    <dialog id="vocab-modal">
-        <div class="dialog-content">
-            <h2 class="text-xl font-bold mb-2">הדבק רשימת מילים</h2>
-            <p class="text-xs mb-2">פורמט: מילה - תרגום (לפחות 4 מילים)</p>
-            <textarea id="vocab-input" class="w-full h-40 border-4 border-black rounded-2xl p-3 mb-4 font-bold" dir="ltr" placeholder="One - אחד
-Two - שתיים"></textarea>
-            <button onclick="saveVocab()" class="app-btn btn-yellow !py-2">שמור והתחל</button>
-        </div>
-    </dialog>
-
     <footer>© פותח ע''י חזי כהן גלמן 2026</footer>
 
     <script>
@@ -187,8 +202,8 @@ Two - שתיים"></textarea>
 
         function startGame(mode) {
             if (vocab.length < 4) {
-                alert('יש להזין לפחות 4 מילים במילון!');
-                openModal('vocab-modal');
+                document.getElementById('error-message').innerText = "יש להזין לפחות 4 מילים לפני שמתחילים!";
+                openModal('error-modal');
                 return;
             }
             state.mode = mode;
@@ -328,7 +343,6 @@ Two - שתיים"></textarea>
             const newVocab = [];
             
             lines.forEach(line => {
-                // תומך במקף רגיל, מקף ארוך, או נקודתיים
                 const parts = line.split(/[–—\-:]/); 
                 if (parts.length >= 2) {
                     const w = parts[0].trim();
@@ -339,10 +353,12 @@ Two - שתיים"></textarea>
             
             if(newVocab.length >= 4) {
                 vocab = newVocab;
-                alert(`נטענו ${vocab.length} מילים!`);
+                document.getElementById('success-message').innerText = `מעולה! נטענו ${vocab.length} מילים בהצלחה.`;
                 closeModal('vocab-modal'); 
+                openModal('success-modal');
             } else {
-                alert(`נמצאו רק ${newVocab.length} מילים תקינות. וודא שהפורמט הוא: מילה - תרגום`);
+                document.getElementById('error-message').innerText = `נמצאו רק ${newVocab.length} מילים תקינות.\nנא להזין לפחות 4 מילים בפורמט: מילה - תרגום`;
+                openModal('error-modal');
             }
         }
 
