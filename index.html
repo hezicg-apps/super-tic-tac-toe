@@ -97,8 +97,6 @@
             height: 100%;
             width: 100%;
         }
-
-        .info-icon { font-style: normal !important; }
     </style>
 </head>
 <body>
@@ -120,9 +118,7 @@
         <div class="game-header">
             <button onclick="location.reload()" class="text-2xl" title="חזרה הביתה">🏠</button>
             <div id="turn-text" class="text-lg">תור: X</div>
-            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold">
-                <span class="info-icon">i</span>
-            </button>
+            <button onclick="openModal('help-modal')" class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold">i</button>
         </div>
 
         <div class="flex flex-col items-center justify-center py-2">
@@ -171,17 +167,17 @@
 
     <dialog id="vocab-modal">
         <div class="dialog-content">
-            <h2 class="text-xl font-bold mb-2">הדבק רשימת מילים (Word - תרגום)</h2>
-            <p class="text-xs mb-2">פורמט: מילה באנגלית - תרגום</p>
-            <textarea id="vocab-input" class="w-full h-40 border-4 border-black rounded-2xl p-3 mb-4 font-bold" dir="ltr" placeholder="Dog - כלב&#10;Cat - חתול"></textarea>
-            <button onclick="saveVocab()" class="app-btn btn-yellow !py-2">שמור רשימה חדשה</button>
+            <h2 class="text-xl font-bold mb-2">הדבק רשימת מילים</h2>
+            <p class="text-xs mb-2">פורמט: מילה - תרגום (לפחות 4 מילים)</p>
+            <textarea id="vocab-input" class="w-full h-40 border-4 border-black rounded-2xl p-3 mb-4 font-bold" dir="ltr" placeholder="One - אחד
+Two - שתיים"></textarea>
+            <button onclick="saveVocab()" class="app-btn btn-yellow !py-2">שמור והתחל</button>
         </div>
     </dialog>
 
     <footer>© פותח ע''י חזי כהן גלמן 2026</footer>
 
     <script>
-        // המערך מתחיל ריק כעת
         let vocab = []; 
         let state = { player: 'X', grids: Array(9).fill(null).map(() => Array(9).fill(null)), mainBoard: Array(9).fill(null), nextBoard: -1, phase: 'ASK', mode: 'pvp', currentWord: '' };
 
@@ -191,7 +187,7 @@
 
         function startGame(mode) {
             if (vocab.length < 4) {
-                alert('יש להזין לפחות 4 מילים במילון לפני שמתחילים!');
+                alert('יש להזין לפחות 4 מילים במילון!');
                 openModal('vocab-modal');
                 return;
             }
@@ -241,22 +237,15 @@
                 const btn = document.createElement('button');
                 btn.className = "answer-btn";
                 btn.innerText = o;
-                btn.dataset.translation = o;
-                
                 btn.onclick = () => {
                     const allBtns = container.querySelectorAll('button');
                     allBtns.forEach(b => b.onclick = null);
-                    
                     if(o === q.translation) {
                         btn.classList.add('answer-correct');
                         setTimeout(() => { closeModal('quiz-modal'); state.phase = 'MOVE'; updateUI(); }, 600);
                     } else {
                         btn.classList.add('answer-wrong');
-                        allBtns.forEach(b => {
-                            if(b.dataset.translation === q.translation) {
-                                b.classList.add('answer-correct');
-                            }
-                        });
+                        allBtns.forEach(b => { if(b.innerText === q.translation) b.classList.add('answer-correct'); });
                         setTimeout(() => { closeModal('quiz-modal'); changePlayer(); }, 1200);
                     }
                 };
@@ -335,27 +324,29 @@
         
         function saveVocab() { 
             const input = document.getElementById('vocab-input').value;
-            const lines = input.split('\n'); 
-            const newVocab = lines
-                .filter(l => l.includes('-'))
-                .map(l => { 
-                    const [w, t] = l.split('-').map(s => s.trim()); 
-                    return { word: w, translation: t }; 
-                }); 
+            const lines = input.split('\n').map(l => l.trim()).filter(l => l.length > 0); 
+            const newVocab = [];
+            
+            lines.forEach(line => {
+                // תומך במקף רגיל, מקף ארוך, או נקודתיים
+                const parts = line.split(/[–—\-:]/); 
+                if (parts.length >= 2) {
+                    const w = parts[0].trim();
+                    const t = parts[1].trim();
+                    if (w && t) newVocab.push({ word: w, translation: t });
+                }
+            });
             
             if(newVocab.length >= 4) {
                 vocab = newVocab;
-                alert(`נשמרו ${vocab.length} מילים בהצלחה!`);
+                alert(`נטענו ${vocab.length} מילים!`);
                 closeModal('vocab-modal'); 
             } else {
-                alert('נא להזין לפחות 4 מילים בפורמט: מילה - תרגום');
+                alert(`נמצאו רק ${newVocab.length} מילים תקינות. וודא שהפורמט הוא: מילה - תרגום`);
             }
         }
 
-        // טעינה ראשונית - תיבת הטקסט תהיה ריקה להדבקה חדשה
-        window.onload = () => { 
-            document.getElementById('vocab-input').value = ""; 
-        };
+        window.onload = () => { document.getElementById('vocab-input').value = ""; };
     </script>
 </body>
 </html>
